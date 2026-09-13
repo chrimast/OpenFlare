@@ -1,5 +1,3 @@
-
-
 /**
  * 系统配置信息
  */
@@ -178,7 +176,11 @@ export interface DispatchTaskRequest {
   payload?: string;
 }
 
-export type TaskExecutionStatus = 'pending' | 'running' | 'succeeded' | 'failed';
+export type TaskExecutionStatus =
+  | 'pending'
+  | 'running'
+  | 'succeeded'
+  | 'failed';
 
 /**
  * 任务执行记录
@@ -210,6 +212,10 @@ export interface TaskExecution {
 export interface ListTaskExecutionsRequest {
   status?: TaskExecutionStatus;
   task_type?: string;
+  /** Prefix match on stored asynq task type (ignored when task_type / task_types is set). */
+  task_type_prefix?: string;
+  /** Comma-separated exact asynq task types for IN filter (ignored when task_type is set). */
+  task_types?: string;
   page?: number;
   page_size?: number;
 }
@@ -397,6 +403,22 @@ export interface AuthSourceRequest {
 
 export interface ToggleAuthSourceRequest {
   is_active: boolean;
+}
+
+/**
+ * 日志数据库状态
+ */
+export interface LogDatabaseStatus {
+  /** 当前日志主库：postgres | sqlite | clickhouse */
+  active_database: string;
+  /** 迁移状态：idle | migrating */
+  migration: string;
+  /** 各日志库保留天数 */
+  retention_days: Record<string, number>;
+  /** 当前主库的合法迁移目标 */
+  available_targets: string[];
+  /** ClickHouse 运行指标（仅主库为 ClickHouse 时） */
+  clickhouse?: unknown;
 }
 
 /**

@@ -1,6 +1,8 @@
 'use client';
 
-import {TrendChart} from '@/components/data/trend-chart';
+import { useTranslations } from 'next-intl';
+
+import { TrendChart } from '@/components/data/trend-chart';
 import {
   Card,
   CardContent,
@@ -8,32 +10,39 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type {CapacityTrendPoint} from '@/lib/services/openflare';
+import type { CapacityTrendPoint } from '@/lib/services/openflare';
 
-import {formatPercent, formatTrendHour} from './dashboard-utils';
+import { formatPercent, formatTrendHour } from './dashboard-utils';
 
 export function CapacityTrendChart({
   points,
-  title = '24 小时容量趋势',
-  description = '按小时聚合 CPU 与内存使用率，判断整体容量是否持续紧张。',
+  title,
+  description,
 }: {
   points: CapacityTrendPoint[];
   title?: string;
   description?: string;
 }) {
+  const t = useTranslations('dashboard.capacityTrend');
   return (
-    <Card className="border-dashed shadow-none">
+    <Card className='border-dashed shadow-none'>
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-        <CardDescription className="text-xs">{description}</CardDescription>
+        <CardTitle className='text-sm font-semibold'>
+          {title ?? t('title')}
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          {description ?? t('description')}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <TrendChart
-          labels={points.map((point) => formatTrendHour(point.bucket_started_at))}
+          labels={points.map((point) =>
+            formatTrendHour(point.bucket_started_at),
+          )}
           yAxisValueFormatter={formatPercent}
           series={[
             {
-              label: '平均 CPU',
+              label: t('avgCpu'),
               color: '#0f766e',
               fillColor: 'rgba(15, 118, 110, 0.15)',
               variant: 'area',
@@ -41,7 +50,7 @@ export function CapacityTrendChart({
               valueFormatter: formatPercent,
             },
             {
-              label: '平均内存',
+              label: t('avgMemory'),
               color: '#2563eb',
               values: points.map((point) => point.average_memory_usage_percent),
               valueFormatter: formatPercent,

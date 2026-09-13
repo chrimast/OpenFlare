@@ -1,3 +1,5 @@
+import type { XYPosition } from '@xyflow/react';
+
 export type ReleaseChannel = 'stable' | 'preview';
 
 export type NodeType = 'edge_node' | 'tunnel_relay' | 'tunnel_client';
@@ -118,10 +120,6 @@ export interface NodeMetricSnapshot {
   storage_total_bytes: number;
   disk_read_bytes: number;
   disk_write_bytes: number;
-  network_rx_bytes: number;
-  network_tx_bytes: number;
-  openresty_rx_bytes: number;
-  openresty_tx_bytes: number;
   openresty_connections: number;
 }
 
@@ -135,17 +133,6 @@ export interface NodeHealthEvent {
   last_triggered_at: string;
   reported_at: string;
   resolved_at?: string | null;
-}
-
-export interface NodeTrafficReport {
-  window_started_at: string;
-  window_ended_at: string;
-  request_count: number;
-  error_count: number;
-  unique_visitor_count: number;
-  status_codes_json: string;
-  top_domains_json: string;
-  source_countries_json: string;
 }
 
 export interface NodeTrafficSummary {
@@ -192,7 +179,6 @@ export interface NodeObservability {
   node_id: string;
   profile: NodeSystemProfile | null;
   metric_snapshots: NodeMetricSnapshot[];
-  traffic_reports?: NodeTrafficReport[];
   health_events: NodeHealthEvent[];
   analytics?: NodeObservabilityAnalytics;
   trends?: NodeObservabilityTrends;
@@ -228,13 +214,19 @@ export interface ProxyRoutePoWConfig {
   blacklist: ProxyRoutePoWListConfig;
 }
 
+/** Route-bound Zone domain as returned by proxy-route APIs. */
+export interface ProxyRouteZoneDomain {
+  id: number;
+  zone_id: number;
+  domain: string;
+  cert_id: number | null;
+}
+
 export interface ProxyRouteItem {
   id: number;
   site_name: string;
-  domain: string;
-  domains: string[];
-  primary_domain: string;
-  domain_count: number;
+  zone_domain_ids: number[];
+  zone_domains: ProxyRouteZoneDomain[];
   origin_id: number | null;
   origin_url: string;
   origin_host: string;
@@ -242,13 +234,11 @@ export interface ProxyRouteItem {
   upstream_list: string[];
   enabled: boolean;
   enable_https: boolean;
-  cert_id: number | null;
-  cert_ids: number[];
-  domain_cert_ids: number[];
   redirect_http: boolean;
   limit_conn_per_server: number;
   limit_conn_per_ip: number;
   limit_rate: string;
+  limit_req_per_ip: string;
   cache_enabled: boolean;
   cache_policy: string;
   cache_rules: string;
@@ -258,7 +248,6 @@ export interface ProxyRouteItem {
   basic_auth_enabled: boolean;
   basic_auth_username: string;
   basic_auth_password: string;
-  remark: string;
   upstream_type: 'direct' | 'tunnel' | 'pages';
   tunnel_node_id?: number | null;
   tunnel_id?: number | null;
@@ -271,8 +260,7 @@ export interface ProxyRouteItem {
 
 export interface ProxyRouteMutationPayload {
   site_name?: string;
-  domain: string;
-  domains?: string[];
+  zone_domain_ids: number[];
   origin_id: number | null;
   origin_url: string;
   origin_scheme: 'http' | 'https';
@@ -283,13 +271,11 @@ export interface ProxyRouteMutationPayload {
   upstreams: string[];
   enabled: boolean;
   enable_https: boolean;
-  cert_id: number | null;
-  cert_ids?: number[];
-  domain_cert_ids?: number[];
   redirect_http: boolean;
   limit_conn_per_server?: number;
   limit_conn_per_ip?: number;
   limit_rate?: string;
+  limit_req_per_ip?: string;
   cache_enabled: boolean;
   cache_policy: string;
   cache_rules: string[];
@@ -297,7 +283,6 @@ export interface ProxyRouteMutationPayload {
   basic_auth_enabled: boolean;
   basic_auth_username?: string;
   basic_auth_password?: string;
-  remark: string;
   upstream_type?: 'direct' | 'tunnel' | 'pages';
   tunnel_node_id?: number | null;
   tunnel_id?: number | null;
@@ -416,9 +401,14 @@ export interface PagesDeployment {
   status: 'uploaded' | 'active';
   file_count: number;
   total_size: number;
-  root_dir?: string;
-  entry_file: string;
   created_by: string;
+  source_type: 'manual_upload' | 'manual_url' | 'remote_url' | 'github_release';
+  source_label: string;
+  trigger_type:
+    | 'manual_upload'
+    | 'manual_url'
+    | 'manual_sync'
+    | 'scheduled_auto_update';
   created_at: string;
   activated_at?: string | null;
 }
@@ -470,9 +460,137 @@ export interface PagesProjectPayload {
 
 export interface PagesDeploymentUploadPayload {
   file: File;
-  rootDir?: string;
-  entryFile?: string;
   onProgress?: (percent: number) => void;
+}
+
+export interface PagesDeploymentUploadFromURLPayload {
+  url: string;
+}
+
+export type PagesSourceStatus =
+  | 'idle'
+  | 'checking'
+  | 'update_available'
+  | 'syncing'
+  | 'failed'
+  | 'attention';
+
+export type PagesGitHubReleaseSelector = 'latest' | 'tag';
+
+export interface PagesSourceRevision {
+  revision: string;
+  label: string;
+  asset_name?: string;
+}
+
+interface PagesSourceRuntimeView {
+  sync_status?: PagesSourceStatus;
+  update_available?: boolean;
+  last_seen?: PagesSourceRevision;
+  last_applied?: PagesSourceRevision;
+  last_checked_at?: string | null;
+  last_synced_at?: string | null;
+  next_check_at?: string | null;
+  last_error?: string;
+}
+
+export interface PagesManualSource {
+  source_type: 'manual';
+}
+
+export interface PagesRemoteURLSource extends PagesSourceRuntimeView {
+  source_type: 'remote_url';
+  remote_url: string;
+  allow_insecure?: boolean;
+}
+
+interface PagesGitHubReleaseSourceBase extends PagesSourceRuntimeView {
+  source_type: 'github_release';
+  github_repository: string;
+  asset_name: string;
+}
+
+interface PagesGitHubLatestReleaseSource extends PagesGitHubReleaseSourceBase {
+  release_selector: 'latest';
+  release_tag?: '';
+  auto_update_enabled: boolean;
+  check_interval_minutes: number;
+}
+
+interface PagesGitHubTagReleaseSource extends PagesGitHubReleaseSourceBase {
+  release_selector: 'tag';
+  release_tag: string;
+  auto_update_enabled: false;
+  check_interval_minutes?: 0;
+}
+
+export type PagesGitHubReleaseSource =
+  | PagesGitHubLatestReleaseSource
+  | PagesGitHubTagReleaseSource;
+
+/**
+ * 部署源使用判别联合，后续仓库构建来源只需增加独立 git_repository variant，
+ * 不需要向 Remote 或 GitHub Release 填入构建字段。
+ */
+export type PagesSource =
+  | PagesManualSource
+  | PagesRemoteURLSource
+  | PagesGitHubReleaseSource;
+
+export interface PagesRemoteSourceUpdatePayload {
+  source_type: 'remote_url';
+  remote_url: string;
+  allow_insecure?: boolean;
+}
+
+interface PagesGitHubSourceUpdateBase {
+  source_type: 'github_release';
+  repository_url: string;
+  asset_name: string;
+}
+
+export interface PagesGitHubLatestSourceUpdatePayload
+  extends PagesGitHubSourceUpdateBase {
+  release_selector: 'latest';
+  release_tag: '';
+  auto_update_enabled: boolean;
+  check_interval_minutes: number;
+}
+
+export interface PagesGitHubTagSourceUpdatePayload
+  extends PagesGitHubSourceUpdateBase {
+  release_selector: 'tag';
+  release_tag: string;
+  auto_update_enabled: false;
+  check_interval_minutes: 0;
+}
+
+export type PagesGitHubSourceUpdatePayload =
+  | PagesGitHubLatestSourceUpdatePayload
+  | PagesGitHubTagSourceUpdatePayload;
+
+/**
+ * Source 更新请求保持 Provider 判别联合；未来仓库拉取构建使用独立 git_repository variant，
+ * 不向 Remote URL 或 GitHub Release payload 混入构建字段。
+ */
+export type PagesSourceUpdatePayload =
+  | PagesRemoteSourceUpdatePayload
+  | PagesGitHubSourceUpdatePayload;
+
+export interface PagesSourceActionPayload {
+  confirmed_revision?: string;
+}
+
+export interface PagesSourceActionReceipt {
+  task_id: string;
+  execution_id: string;
+  action: 'check' | 'sync';
+}
+
+export interface PagesSourceUpdateResult {
+  source: PagesSource;
+  check_task: PagesSourceActionReceipt | null;
+  warning: string;
 }
 
 // ==================== Origins ====================
@@ -512,10 +630,50 @@ export interface AccessLogFilters {
   remote_addr?: string;
   host?: string;
   path?: string;
+  status_code?: number;
+  since?: string;
+  until?: string;
   p?: number;
   page_size?: number;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
+}
+
+export interface AccessLogOverviewFilters {
+  node_id?: string;
+  host?: string;
+  hosts?: string[];
+  hours?: number;
+  bucket_minutes?: number;
+}
+
+export interface AccessLogOverviewMetricPoint {
+  bucket_started_at: string;
+  value: number;
+}
+
+export interface AccessLogOverview {
+  generated_at: string;
+  hours: number;
+  bucket_minutes?: number;
+  summary: {
+    total_requests: number;
+    total_visits: number;
+    bandwidth_served: number;
+  };
+  trends: {
+    requests: AccessLogOverviewMetricPoint[];
+    visits: AccessLogOverviewMetricPoint[];
+    bandwidth: AccessLogOverviewMetricPoint[];
+  };
+  top_paths: DistributionItem[];
+  top_hosts: DistributionItem[];
+  top_ips: DistributionItem[];
+  device_types: DistributionItem[];
+  top_browsers: DistributionItem[];
+  top_operating_systems: DistributionItem[];
+  top_user_agents: DistributionItem[];
+  status_codes: DistributionItem[];
 }
 
 export interface AccessLogItem {
@@ -527,7 +685,13 @@ export interface AccessLogItem {
   region: string;
   host: string;
   path: string;
+  user_agent: string;
+  cache_status: string;
   status_code: number;
+  bytes_sent: number;
+  request_length: number;
+  request_time_ms: number;
+  created_at: string;
 }
 
 export interface AccessLogList {
@@ -593,6 +757,9 @@ export interface AccessLogIPSummaryFilters {
   node_id?: string;
   remote_addr?: string;
   host?: string;
+  hours?: number;
+  since?: string;
+  until?: string;
   p?: number;
   page_size?: number;
   sort_by?: string;
@@ -601,8 +768,14 @@ export interface AccessLogIPSummaryFilters {
 
 export interface AccessLogIPSummaryItem {
   remote_addr: string;
+  region?: string;
   total_requests: number;
-  recent_requests: number;
+  success_2xx_count: number;
+  success_ratio: number;
+  bytes_received: number;
+  bytes_sent: number;
+  /** @deprecated always 0 */
+  recent_requests?: number;
   last_seen_at: string;
 }
 
@@ -612,6 +785,9 @@ export interface AccessLogIPSummaryList {
   page_size: number;
   has_more: boolean;
   total_ip: number;
+  hours: number;
+  since: string;
+  until?: string;
   sort_by: string;
   sort_order: 'asc' | 'desc';
 }
@@ -634,6 +810,33 @@ export interface AccessLogIPTrend {
   hours: number;
   bucket_minutes: number;
   points: AccessLogIPTrendPoint[];
+}
+
+export interface AccessLogIPAnalysisFilters {
+  node_id?: string;
+  remote_addr: string;
+  host?: string;
+  hours?: number;
+}
+
+export interface AccessLogIPAnalysis {
+  remote_addr: string;
+  hours: number;
+  generated_at: string;
+  summary: {
+    total_requests: number;
+    error_count: number;
+    bandwidth_served: number;
+    bytes_received: number;
+    unique_hosts: number;
+    unique_paths: number;
+  };
+  top_paths: DistributionItem[];
+  top_hosts: DistributionItem[];
+  status_codes: DistributionItem[];
+  top_user_agents: DistributionItem[];
+  device_types: DistributionItem[];
+  top_browsers: DistributionItem[];
 }
 
 export interface AccessLogCleanupPayload {
@@ -666,25 +869,6 @@ export interface GeoIPLookupResult {
   longitude?: number | null;
 }
 
-export type DatabaseCleanupTarget =
-  | 'node_access_logs'
-  | 'node_metric_snapshots'
-  | 'node_request_reports';
-
-export interface DatabaseCleanupPayload {
-  target: DatabaseCleanupTarget;
-  retention_days?: number;
-}
-
-export interface DatabaseCleanupResult {
-  target: DatabaseCleanupTarget;
-  target_label: string;
-  deleted_count: number;
-  delete_all: boolean;
-  retention_days?: number;
-  cutoff?: string;
-}
-
 export interface OpenFlarePublicStatus {
   version: string;
   start_time: number;
@@ -692,11 +876,138 @@ export interface OpenFlarePublicStatus {
   system_name: string;
 }
 
-export interface WAFRuleGroup {
+export interface IPMatchConfig {
+  ips: string[];
+  cidrs: string[];
+  ip_group_ids: number[];
+}
+
+export interface GeoMatchConfig {
+  countries: string[];
+  regions: string[];
+}
+
+export interface PoWNodeConfig {
+  algorithm: 'fast' | 'slow';
+  difficulty: number;
+  session_ttl: number;
+  challenge_ttl: number;
+}
+
+export interface BlockNodeConfig {
+  status_code: number;
+  response_body: string;
+}
+
+export interface UACheckConfig {
+  require_ua: boolean;
+  browsers: string[];
+  operating_systems: string[];
+  match_mode: 'and' | 'or';
+  block_common_bots: boolean;
+  block_abnormal_ua: boolean;
+  block_custom_ua: boolean;
+  custom_ua_patterns: string[];
+}
+
+export interface SecurityCheckConfig {
+  sql_injection: boolean;
+  path_traversal: boolean;
+  command_injection: boolean;
+  xss: boolean;
+  ssrf: boolean;
+  file_inclusion: boolean;
+  malicious_upload: boolean;
+  xxe: boolean;
+  crlf_injection: boolean;
+}
+
+export type WAFRuleNode =
+  | {
+      id: string;
+      type: 'start';
+      label?: string;
+      position: XYPosition;
+      config: Record<string, never>;
+    }
+  | {
+      id: string;
+      type: 'ip_match';
+      label?: string;
+      position: XYPosition;
+      config: IPMatchConfig;
+    }
+  | {
+      id: string;
+      type: 'geo_match';
+      label?: string;
+      position: XYPosition;
+      config: GeoMatchConfig;
+    }
+  | {
+      id: string;
+      type: 'ua_check';
+      label?: string;
+      position: XYPosition;
+      config: UACheckConfig;
+    }
+  | {
+      id: string;
+      type: 'security_check';
+      label?: string;
+      position: XYPosition;
+      config: SecurityCheckConfig;
+    }
+  | {
+      id: string;
+      type: 'pow';
+      label?: string;
+      position: XYPosition;
+      config: PoWNodeConfig;
+    }
+  | {
+      id: string;
+      type: 'allow';
+      label?: string;
+      position: XYPosition;
+      config: Record<string, never>;
+    }
+  | {
+      id: string;
+      type: 'block';
+      label?: string;
+      position: XYPosition;
+      config: BlockNodeConfig;
+    };
+
+export interface WAFRuleEdge {
+  id: string;
+  source: string;
+  source_handle: string;
+  target: string;
+}
+
+export interface WAFRuleGraph {
+  schema_version: number;
+  nodes: WAFRuleNode[];
+  edges: WAFRuleEdge[];
+}
+
+export interface WAFRule {
   id: number;
   name: string;
   enabled: boolean;
   is_global: boolean;
+  graph: WAFRuleGraph;
+  revision: number;
+  applied_site_ids: number[];
+  applied_site_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** @deprecated Legacy fixed-chain rule shape retained for untouched binding consumers. */
+export interface WAFRuleGroup extends WAFRule {
   block_status_code: number;
   block_response_body: string;
   ip_whitelist: string[];
@@ -709,11 +1020,20 @@ export interface WAFRuleGroup {
   region_blacklist: string[];
   pow_enabled: boolean;
   pow_config: ProxyRoutePoWConfig;
-  remark: string;
-  applied_site_ids: number[];
-  applied_site_count: number;
-  created_at: string;
-  updated_at: string;
+}
+
+export interface WAFCreateRulePayload {
+  name: string;
+}
+
+export interface WAFSaveRuleGraphPayload {
+  revision: number;
+  graph: WAFRuleGraph;
+}
+
+export interface WAFUpdateRuleMetaPayload {
+  name: string;
+  enabled: boolean;
 }
 
 export interface WAFRuleGroupPayload {
@@ -731,14 +1051,13 @@ export interface WAFRuleGroupPayload {
   region_blacklist: string[];
   pow_enabled: boolean;
   pow_config: ProxyRoutePoWConfig;
-  remark: string;
 }
 
 export interface WAFSiteRuleGroups {
   route_id: number;
-  global_rule_group: WAFRuleGroup | null;
-  rule_groups: WAFRuleGroup[];
-  applied_rule_groups: WAFRuleGroup[];
+  global_rule_group: WAFRule | null;
+  rule_groups: WAFRule[];
+  applied_rule_groups: WAFRule[];
   applied_ids: number[];
 }
 
@@ -766,7 +1085,6 @@ export interface WAFIPGroup {
   next_sync_at?: string;
   last_sync_status: string;
   last_sync_message: string;
-  remark: string;
   referenced_by_rule_count: number;
   created_at: string;
   updated_at: string;
@@ -782,7 +1100,6 @@ export interface WAFIPGroupPayload {
   subscription_format: WAFIPGroupSubscriptionFormat;
   subscription_mapping_rule: string;
   sync_interval_minutes: number;
-  remark: string;
 }
 
 export interface WAFIPGroupSyncResult {
@@ -801,7 +1118,7 @@ export interface WAFIPGroupAutoTestPayload {
 export interface WAFIPGroupAutoTestResult {
   matched_ips: string[];
   matched_count: number;
-  lookback_minutes: number;
+  lookback: string;
   rule_count: number;
   tested_at: string;
 }
@@ -842,6 +1159,9 @@ export interface TrafficTrendPoint {
   request_count: number;
   error_count: number;
   unique_visitor_count: number;
+  status_2xx_count: number;
+  status_4xx_count: number;
+  status_5xx_count: number;
 }
 
 export interface CapacityTrendPoint {
@@ -853,10 +1173,10 @@ export interface CapacityTrendPoint {
 
 export interface NetworkTrendPoint {
   bucket_started_at: string;
-  network_rx_bytes: number;
-  network_tx_bytes: number;
-  openresty_rx_bytes: number;
-  openresty_tx_bytes: number;
+  /** L1 接收数据 sum(request_length) */
+  bytes_received: number;
+  /** L1 已提供数据 sum(bytes_sent) */
+  bytes_provided: number;
   reported_nodes: number;
 }
 
@@ -910,16 +1230,18 @@ export interface DashboardOverview {
   nodes: DashboardNodeHealth[];
 }
 
-export type CompactTrafficTrendPoint = [string, number, number, number];
-export type CompactCapacityTrendPoint = [string, number, number, number];
-export type CompactNetworkTrendPoint = [
+export type CompactTrafficTrendPoint = [
   string,
   number,
   number,
   number,
   number,
   number,
+  number,
 ];
+export type CompactCapacityTrendPoint = [string, number, number, number];
+/** [bucket, bytes_received, bytes_provided, reported_nodes] */
+export type CompactNetworkTrendPoint = [string, number, number, number];
 export type CompactDiskIOTrendPoint = [string, number, number, number];
 export type CompactDashboardNodeHealth = [
   number,
@@ -962,36 +1284,149 @@ export interface DashboardOverviewCompact {
 
 // ==================== Websites / TLS / DNS ====================
 
-export interface ManagedDomainItem {
+export interface ZoneItem {
   id: number;
   domain: string;
-  cert_id: number | null;
-  enabled: boolean;
-  remark: string;
+  /** Present on list API; may be omitted on nested zone objects. */
+  domain_count?: number;
   created_at: string;
   updated_at: string;
 }
 
-export interface ManagedDomainMutationPayload {
+export interface ZoneMutationPayload {
+  domain: string;
+}
+
+export interface ZoneDomainItem {
+  id: number;
+  zone_id: number;
+  proxy_route_id: number | null;
   domain: string;
   cert_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ZoneDomainMutationPayload {
+  domain: string;
+  cert_id: number | null;
+}
+
+export interface ZoneOverview {
+  zone: ZoneItem;
+  domains: ZoneDomainItem[];
+}
+
+export type ZoneStatsRange = '24h' | '7d' | '30d';
+
+export interface ZoneStatsPoint {
+  bucket_started_at: string;
+  request_count: number;
+  unique_visitors: number;
+  bytes_sent: number;
+}
+
+export interface ZoneStats {
+  range: ZoneStatsRange;
+  range_hours: number;
+  window_started_at: string;
+  window_ended_at: string;
+  bucket_minutes: number;
+  unique_visitors: number;
+  request_count: number;
+  bytes_sent: number;
+  domain_count: number;
+  available: boolean;
+  series: ZoneStatsPoint[];
+}
+
+export type CloudflareConnectionSource = 'dns_account' | 'standalone';
+export type CloudflareSyncStatus = 'pending' | 'syncing' | 'ok' | 'error';
+
+export interface CloudflareConnection {
+  configured: boolean;
+  ready: boolean;
+  source: CloudflareConnectionSource | '';
+  dns_account_id: number | null;
+  status: string;
+  verified_at: string | null;
+}
+
+export interface CloudflareConnectionPayload {
+  source: CloudflareConnectionSource;
+  dns_account_id: number;
+  api_token: string;
+}
+
+export interface CloudflareNodeOption {
+  id: number;
+  name: string;
+  ip: string;
+}
+
+export interface CloudflareGroup {
+  id: number;
+  name: string;
+  primary_node: CloudflareNodeOption;
+  backup_node: CloudflareNodeOption | null;
+  active_node: CloudflareNodeOption;
+  default_proxied: boolean;
   enabled: boolean;
-  remark: string;
+  member_count: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface ManagedDomainMatchCandidate {
-  managed_domain_id: number;
-  domain: string;
-  match_type: 'exact' | 'wildcard' | string;
-  certificate_id: number;
-  certificate_name: string;
+export interface CloudflareGroupPayload {
+  name: string;
+  primary_node_id: number;
+  backup_node_id: number | null;
+  default_proxied: boolean;
+  enabled: boolean;
 }
 
-export interface ManagedDomainMatchResult {
+export interface CloudflareMember {
+  id: number;
+  group_id: number;
+  zone_domain_id: number;
   domain: string;
-  matched: boolean;
-  candidate?: ManagedDomainMatchCandidate;
-  candidates: ManagedDomainMatchCandidate[];
+  zone_id: number;
+  proxied: boolean;
+  desired_ip: string;
+  sync_status: CloudflareSyncStatus;
+  last_error: string;
+  synced_at: string | null;
+}
+
+export interface CloudflareMemberCreatePayload {
+  zone_domain_id: number;
+  proxied?: boolean;
+}
+
+export interface CloudflareGroupDetail {
+  group: CloudflareGroup;
+  members: CloudflareMember[];
+}
+
+export interface CloudflareAvailableDomain {
+  id: number;
+  zone_id: number;
+  domain: string;
+  /** Zone apex / root domain used for hierarchical grouping. */
+  zone_domain: string;
+}
+
+export interface CloudflareOverview {
+  connection: CloudflareConnection;
+  group_count: number;
+  member_count: number;
+  ok_count: number;
+  pending_count: number;
+  error_count: number;
+}
+
+export interface CloudflareSyncReceipt {
+  task_id: string;
 }
 
 export interface TlsCertificateItem {

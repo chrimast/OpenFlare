@@ -6,7 +6,7 @@ export { ConfigVersionService } from './config-version.service';
 export { ApplyLogService } from './apply-log.service';
 export { DashboardService } from './dashboard.service';
 export { WafService } from './waf.service';
-export { WebsiteService } from './website.service';
+export { ZoneDomainService, ZoneService, zoneQueryKey } from './zone.service';
 export { TlsCertificateService } from './tls-certificate.service';
 export { DnsAccountService } from './dns-account.service';
 export { PagesService } from './pages.service';
@@ -15,6 +15,10 @@ export { AccessLogService } from './access-log.service';
 export { OptionService } from './option.service';
 export { UptimeKumaService } from './uptimekuma.service';
 export { StatusService } from './status.service';
+export {
+  CloudflareService,
+  cloudflareQueryKey,
+} from './cloudflare.service';
 
 export type {
   ApplyLogCleanupPayload,
@@ -40,7 +44,6 @@ export type {
   NodeObservabilityAnalytics,
   NodeObservabilityTrends,
   NodeSystemProfile,
-  NodeTrafficReport,
   NodeStatus,
   NodeType,
   OpenrestyStatus,
@@ -49,6 +52,7 @@ export type {
   ProxyRouteItem,
   ProxyRouteMutationPayload,
   ProxyRoutePoWConfig,
+  ProxyRouteZoneDomain,
   ReleaseChannel,
   SupportFile,
   DashboardOverview,
@@ -69,12 +73,21 @@ export type {
   WAFIPGroupSyncResult,
   WAFIPGroupSubscriptionFormat,
   WAFIPGroupType,
+  WAFCreateRulePayload,
+  WAFRule,
+  WAFRuleEdge,
+  WAFRuleGraph,
+  WAFRuleNode,
+  WAFSaveRuleGraphPayload,
+  WAFUpdateRuleMetaPayload,
   WAFRuleGroup,
   WAFRuleGroupPayload,
   WAFSiteRuleGroups,
   AccessLogCleanupPayload,
   AccessLogCleanupResult,
   AccessLogFilters,
+  AccessLogIPAnalysis,
+  AccessLogIPAnalysisFilters,
   AccessLogIPSummaryFilters,
   AccessLogIPSummaryItem,
   AccessLogIPSummaryList,
@@ -82,52 +95,86 @@ export type {
   AccessLogIPTrendFilters,
   AccessLogItem,
   AccessLogList,
+  AccessLogOverview,
+  AccessLogOverviewFilters,
+  AccessLogOverviewMetricPoint,
   FoldedAccessLogFilters,
   FoldedAccessLogIPFilters,
   FoldedAccessLogIPList,
   FoldedAccessLogList,
   OptionItem,
   GeoIPLookupResult,
-  DatabaseCleanupPayload,
-  DatabaseCleanupResult,
-  DatabaseCleanupTarget,
   OpenFlarePublicStatus,
   OriginDetail,
   OriginItem,
   OriginMutationPayload,
   PagesDeployment,
   PagesDeploymentFile,
+  PagesGitHubLatestSourceUpdatePayload,
+  PagesGitHubReleaseSelector,
+  PagesGitHubReleaseSource,
+  PagesGitHubSourceUpdatePayload,
+  PagesGitHubTagSourceUpdatePayload,
+  PagesManualSource,
   PagesProject,
   PagesProjectPayload,
+  PagesRemoteSourceUpdatePayload,
+  PagesRemoteURLSource,
+  PagesSource,
+  PagesSourceActionPayload,
+  PagesSourceActionReceipt,
+  PagesSourceRevision,
+  PagesSourceStatus,
+  PagesSourceUpdatePayload,
+  PagesSourceUpdateResult,
   AcmeAccountItem,
   DnsAccountItem,
   DnsAccountMutationPayload,
-  ManagedDomainItem,
-  ManagedDomainMatchResult,
-  ManagedDomainMutationPayload,
+  ZoneDomainItem,
+  ZoneDomainMutationPayload,
+  ZoneItem,
+  ZoneMutationPayload,
+  ZoneOverview,
+  ZoneStats,
+  ZoneStatsPoint,
+  ZoneStatsRange,
   TlsCertificateApplyPayload,
   TlsCertificateContentItem,
   TlsCertificateDetailItem,
   TlsCertificateFileImportPayload,
   TlsCertificateItem,
   TlsCertificateMutationPayload,
+  CloudflareAvailableDomain,
+  CloudflareConnection,
+  CloudflareConnectionPayload,
+  CloudflareConnectionSource,
+  CloudflareGroup,
+  CloudflareGroupDetail,
+  CloudflareGroupPayload,
+  CloudflareMember,
+  CloudflareMemberCreatePayload,
+  CloudflareNodeOption,
+  CloudflareOverview,
+  CloudflareSyncReceipt,
+  CloudflareSyncStatus,
 } from './types';
 
-import {AccessLogService} from './access-log.service';
-import {ApplyLogService} from './apply-log.service';
-import {ConfigVersionService} from './config-version.service';
-import {DashboardService} from './dashboard.service';
-import {DnsAccountService} from './dns-account.service';
-import {NodeService} from './node.service';
-import {OptionService} from './option.service';
-import {StatusService} from './status.service';
-import {UptimeKumaService} from './uptimekuma.service';
-import {OriginService} from './origin.service';
-import {PagesService} from './pages.service';
-import {ProxyRouteService} from './proxy-route.service';
-import {TlsCertificateService} from './tls-certificate.service';
-import {WafService} from './waf.service';
-import {WebsiteService} from './website.service';
+import { AccessLogService } from './access-log.service';
+import { ApplyLogService } from './apply-log.service';
+import { ConfigVersionService } from './config-version.service';
+import { DashboardService } from './dashboard.service';
+import { DnsAccountService } from './dns-account.service';
+import { NodeService } from './node.service';
+import { OptionService } from './option.service';
+import { StatusService } from './status.service';
+import { UptimeKumaService } from './uptimekuma.service';
+import { OriginService } from './origin.service';
+import { PagesService } from './pages.service';
+import { ProxyRouteService } from './proxy-route.service';
+import { TlsCertificateService } from './tls-certificate.service';
+import { WafService } from './waf.service';
+import { ZoneDomainService, ZoneService } from './zone.service';
+import { CloudflareService } from './cloudflare.service';
 
 export const openflareServices = {
   node: NodeService,
@@ -136,7 +183,8 @@ export const openflareServices = {
   applyLog: ApplyLogService,
   dashboard: DashboardService,
   waf: WafService,
-  website: WebsiteService,
+  zone: ZoneService,
+  zoneDomain: ZoneDomainService,
   tlsCertificate: TlsCertificateService,
   dnsAccount: DnsAccountService,
   pages: PagesService,
@@ -145,4 +193,5 @@ export const openflareServices = {
   option: OptionService,
   uptimeKuma: UptimeKumaService,
   status: StatusService,
+  cloudflare: CloudflareService,
 } as const;

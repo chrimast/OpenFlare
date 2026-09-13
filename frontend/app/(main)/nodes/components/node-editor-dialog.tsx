@@ -1,11 +1,12 @@
 'use client';
 
-import {useEffect} from 'react';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {useForm} from 'react-hook-form';
-import {z} from 'zod';
+import { useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,55 +15,67 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
-import {Switch} from '@/components/ui/switch';
-import type {NodeItem, NodeMutationPayload, NodeType} from '@/lib/services/openflare';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import type {
+  NodeItem,
+  NodeMutationPayload,
+  NodeType,
+} from '@/lib/services/openflare';
 
-const nodeSchema = z
-  .object({
-    node_type: z.enum(['edge_node', 'tunnel_relay', 'tunnel_client']),
-    name: z.string().trim().min(1, '请输入节点名称').max(255),
-    ip: z.string(),
-    ip_manual_override: z.boolean(),
-    auto_update_enabled: z.boolean(),
-    geo_manual_override: z.boolean(),
-    geo_name: z.string(),
-    geo_latitude: z.string(),
-    geo_longitude: z.string(),
-    relay_bind_port: z.string(),
-    relay_vhost_http_port: z.string(),
-  })
-  .superRefine((value, context) => {
-    if (value.ip_manual_override && !value.ip.trim()) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['ip'],
-        message: '锁定 IP 时必须填写节点 IP',
-      });
-    }
-    if (value.node_type === 'tunnel_relay') {
-      const bindPort = Number(value.relay_bind_port);
-      const vhostPort = Number(value.relay_vhost_http_port);
-      if (!Number.isFinite(bindPort) || bindPort <= 0) {
+function buildNodeSchema(t: (key: string) => string) {
+  return z
+    .object({
+      node_type: z.enum(['edge_node', 'tunnel_relay', 'tunnel_client']),
+      name: z.string().trim().min(1, t('editor.errName')).max(255),
+      ip: z.string(),
+      ip_manual_override: z.boolean(),
+      auto_update_enabled: z.boolean(),
+      geo_manual_override: z.boolean(),
+      geo_name: z.string(),
+      geo_latitude: z.string(),
+      geo_longitude: z.string(),
+      relay_bind_port: z.string(),
+      relay_vhost_http_port: z.string(),
+    })
+    .superRefine((value, context) => {
+      if (value.ip_manual_override && !value.ip.trim()) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['relay_bind_port'],
-          message: '请输入有效的绑定端口',
+          path: ['ip'],
+          message: t('editor.errLockIp'),
         });
       }
-      if (!Number.isFinite(vhostPort) || vhostPort <= 0) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['relay_vhost_http_port'],
-          message: '请输入有效的 VHost 端口',
-        });
+      if (value.node_type === 'tunnel_relay') {
+        const bindPort = Number(value.relay_bind_port);
+        const vhostPort = Number(value.relay_vhost_http_port);
+        if (!Number.isFinite(bindPort) || bindPort <= 0) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['relay_bind_port'],
+            message: t('editor.errBindPort'),
+          });
+        }
+        if (!Number.isFinite(vhostPort) || vhostPort <= 0) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['relay_vhost_http_port'],
+            message: t('editor.errVhostPort'),
+          });
+        }
       }
-    }
-  });
+    });
+}
 
-type NodeFormValues = z.infer<typeof nodeSchema>;
+type NodeFormValues = z.infer<ReturnType<typeof buildNodeSchema>>;
 
 const defaultForm: NodeFormValues = {
   node_type: 'edge_node',
@@ -111,12 +124,14 @@ function toPayload(form: NodeFormValues): NodeMutationPayload {
     auto_update_enabled: form.auto_update_enabled,
     geo_manual_override: form.geo_manual_override,
     geo_name: form.geo_manual_override ? form.geo_name.trim() : '',
-    geo_latitude: form.geo_manual_override && form.geo_latitude
-      ? Number(form.geo_latitude)
-      : null,
-    geo_longitude: form.geo_manual_override && form.geo_longitude
-      ? Number(form.geo_longitude)
-      : null,
+    geo_latitude:
+      form.geo_manual_override && form.geo_latitude
+        ? Number(form.geo_latitude)
+        : null,
+    geo_longitude:
+      form.geo_manual_override && form.geo_longitude
+        ? Number(form.geo_longitude)
+        : null,
   };
 
   if (form.node_type === 'tunnel_relay') {
@@ -144,8 +159,10 @@ export function NodeEditorDialog({
   onClose: () => void;
   onSubmit: (payload: NodeMutationPayload) => Promise<void>;
 }) {
+  const t = useTranslations('nodes');
+  const tc = useTranslations('common');
   const form = useForm<NodeFormValues>({
-    resolver: zodResolver(nodeSchema),
+    resolver: zodResolver(buildNodeSchema(t)),
     defaultValues: defaultForm,
   });
 
@@ -165,17 +182,20 @@ export function NodeEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className='sm:max-w-lg'>
         <DialogHeader>
-          <DialogTitle>{node ? '编辑节点' : '新增节点'}</DialogTitle>
-          <DialogDescription>
-            预创建节点后可在详情页查看专属 Token 与部署命令。
-          </DialogDescription>
+          <DialogTitle>
+            {node ? t('editor.editTitle') : t('editor.createTitle')}
+          </DialogTitle>
+          <DialogDescription>{t('editor.description')}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
-          <div className="space-y-2">
-            <Label>节点类型</Label>
+        <form
+          onSubmit={(event) => void handleSubmit(event)}
+          className='space-y-4'
+        >
+          <div className='space-y-2'>
+            <Label>{t('editor.nodeType')}</Label>
             <Select
               value={nodeType}
               disabled={Boolean(node)}
@@ -187,45 +207,53 @@ export function NodeEditorDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="edge_node">Edge 节点</SelectItem>
-                <SelectItem value="tunnel_relay">Relay 节点</SelectItem>
-                <SelectItem value="tunnel_client">Tunnel 节点</SelectItem>
+                <SelectItem value='edge_node'>
+                  {t('editor.typeEdge')}
+                </SelectItem>
+                <SelectItem value='tunnel_relay'>
+                  {t('editor.typeRelay')}
+                </SelectItem>
+                <SelectItem value='tunnel_client'>
+                  {t('editor.typeTunnel')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="node-name">节点名称</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='node-name'>{t('editor.name')}</Label>
             <Input
-              id="node-name"
-              placeholder="例如 edge-hk-01"
+              id='node-name'
+              placeholder={t('editor.namePlaceholder')}
               {...form.register('name')}
             />
             {form.formState.errors.name ? (
-              <p className="text-xs text-destructive">
+              <p className='text-xs text-destructive'>
                 {form.formState.errors.name.message}
               </p>
             ) : null}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="node-ip">节点 IP</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='node-ip'>{t('editor.ip')}</Label>
             <Input
-              id="node-ip"
-              placeholder="可选，接入后自动上报"
+              id='node-ip'
+              placeholder={t('editor.ipPlaceholder')}
               {...form.register('ip')}
             />
             {form.formState.errors.ip ? (
-              <p className="text-xs text-destructive">
+              <p className='text-xs text-destructive'>
                 {form.formState.errors.ip.message}
               </p>
             ) : null}
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+          <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
             <div>
-              <p className="text-sm font-medium">锁定 IP</p>
-              <p className="text-xs text-muted-foreground">启用后管理端不再自动覆盖 IP</p>
+              <p className='text-sm font-medium'>{t('editor.lockIp')}</p>
+              <p className='text-xs text-muted-foreground'>
+                {t('editor.lockIpDesc')}
+              </p>
             </div>
             <Switch
               checked={ipManualOverride}
@@ -235,10 +263,12 @@ export function NodeEditorDialog({
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+          <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
             <div>
-              <p className="text-sm font-medium">自动更新 Agent</p>
-              <p className="text-xs text-muted-foreground">启用后节点将自动拉取正式版更新</p>
+              <p className='text-sm font-medium'>{t('editor.autoUpdate')}</p>
+              <p className='text-xs text-muted-foreground'>
+                {t('editor.autoUpdateDesc')}
+              </p>
             </div>
             <Switch
               checked={form.watch('auto_update_enabled')}
@@ -249,27 +279,29 @@ export function NodeEditorDialog({
           </div>
 
           {nodeType === 'tunnel_relay' ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="relay-bind-port">绑定端口</Label>
+            <div className='grid gap-3 sm:grid-cols-2'>
+              <div className='space-y-2'>
+                <Label htmlFor='relay-bind-port'>{t('editor.bindPort')}</Label>
                 <Input
-                  id="relay-bind-port"
+                  id='relay-bind-port'
                   {...form.register('relay_bind_port')}
                 />
                 {form.formState.errors.relay_bind_port ? (
-                  <p className="text-xs text-destructive">
+                  <p className='text-xs text-destructive'>
                     {form.formState.errors.relay_bind_port.message}
                   </p>
                 ) : null}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="relay-vhost-port">VHost 端口</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='relay-vhost-port'>
+                  {t('editor.vhostPort')}
+                </Label>
                 <Input
-                  id="relay-vhost-port"
+                  id='relay-vhost-port'
                   {...form.register('relay_vhost_http_port')}
                 />
                 {form.formState.errors.relay_vhost_http_port ? (
-                  <p className="text-xs text-destructive">
+                  <p className='text-xs text-destructive'>
                     {form.formState.errors.relay_vhost_http_port.message}
                   </p>
                 ) : null}
@@ -277,10 +309,12 @@ export function NodeEditorDialog({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+          <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
             <div>
-              <p className="text-sm font-medium">手动地图点位</p>
-              <p className="text-xs text-muted-foreground">用于总览地图展示</p>
+              <p className='text-sm font-medium'>{t('editor.manualGeo')}</p>
+              <p className='text-xs text-muted-foreground'>
+                {t('editor.manualGeoDesc')}
+              </p>
             </div>
             <Switch
               checked={geoManualOverride}
@@ -291,28 +325,37 @@ export function NodeEditorDialog({
           </div>
 
           {geoManualOverride ? (
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-2 sm:col-span-3">
-                <Label htmlFor="geo-name">位置名称</Label>
-                <Input id="geo-name" {...form.register('geo_name')} />
+            <div className='grid gap-3 sm:grid-cols-3'>
+              <div className='space-y-2 sm:col-span-3'>
+                <Label htmlFor='geo-name'>{t('editor.geoName')}</Label>
+                <Input id='geo-name' {...form.register('geo_name')} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="geo-lat">纬度</Label>
-                <Input id="geo-lat" {...form.register('geo_latitude')} />
+              <div className='space-y-2'>
+                <Label htmlFor='geo-lat'>{t('editor.latitude')}</Label>
+                <Input id='geo-lat' {...form.register('geo_latitude')} />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="geo-lng">经度</Label>
-                <Input id="geo-lng" {...form.register('geo_longitude')} />
+              <div className='space-y-2 sm:col-span-2'>
+                <Label htmlFor='geo-lng'>{t('editor.longitude')}</Label>
+                <Input id='geo-lng' {...form.register('geo_longitude')} />
               </div>
             </div>
           ) : null}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-              取消
+            <Button
+              type='button'
+              variant='outline'
+              onClick={onClose}
+              disabled={submitting}
+            >
+              {tc('cancel')}
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? '保存中...' : node ? '保存修改' : '新增节点'}
+            <Button type='submit' disabled={submitting}>
+              {submitting
+                ? t('editor.saving')
+                : node
+                  ? t('editor.saveEdit')
+                  : t('editor.createAction')}
             </Button>
           </DialogFooter>
         </form>

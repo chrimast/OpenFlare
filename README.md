@@ -2,9 +2,9 @@
 
 # OpenFlare
 
-**[📖 中文](./README.md) | [English](./README.en.md)**
+**[English](./README.md) | [简体中文](./README.zh-CN.md)**
 
-OpenFlare 是开源 CDN 编排与边缘安全平台。它支持反向代理、集中式配置同步、内网穿透（Tunnels）、动态 WAF 防护以及防 CC 挑战。
+OpenFlare is an open-source CDN orchestration and edge security platform. It supports reverse proxy, centralized configuration synchronization, in-network tunneling (Tunnels), dynamic WAF protection, and CC defense challenges.
 
 </div>
 
@@ -21,55 +21,64 @@ OpenFlare 是开源 CDN 编排与边缘安全平台。它支持反向代理、�
 </p>
 
 > [!WARNING]
-> 使用 `admin` 用户初次登录系统后，务必修改默认密码 `12345678`。
+> After the first login with the `admin` user, you must change the default password `12345678`.
 >
-> BETA 版本为开发测试阶段的临时产物，可能存在未知问题，请勿在生产环境使用。
+> The BETA version is a temporary product in the development and testing stage and may have unknown issues. It should not be used in production environments.
 
-## 文档
+## Documentation
 
-**https://open-flare.pages.dev**
+**https://openflare.fyrn.link**
 
-常用入口：
+Common entry points:
 
-* [快速开始](https://open-flare.pages.dev/guide/quick-start)
-* [部署说明](https://open-flare.pages.dev/deployment/deployment)
-* [配置项参考](https://open-flare.pages.dev/reference/configuration)
-* [系统设计](https://open-flare.pages.dev/design/)
+* [Quick Start](https://openflare.fyrn.link/guide/quick-start)
+* [Deployment Guide](https://openflare.fyrn.link/deployment/deployment)
+* [Configuration Reference](https://openflare.fyrn.link/reference/configuration)
+* [System Design](https://openflare.fyrn.link/design/)
 
-## 核心能力
+## Core Capabilities
 
-* **反代配置管理**：以网站规则为聚合边界，支持多域名绑定与多上游负载均衡，统一管理所有 OpenResty 节点的反代配置。
-* **安全内网穿透（Tunnels）**：开源版的 Cloudflare Tunnels。无须公网 IP 或暴露入向端口，通过 Relay 中继节点与 OpenFlared 客户端安全反向穿透内网 Web 服务至公网。
-* **边缘 WAF 安全防护**：提供全局与自定义规则组，支持手动/自动/订阅型 IP 组、MaxMind GeoIP 国家级地域准入、IP 组成员 Checksum 差分同步（无需 Nginx 重载）以及自定义拦截响应。
-* **防 CC 与人机挑战（PoW）**：内置高性能客户端密码学 Proof of Work 挑战（类似 Turnstile），在网关边缘秒级拦截并阻断僵尸网络与爬虫。
-* **Pages 静态托管**：直接上传预构建 ZIP 包，由边缘 Agent 拉取并通过 OpenResty 本地提供服务，支持 SPA Fallback 与内置 API 反向代理配置。
-* **TLS 证书自动化**：支持证书动态上传、多域名证书自动匹配绑定，以及通过 ACME 协议向 Let's Encrypt 自动申请与续期证书。
-* **Uptime Kuma 监控同步**：与 Uptime Kuma 集成，自动差分同步监控站点列表，实时感知节点存活与服务可用状态。
-* **SSO 单点登录**：支持 GitHub OAuth 与标准 OIDC 协议，无缝接入企业身份提供商实现统一登录。
-* **统一观测**：聚合节点请求指标、实时访问日志明细、宿主机与 Nginx 资源快照、健康事件以及网络波动补传缓冲。
+* **Reverse Proxy Configuration Management**: Uses website rules as the aggregation boundary, supports multi-domain binding and multi-upstream load balancing, and centrally manages reverse proxy configurations for all OpenResty nodes.
+* **Secure In-Network Tunneling (Tunnels)**: Open-source version of Cloudflare Tunnels. No public IP or exposed inbound ports are required. Securely reverse-proxy internal web services to the public internet through Relay relay nodes and OpenFlared clients.
+* **Edge WAF Security Protection**: Provides global and custom rule groups, supports manual/auto/subscription-type IP groups, MaxMind GeoIP national-level geographic access control, IP group member Checksum differential synchronization (no Nginx reload required), and custom blocking responses.
+* **CC Defense and Human-Computer Challenge (PoW)**: Built-in high-performance client-side cryptography Proof of Work challenge (similar to Turnstile). Secures high-speed interception and blocking of zombie networks and crawlers at the gateway edge.
+* **Pages Static Hosting**: Supports uploading or synchronizing pre-built artifacts from restricted Remote URLs or public GitHub Release assets. GitHub latest can be checked periodically and optionally auto-published. All sources are unified to generate immutable deployments, pulled by the edge Agent and served locally by OpenResty, supporting rollbacks, SPA Fallback, and API reverse proxy.
+* **TLS Certificate Automation**: Supports dynamic certificate uploads, automatic multi-domain certificate matching and binding, and automatic issuance and renewal of certificates from Let's Encrypt via the ACME protocol.
+* **Uptime Kuma Monitoring Synchronization**: Integrated with Uptime Kuma to automatically perform differential synchronization of monitoring site lists, real-time awareness of node availability and service status.
+* **SSO Single Sign-On**: Supports GitHub OAuth and standard OIDC protocol for seamless integration with enterprise identity providers to achieve unified login.
+* **Unified Observability**: Aggregates node request metrics, real-time access log details, host and Nginx resource snapshots, health events, and network fluctuation replenishment buffers.
 
-## 界面预览
+## Interface Preview
 
-### 仪表盘总览
+### Dashboard Overview
 
 ![OpenFlare dashboard overview](./docs/assets/readme/dashboard-overview.png)
 
-### 节点详情
+### Access Logs
 
-![OpenFlare node detail](./docs/assets/readme/node-detail.png)
+![OpenFlare version release](./docs/assets/readme/domain_overview.png)
 
-### 配置新增
+### WAF Protection
 
-![OpenFlare version release](./docs/assets/readme/proxy-route-detail.png)
+![OpenFlare version release](./docs/assets/readme/waf.png)
 
-## 快速开始
+## Quick Start
 
-### 1. 启动 Server
+### Hardware Configuration Recommendations
 
-使用 docker-compose
+| Component              | Minimum Hardware Requirements     | Recommended Hardware Requirements | Notes |
+|------------------------|-----------------------------------|-----------------------------------|-------|
+| **Server Control Plane** | 1 CPU core / 2 GB RAM / 20 GB disk | 2 CPU cores / 4 GB RAM / 50 GB+ disk | Disk usage should be expanded reasonably based on access log retention duration and concurrent traffic |
+| **Agent Data Plane**     | 1 CPU core / 512 MB RAM / 2 GB disk | 2 CPU cores / 2 GB RAM / 10 GB+ disk | Expanded based on OpenResty concurrent proxy connections and WAF interception processing |
+| **Relay Relay Node**     | 1 CPU core / 1 GB RAM / 5 GB disk | 2 CPU cores / 2 GB RAM / 20 GB disk | frps transmission relay throughput is mainly limited by bandwidth and CPU throughput |
+| **OpenFlared Client**    | 1 CPU core / 256 MB RAM / 1 GB disk | 1 CPU core / 512 MB RAM / 5 GB disk | Runs independently on the internal network with extremely low resource consumption; only network throughput needs to be guaranteed |
+
+### 1. Start the Server
+
+Use `docker-compose`:
 
 ```bash
-# 下载环境变量模板并创建 .env 文件
+# Download environment variable template and create .env file
 curl -o .env.example https://raw.githubusercontent.com/Rain-kl/OpenFlare/refs/heads/main/.env.example
 cp .env.example .env
 ```
@@ -90,8 +99,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      clickhouse:
         condition: service_healthy
 
   postgres:
@@ -122,63 +129,57 @@ services:
       retries: 5
       start_period: 5s
 
-  clickhouse:
-    image: clickhouse/clickhouse-server:25.3-alpine
-    restart: unless-stopped
-    environment:
-      CLICKHOUSE_DB: ${CLICKHOUSE_NAME:-openflare}
-      CLICKHOUSE_USER: ${CLICKHOUSE_USERNAME:-default}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-replace-with-clickhouse-password}
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-      TZ: ${TZ:-Asia/Shanghai}
-    volumes:
-      - openflare_clickhouse_data:/var/lib/clickhouse
-    healthcheck:
-      test: ["CMD", "clickhouse-client", "--user", "${CLICKHOUSE_USERNAME:-default}", "--password", "${CLICKHOUSE_PASSWORD:-replace-with-clickhouse-password}", "--query", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-      
 volumes:
     openflare_uploads:
     openflare_postgres_data:
     openflare_redis_data:
-    openflare_clickhouse_data:
 ```
 
-详细部署说明见 [部署文档](https://open-flare.pages.dev/deployment/deployment)。
+See the [deployment documentation](https://openflare.fyrn.link/deployment/deployment) for details.
 
-访问地址：`http://localhost:3000`
+Access address: `http://localhost:3000`
 
-默认账号：
+Default account:
 
-* 用户名：`admin`
-* 密码：`12345678`
+* Username: `admin`
+* Password: `12345678`
 
-### 2. 安装 Agent
+### 2. Install Agent
 
-安装 Agent 前请先在节点上安装 OpenResty，或改用内置 OpenResty 的 Agent Docker 镜像。
+Before installing the Agent, first install OpenResty on the node or use the built-in OpenResty Agent Docker image.
 
-你可以在控制面板的节点管理->详情->节点信息->节点标识与部署复制安装命令，或直接使用下面的脚本：
+You can copy the installation command from the control panel's **Nodes Management -> Details -> Node Information -> Node ID and Deployment**, or use the script below:
 
-#### Docker 部署
+#### Docker Deployment
 
-Docker 部署可直接运行 Agent 镜像：
+Docker deployment can directly run the Agent image:
 
 ```bash
 docker pull ghcr.io/rain-kl/openflare-agent:latest
 docker rm -f openflare-agent 2>/dev/null || true
 docker run -d --name openflare-agent --restart unless-stopped \
   -p 80:80 -p 443:443/tcp -p 443:443/udp \
+  -v openflare-agent-pages:/data/var/lib/openflare/pages \
   -e OPENFLARE_SERVER_URL=http://your-server:3000 \
   -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
 
-## 开源协议
+## Cordis / Wavelet upstream
 
-本项目采用 [Apache License 2.0](./LICENSE) 开源。
+OpenFlare is built on Wavelet Cordis. After cloning, enable `merge=ours` from `.gitattributes` so `git merge wavelet/main` keeps OpenFlare-owned paths:
+
+```bash
+git config include.path ../.gitconfig
+# worktree-safe:
+git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
+```
+
+`docker compose` uses `docker-compose.yaml`. `docker-compose.wavelet.yml` is the upstream Wavelet stack and is not the product default. Image publishes go through `.github/workflows/build-image-openflare*.yml`; the Wavelet `build-image.yml` is isolated.
+
+## Open Source License
+
+This project is licensed under the [Apache License 2.0](./LICENSE).
 
 ## Star History
 

@@ -1,13 +1,17 @@
-import {OpenFlareBaseService} from './base.service';
+import { OpenFlareBaseService } from './base.service';
 import type {
   AccessLogCleanupPayload,
   AccessLogCleanupResult,
   AccessLogFilters,
+  AccessLogIPAnalysis,
+  AccessLogIPAnalysisFilters,
   AccessLogIPSummaryFilters,
   AccessLogIPSummaryList,
   AccessLogIPTrend,
   AccessLogIPTrendFilters,
   AccessLogList,
+  AccessLogOverview,
+  AccessLogOverviewFilters,
   FoldedAccessLogFilters,
   FoldedAccessLogIPFilters,
   FoldedAccessLogIPList,
@@ -16,12 +20,18 @@ import type {
 
 function buildSearchParams(filters: object): Record<string, unknown> {
   const params: Record<string, unknown> = {};
-  Object.entries(filters as Record<string, string | number | undefined>).forEach(
-    ([key, value]) => {
-      if (value === undefined || value === null || value === '') return;
-      params[key] = value;
-    },
-  );
+  Object.entries(filters as Record<string, unknown>).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) {
+      const items = value
+        .map((item) => String(item).trim())
+        .filter((item) => item !== '');
+      if (items.length === 0) return;
+      params[key] = items;
+      return;
+    }
+    params[key] = value;
+  });
   return params;
 }
 
@@ -32,13 +42,16 @@ export class AccessLogService extends OpenFlareBaseService {
     return this.get<AccessLogList>('/', buildSearchParams(filters));
   }
 
+  static getOverview(
+    filters: AccessLogOverviewFilters = {},
+  ): Promise<AccessLogOverview> {
+    return this.get<AccessLogOverview>('/overview', buildSearchParams(filters));
+  }
+
   static listFolds(
     filters: FoldedAccessLogFilters,
   ): Promise<FoldedAccessLogList> {
-    return this.get<FoldedAccessLogList>(
-      '/folds',
-      buildSearchParams(filters),
-    );
+    return this.get<FoldedAccessLogList>('/folds', buildSearchParams(filters));
   }
 
   static listFoldIPs(
@@ -64,6 +77,15 @@ export class AccessLogService extends OpenFlareBaseService {
   ): Promise<AccessLogIPTrend> {
     return this.get<AccessLogIPTrend>(
       '/ip-summary/trend',
+      buildSearchParams(filters),
+    );
+  }
+
+  static getIPAnalysis(
+    filters: AccessLogIPAnalysisFilters,
+  ): Promise<AccessLogIPAnalysis> {
+    return this.get<AccessLogIPAnalysis>(
+      '/ip-summary/analysis',
       buildSearchParams(filters),
     );
   }

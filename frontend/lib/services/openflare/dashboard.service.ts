@@ -1,4 +1,4 @@
-import {OpenFlareBaseService} from './base.service';
+import { OpenFlareBaseService } from './base.service';
 import type {
   CompactCapacityTrendPoint,
   CompactDashboardNodeHealth,
@@ -89,6 +89,9 @@ function normalizeTrafficTrendPoints(
           request_count: Number(item[1] ?? 0),
           error_count: Number(item[2] ?? 0),
           unique_visitor_count: Number(item[3] ?? 0),
+          status_2xx_count: Number(item[4] ?? 0),
+          status_4xx_count: Number(item[5] ?? 0),
+          status_5xx_count: Number(item[6] ?? 0),
         }
       : item,
   );
@@ -128,13 +131,19 @@ function normalizeNetworkTrendPoints(
     isCompactNetworkTrendPoint(item)
       ? {
           bucket_started_at: String(item[0] ?? ''),
-          network_rx_bytes: Number(item[1] ?? 0),
-          network_tx_bytes: Number(item[2] ?? 0),
-          openresty_rx_bytes: Number(item[3] ?? 0),
-          openresty_tx_bytes: Number(item[4] ?? 0),
-          reported_nodes: Number(item[5] ?? 0),
+          bytes_received: Number(item[1] ?? 0),
+          bytes_provided: Number(item[2] ?? 0),
+          reported_nodes: Number(item[3] ?? 0),
         }
-      : item,
+      : {
+          ...item,
+          bytes_received: Number(
+            (item as { bytes_received?: number }).bytes_received ?? 0,
+          ),
+          bytes_provided: Number(
+            (item as { bytes_provided?: number }).bytes_provided ?? 0,
+          ),
+        },
   );
 }
 

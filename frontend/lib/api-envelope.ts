@@ -1,6 +1,6 @@
 /**
  * OpenFlare 统一 API 响应信封解析。
- * 与后端 internal/common/response.Response 及 axios api-client 约定一致。
+ * 与后端 internal/shared/response.Response 及 axios api-client 约定一致。
  */
 
 export interface ApiEnvelope<T = unknown> {
@@ -47,7 +47,10 @@ export async function readApiEnvelope<T>(
 
   const envelope = body as ApiEnvelope<T>;
   if (!res.ok) {
-    throw new ApiEnvelopeError(envelope.error_msg || fallbackMessage, res.status);
+    throw new ApiEnvelopeError(
+      envelope.error_msg || fallbackMessage,
+      res.status,
+    );
   }
   if (envelope.error_msg) {
     throw new ApiEnvelopeError(envelope.error_msg, res.status);

@@ -1,15 +1,30 @@
-import type {ApplyResult, NodeItem, NodeStatus, NodeTrafficReport, OpenrestyStatus,} from '@/lib/services/openflare';
+import type {
+  ApplyResult,
+  NodeItem,
+  NodeStatus,
+  OpenrestyStatus,
+} from '@/lib/services/openflare';
 
 export const WS_CONNECTED_LAST_SEEN = '__OPENFLARE_WS_CONNECTED__';
-export const FLARED_WS_CONNECTED_LAST_SEEN = '__OPENFLARE_FLARED_WS_CONNECTED__';
+export const FLARED_WS_CONNECTED_LAST_SEEN =
+  '__OPENFLARE_FLARED_WS_CONNECTED__';
 
 export type StatusTone = 'success' | 'warning' | 'danger' | 'info';
 
+export type NodeMessageT = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
+
 export function isWSConnectedLastSeen(value: string | null | undefined) {
-  return value === WS_CONNECTED_LAST_SEEN || value === FLARED_WS_CONNECTED_LAST_SEEN;
+  return (
+    value === WS_CONNECTED_LAST_SEEN || value === FLARED_WS_CONNECTED_LAST_SEEN
+  );
 }
 
-export function isMeaningfulTime(value: string | null | undefined): value is string {
+export function isMeaningfulTime(
+  value: string | null | undefined,
+): value is string {
   return (
     Boolean(value) &&
     !isWSConnectedLastSeen(value) &&
@@ -17,7 +32,7 @@ export function isMeaningfulTime(value: string | null | undefined): value is str
   );
 }
 
-export function formatRelativeTime(value: string) {
+export function formatRelativeTime(value: string, t: NodeMessageT) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return value;
@@ -25,16 +40,16 @@ export function formatRelativeTime(value: string) {
 
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.floor(diffMs / 60_000);
-  if (diffMinutes < 1) return '刚刚';
-  if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
+  if (diffMinutes < 1) return t('relative.justNow');
+  if (diffMinutes < 60) return t('relative.minutesAgo', { count: diffMinutes });
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} 小时前`;
+  if (diffHours < 24) return t('relative.hoursAgo', { count: diffHours });
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} 天前`;
+  if (diffDays < 30) return t('relative.daysAgo', { count: diffDays });
 
-  return `${Math.floor(diffDays / 30)} 个月前`;
+  return t('relative.monthsAgo', { count: Math.floor(diffDays / 30) });
 }
 
 export function getNodeStatusTone(status: NodeStatus): StatusTone {
@@ -43,10 +58,10 @@ export function getNodeStatusTone(status: NodeStatus): StatusTone {
   return 'danger';
 }
 
-export function getNodeStatusLabel(status: NodeStatus) {
-  if (status === 'online') return '在线';
-  if (status === 'pending') return '待接入';
-  return '离线';
+export function getNodeStatusLabel(status: NodeStatus, t: NodeMessageT) {
+  if (status === 'online') return t('status.online');
+  if (status === 'pending') return t('status.pending');
+  return t('status.offline');
 }
 
 export function getApplyTone(result: ApplyResult): StatusTone {
@@ -56,11 +71,11 @@ export function getApplyTone(result: ApplyResult): StatusTone {
   return 'warning';
 }
 
-export function getApplyLabel(result: ApplyResult) {
-  if (result === 'success') return '成功';
-  if (result === 'warning') return '警告';
-  if (result === 'failed') return '失败';
-  return '暂无';
+export function getApplyLabel(result: ApplyResult, t: NodeMessageT) {
+  if (result === 'success') return t('apply.success');
+  if (result === 'warning') return t('apply.warning');
+  if (result === 'failed') return t('apply.failed');
+  return t('apply.none');
 }
 
 export function getOpenrestyStatusTone(status: OpenrestyStatus): StatusTone {
@@ -69,22 +84,30 @@ export function getOpenrestyStatusTone(status: OpenrestyStatus): StatusTone {
   return 'warning';
 }
 
-export function getOpenrestyStatusLabel(status: OpenrestyStatus) {
-  if (status === 'healthy') return '健康';
-  if (status === 'unhealthy') return '异常';
-  return '未知';
+export function getOpenrestyStatusLabel(
+  status: OpenrestyStatus,
+  t: NodeMessageT,
+) {
+  if (status === 'healthy') return t('health.healthy');
+  if (status === 'unhealthy') return t('health.unhealthy');
+  return t('health.unknown');
 }
 
-export function getRelayStatusTone(status: string | null | undefined): StatusTone {
+export function getRelayStatusTone(
+  status: string | null | undefined,
+): StatusTone {
   if (status === 'healthy') return 'success';
   if (status === 'unhealthy') return 'danger';
   return 'warning';
 }
 
-export function getRelayStatusLabel(status: string | null | undefined) {
-  if (status === 'healthy') return '健康';
-  if (status === 'unhealthy') return '异常';
-  return '未知';
+export function getRelayStatusLabel(
+  status: string | null | undefined,
+  t: NodeMessageT,
+) {
+  if (status === 'healthy') return t('health.healthy');
+  if (status === 'unhealthy') return t('health.unhealthy');
+  return t('health.unknown');
 }
 
 export function getNodeTypeLabel(nodeType: NodeItem['node_type']) {
@@ -93,8 +116,8 @@ export function getNodeTypeLabel(nodeType: NodeItem['node_type']) {
   return 'Edge';
 }
 
-export function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '请求失败，请稍后重试。';
+export function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function getServerUrl(value: string) {
@@ -112,7 +135,12 @@ export function getImageTag(version?: string): string {
     return 'latest';
   }
   const v = version.toLowerCase();
-  if (v === 'dev' || v.includes('alpha') || v.includes('beta') || v.includes('rc')) {
+  if (
+    v === 'dev' ||
+    v.includes('alpha') ||
+    v.includes('beta') ||
+    v.includes('rc')
+  ) {
     return 'beta';
   }
   if (v.startsWith('v')) {
@@ -121,7 +149,30 @@ export function getImageTag(version?: string): string {
   return 'latest';
 }
 
-export function buildRelayInstallCommand(serverUrl: string, discoveryToken: string) {
+export function buildEdgeDockerInstallCommand(
+  serverUrl: string,
+  agentToken: string,
+  version?: string,
+) {
+  const tag = getImageTag(version);
+  const image = `ghcr.io/rain-kl/openflare-agent:${tag}`;
+
+  return [
+    `docker pull ${image}`,
+    `docker rm -f openflare-agent 2>/dev/null || true`,
+    `docker run -d --name openflare-agent --restart unless-stopped \\`,
+    `  -p 80:80 -p 443:443/tcp -p 443:443/udp \\`,
+    `  -v openflare-agent-pages:/data/var/lib/openflare/pages \\`,
+    `  -e OPENFLARE_SERVER_URL=${serverUrl} \\`,
+    `  -e OPENFLARE_AGENT_TOKEN=${agentToken} \\`,
+    `  ${image}`,
+  ].join('\n');
+}
+
+export function buildRelayInstallCommand(
+  serverUrl: string,
+  discoveryToken: string,
+) {
   return [
     `curl -fsSL ${relayInstallerScriptUrl} | bash -s -- \\`,
     `  --server-url ${serverUrl} \\`,
@@ -129,7 +180,11 @@ export function buildRelayInstallCommand(serverUrl: string, discoveryToken: stri
   ].join('\n');
 }
 
-export function buildRelayDockerInstallCommand(serverUrl: string, discoveryToken: string, version?: string) {
+export function buildRelayDockerInstallCommand(
+  serverUrl: string,
+  discoveryToken: string,
+  version?: string,
+) {
   const tag = getImageTag(version);
   const image = `ghcr.io/rain-kl/openflare-relay:${tag}`;
 
@@ -143,7 +198,10 @@ export function buildRelayDockerInstallCommand(serverUrl: string, discoveryToken
   ].join('\n');
 }
 
-export function buildTunnelInstallCommand(serverUrl: string, tunnelToken: string) {
+export function buildTunnelInstallCommand(
+  serverUrl: string,
+  tunnelToken: string,
+) {
   return [
     `curl -fsSL ${flaredInstallerScriptUrl} | bash -s -- \\`,
     `  --server-url ${serverUrl} \\`,
@@ -151,7 +209,11 @@ export function buildTunnelInstallCommand(serverUrl: string, tunnelToken: string
   ].join('\n');
 }
 
-export function buildTunnelDockerInstallCommand(serverUrl: string, tunnelToken: string, version?: string) {
+export function buildTunnelDockerInstallCommand(
+  serverUrl: string,
+  tunnelToken: string,
+  version?: string,
+) {
   const tag = getImageTag(version);
   const image = `ghcr.io/rain-kl/openflared:${tag}`;
 
@@ -165,7 +227,6 @@ export function buildTunnelDockerInstallCommand(serverUrl: string, tunnelToken: 
   ].join('\n');
 }
 
-
 export function formatBytes(bytes?: number | null, decimals = 1) {
   if (bytes === undefined || bytes === null || !Number.isFinite(bytes)) {
     return '—';
@@ -175,7 +236,10 @@ export function formatBytes(bytes?: number | null, decimals = 1) {
   }
 
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
   const value = bytes / 1024 ** index;
   return `${value.toFixed(decimals)} ${units[index]}`;
 }
@@ -194,10 +258,7 @@ export function formatMetricCount(value?: number | null) {
   return value.toLocaleString('zh-CN');
 }
 
-export function formatBytesPerSecond(
-  value?: number | null,
-  windowSeconds = 1,
-) {
+export function formatBytesPerSecond(value?: number | null, windowSeconds = 1) {
   if (value === undefined || value === null || !Number.isFinite(value)) {
     return '—';
   }
@@ -207,45 +268,6 @@ export function formatBytesPerSecond(
   return `${formatBytes(value / windowSeconds)}/s`;
 }
 
-export function parseTrafficMap(value?: string | null) {
-  if (!value) {
-    return {} as Record<string, number>;
-  }
-  try {
-    const parsed = JSON.parse(value) as Record<string, number>;
-    return Object.entries(parsed).reduce<Record<string, number>>((result, [key, count]) => {
-      if (typeof count === 'number' && Number.isFinite(count)) {
-        result[key] = count;
-      }
-      return result;
-    }, {});
-  } catch {
-    return {} as Record<string, number>;
-  }
-}
-
-export function aggregateTrafficBreakdown(
-  reports: NodeTrafficReport[] | undefined,
-  field: 'status_codes_json' | 'top_domains_json',
-) {
-  const summary = new Map<string, number>();
-  for (const report of reports ?? []) {
-    const parsed = parseTrafficMap(report[field]);
-    for (const [key, value] of Object.entries(parsed)) {
-      summary.set(key, (summary.get(key) ?? 0) + value);
-    }
-  }
-  return Array.from(summary.entries())
-    .sort((left, right) => {
-      if (right[1] === left[1]) {
-        return left[0].localeCompare(right[0]);
-      }
-      return right[1] - left[1];
-    })
-    .slice(0, 6)
-    .map(([label, value]) => ({ label, value }));
-}
-
 export function formatUsageRatio(used?: number | null, total?: number | null) {
   if (!used || !total || total <= 0) {
     return null;
@@ -253,7 +275,10 @@ export function formatUsageRatio(used?: number | null, total?: number | null) {
   return Math.max(0, Math.min(100, (used / total) * 100));
 }
 
-export function formatUptime(seconds?: number | null) {
+export function formatUptime(
+  seconds: number | null | undefined,
+  t: NodeMessageT,
+) {
   if (!seconds || seconds <= 0) {
     return '—';
   }
@@ -263,17 +288,18 @@ export function formatUptime(seconds?: number | null) {
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (days > 0) {
-    return `${days} 天 ${hours} 小时`;
+    return t('uptime.daysHours', { days, hours });
   }
   if (hours > 0) {
-    return `${hours} 小时 ${minutes} 分钟`;
+    return t('uptime.hoursMinutes', { hours, minutes });
   }
-  return `${minutes} 分钟`;
+  return t('uptime.minutes', { minutes });
 }
 
-export function getHealthEventTone(
-  event: { status: string; severity: string },
-): StatusTone {
+export function getHealthEventTone(event: {
+  status: string;
+  severity: string;
+}): StatusTone {
   if (event.status === 'resolved') {
     return 'success';
   }
@@ -290,17 +316,17 @@ export function getHealthEventLabel(event: { event_type: string }) {
   return event.event_type.replaceAll('_', ' ');
 }
 
-export function getFlaredStatusLabel(node: NodeItem) {
+export function getFlaredStatusLabel(node: NodeItem, t: NodeMessageT) {
   if (isWSConnectedLastSeen(node.last_seen_at)) {
-    return 'WS 已连接';
+    return t('status.wsConnected');
   }
   if (node.status === 'online') {
-    return '运行中';
+    return t('status.running');
   }
   if (node.status === 'pending') {
-    return '待接入';
+    return t('status.pending');
   }
-  return '离线';
+  return t('status.offline');
 }
 
 export function getFlaredStatusTone(node: NodeItem): StatusTone {

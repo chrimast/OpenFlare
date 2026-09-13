@@ -20,12 +20,12 @@ import {
   AdminTemplateService,
   AdminUserService,
 } from './admin';
-import {AuthService} from './auth';
-import {ConfigService} from './config';
-import {DbManageService} from './db-manage';
-import {PushService} from './push';
-import {AdminUploadService, UploadService} from './upload';
-import {UserService} from './user';
+import { AuthService } from './auth';
+import { ConfigService } from './config';
+import { DbManageService } from './db-manage';
+import { PushService } from './push';
+import { AdminUploadService, UploadService } from './upload';
+import { UserService } from './user';
 import {
   AccessLogService,
   ApplyLogService,
@@ -41,7 +41,8 @@ import {
   TlsCertificateService,
   UptimeKumaService,
   WafService,
-  WebsiteService,
+  ZoneDomainService,
+  ZoneService,
 } from './openflare';
 
 const services = {
@@ -66,7 +67,8 @@ const services = {
   openflareApplyLog: ApplyLogService,
   openflareDashboard: DashboardService,
   openflareWaf: WafService,
-  openflareWebsite: WebsiteService,
+  openflareZone: ZoneService,
+  openflareZoneDomain: ZoneDomainService,
   openflareTls: TlsCertificateService,
   openflareDns: DnsAccountService,
   openflarePages: PagesService,
@@ -113,7 +115,15 @@ export type {
 // ==================== 业务服务导出 ====================
 
 export { AuthService } from './auth';
-export type { User, OAuthLoginUrlResponse, OAuthCallbackRequest, AuthSource, ExternalAccountBinding, ChangePasswordRequest, UpdateProfileRequest } from './auth';
+export type {
+  User,
+  OAuthLoginUrlResponse,
+  OAuthCallbackRequest,
+  AuthSource,
+  ExternalAccountBinding,
+  ChangePasswordRequest,
+  UpdateProfileRequest,
+} from './auth';
 
 export { ConfigService } from './config';
 export type { PublicConfigResponse } from './config';
@@ -148,6 +158,7 @@ export type {
   CreateUserRequest,
   UpdateUserRequest,
   SystemStatus,
+  LogDatabaseStatus,
   AppUpdateStatus,
   Schedule,
   CreateScheduleRequest,
@@ -168,14 +179,37 @@ export type {
 export { UserService } from './user';
 export type { AccessToken, CreateTokenResponse } from './user';
 
-export { UploadService, AdminUploadService, formatFileSize, getFileUrl } from './upload';
-export type { UploadImageResponse, Upload, ListUploadsResponse, FileStatsResponse, ImageQuality } from './upload';
+export {
+  UploadService,
+  AdminUploadService,
+  formatFileSize,
+  getFileUrl,
+} from './upload';
+export type {
+  UploadImageResponse,
+  Upload,
+  ListUploadsResponse,
+  FileStatsResponse,
+  ImageQuality,
+} from './upload';
 
 export { DbManageService } from './db-manage';
-export type { DBOverview, TableDataResponse, ExecuteSQLResponse } from './db-manage';
+export type {
+  DBOverview,
+  TableDataResponse,
+  ExecuteSQLResponse,
+} from './db-manage';
 
 export { PushService } from './push';
-export type { PushEvent, PushHistory, PushChannelConfig, ListPushHistoriesRequest, ListPushHistoriesResponse, UpdatePushEventRequest, TestPushRequest } from './push';
+export type {
+  PushEvent,
+  PushHistory,
+  PushChannelConfig,
+  ListPushHistoriesRequest,
+  ListPushHistoriesResponse,
+  UpdatePushEventRequest,
+  TestPushRequest,
+} from './push';
 
 // ==================== OpenFlare 业务服务导出 ====================
 
@@ -187,7 +221,6 @@ export {
   ApplyLogService,
   DashboardService,
   WafService,
-  WebsiteService,
   TlsCertificateService,
   DnsAccountService,
   PagesService,
@@ -201,6 +234,7 @@ export {
 export type {
   NodeItem,
   ProxyRouteItem,
+  ProxyRouteZoneDomain,
   ProxyRouteConfigSection,
   ConfigVersionSummary,
   ConfigVersionDetail,
@@ -209,18 +243,23 @@ export type {
   ApplyLogList,
   DashboardOverview,
   WAFIPGroup,
+  WAFRule,
+  WAFRuleGraph,
+  WAFRuleNode,
   WAFRuleGroup,
   WAFSiteRuleGroups,
-  ManagedDomainItem,
   TlsCertificateItem,
   DnsAccountItem,
   PagesProject,
   PagesDeployment,
+  PagesSource,
+  PagesSourceActionReceipt,
+  PagesSourceStatus,
   OriginItem,
   OriginDetail,
   AccessLogList,
+  AccessLogOverview,
   OptionItem,
   GeoIPLookupResult,
-  DatabaseCleanupResult,
   OpenFlarePublicStatus,
 } from './openflare';

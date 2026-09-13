@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {useEffect, useMemo, useState} from 'react';
+import { useRouter } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   Copy,
@@ -18,7 +18,8 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import {toast} from 'sonner';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -30,23 +31,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Switch} from '@/components/ui/switch';
-import {formatDateTime} from '@/lib/utils';
-import type {NodeAgentReleaseInfo, NodeItem, ReleaseChannel} from '@/lib/services/openflare';
-import {NodeService} from '@/lib/services/openflare';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { formatDateTime } from '@/lib/utils';
+import type {
+  NodeAgentReleaseInfo,
+  NodeItem,
+  ReleaseChannel,
+} from '@/lib/services/openflare';
+import { NodeService } from '@/lib/services/openflare';
 import services from '@/lib/services';
-import type {SystemConfig} from '@/lib/services/admin';
+import type { SystemConfig } from '@/lib/services/admin';
 
-import {AgentUpdateDialog} from './agent-update-dialog';
-import {InstallCommand} from './install-command';
-import {NodeDetailShell} from './node-detail-shell';
-import {NodeErrorBanner, NodeInfoRow, NodeSectionCard,} from './node-detail-primitives';
-import {NodeEditorDialog} from './node-editor-dialog';
-import {NodeObservability} from './node-observability';
-import {NodeStatusBadge} from './node-status-badge';
+import { AgentUpdateDialog } from './agent-update-dialog';
+import { InstallCommand } from './install-command';
+import { NodeDetailShell } from './node-detail-shell';
+import {
+  NodeErrorBanner,
+  NodeInfoRow,
+  NodeSectionCard,
+} from './node-detail-primitives';
+import { NodeEditorDialog } from './node-editor-dialog';
+import { NodeObservability } from './node-observability';
+import { NodeStatusBadge } from './node-status-badge';
 import {
   formatRelativeTime,
   getApplyLabel,
@@ -70,6 +79,8 @@ function systemConfigMap(configs: SystemConfig[]) {
 }
 
 export function RelayNodeDetail({ node }: { node: NodeItem }) {
+  const t = useTranslations('nodes');
+  const tc = useTranslations('common');
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editorOpen, setEditorOpen] = useState(false);
@@ -85,7 +96,7 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
 
   const configs = useMemo(
     () => systemConfigMap(systemConfigsQuery.data ?? []),
-    [systemConfigsQuery.data]
+    [systemConfigsQuery.data],
   );
 
   useEffect(() => {
@@ -98,30 +109,38 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
     mutationFn: async (port: string) => {
       const portNum = parseInt(port, 10);
       if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-        throw new Error('端口号必须在 1 ~ 65535 范围内');
+        throw new Error(t('relay.invalidPort'));
       }
       const portCfg = configs['relay_frps_web_ui_port'];
-      await services.adminSystemConfig.updateSystemConfig('relay_frps_web_ui_port', {
-        value: String(portNum),
-        description: portCfg?.description || 'FRPS 内置 Web 管理界面端口',
-      });
+      await services.adminSystemConfig.updateSystemConfig(
+        'relay_frps_web_ui_port',
+        {
+          value: String(portNum),
+          description: portCfg?.description || 'FRPS 内置 Web 管理界面端口',
+        },
+      );
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'system-configs'] });
-      toast.success('FRPS WebUI 端口配置已更新');
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'system-configs'],
+      });
+      toast.success(t('relay.toastPortSaved'));
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : '更新端口失败'),
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : t('relay.portSaveFailed'),
+      ),
   });
 
   const saveMutation = useMutation({
     mutationFn: (payload: Parameters<typeof NodeService.updateNode>[1]) =>
       NodeService.updateNode(node.id, payload),
     onSuccess: async () => {
-      toast.success('中继节点已更新');
+      toast.success(t('relay.toastUpdated'));
       setEditorOpen(false);
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const webServerMutation = useMutation({
@@ -141,19 +160,19 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
         relay_web_server_enabled: enabled,
       }),
     onSuccess: async () => {
-      toast.success('FRPS WebUI 设置已更新');
+      toast.success(t('relay.toastWebui'));
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const forceSyncMutation = useMutation({
     mutationFn: () => NodeService.requestForceSync(node.id),
     onSuccess: async (updated) => {
-      toast.success(`已向中继节点 ${updated.name} 下发强制同步指令`);
+      toast.success(t('relay.toastForceSync', { name: updated.name }));
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const upgradeMutation = useMutation({
@@ -166,39 +185,54 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
     }) =>
       NodeService.requestAgentUpdate(node.id, {
         channel: release?.channel ?? channel,
-        tag_name: release?.channel === 'preview' ? release.tag_name || undefined : undefined,
+        tag_name:
+          release?.channel === 'preview'
+            ? release.tag_name || undefined
+            : undefined,
       }),
     onSuccess: async (updated) => {
       toast.success(
-        `已向中继节点 ${updated.name} 下发${updated.update_channel === 'preview' ? '预览版' : '正式版'}升级指令`,
+        t('relay.toastUpgrade', {
+          name: updated.name,
+          channel:
+            updated.update_channel === 'preview'
+              ? t('channel.preview')
+              : t('channel.stable'),
+        }),
       );
       setUpgradeOpen(false);
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => NodeService.deleteNode(node.id),
     onSuccess: async () => {
-      toast.success('中继节点已删除');
+      toast.success(t('relay.toastDeleted'));
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
       router.push('/nodes');
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const handleRefresh = () => {
     void Promise.all([
       queryClient.invalidateQueries({ queryKey: nodesQueryKey }),
-      queryClient.invalidateQueries({ queryKey: ['openflare', 'node-observability', node.id] }),
+      queryClient.invalidateQueries({
+        queryKey: ['openflare', 'node-observability', node.id],
+      }),
     ]);
   };
 
-  const webServerPortNum = parseInt(configs['relay_frps_web_ui_port']?.value || '', 10);
-  const resolvedPort = !isNaN(webServerPortNum) && webServerPortNum > 0
-    ? webServerPortNum
-    : (node.relay_bind_port || 7000) + 500;
+  const webServerPortNum = parseInt(
+    configs['relay_frps_web_ui_port']?.value || '',
+    10,
+  );
+  const resolvedPort =
+    !isNaN(webServerPortNum) && webServerPortNum > 0
+      ? webServerPortNum
+      : (node.relay_bind_port || 7000) + 500;
 
   const webUiUrl =
     node.relay_web_server_enabled && node.relay_bind_port
@@ -207,116 +241,146 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
 
   const headerActions = (
     <>
-      <Button variant="outline" size="sm" className="h-8" onClick={() => setEditorOpen(true)}>
-        编辑
-      </Button>
-      <Button variant="outline" size="sm" className="h-8" onClick={handleRefresh}>
-        <RefreshCw className="size-3.5 mr-1.5" />
-        刷新
+      <Button
+        variant='outline'
+        size='sm'
+        className='h-8'
+        onClick={() => setEditorOpen(true)}
+      >
+        {t('edit')}
       </Button>
       <Button
-        variant="outline"
-        size="sm"
-        className="h-8"
+        variant='outline'
+        size='sm'
+        className='h-8'
+        onClick={handleRefresh}
+      >
+        <RefreshCw className='size-3.5 mr-1.5' />
+        {t('refresh')}
+      </Button>
+      <Button
+        variant='outline'
+        size='sm'
+        className='h-8'
         disabled={forceSyncMutation.isPending}
         onClick={() => forceSyncMutation.mutate()}
       >
-        <RotateCcw className="size-3.5 mr-1.5" />
-        {forceSyncMutation.isPending ? '同步中...' : '强制同步'}
-      </Button>
-      <Button variant="secondary" size="sm" className="h-8" onClick={() => setUpgradeOpen(true)}>
-        <Upload className="size-3.5 mr-1.5" />
-        {node.update_requested ? '查看升级' : '升级 Relay'}
+        <RotateCcw className='size-3.5 mr-1.5' />
+        {forceSyncMutation.isPending ? t('syncing') : t('forceSync')}
       </Button>
       <Button
-        variant="outline"
-        size="sm"
-        className="h-8 text-destructive hover:text-destructive"
+        variant='secondary'
+        size='sm'
+        className='h-8'
+        onClick={() => setUpgradeOpen(true)}
+      >
+        <Upload className='size-3.5 mr-1.5' />
+        {node.update_requested ? t('viewUpgrade') : t('relay.upgrade')}
+      </Button>
+      <Button
+        variant='outline'
+        size='sm'
+        className='h-8 text-destructive hover:text-destructive'
         onClick={() => setDeleteOpen(true)}
       >
-        <Trash2 className="size-3.5 mr-1.5" />
-        删除
+        <Trash2 className='size-3.5 mr-1.5' />
+        {t('delete')}
       </Button>
     </>
   );
 
-  const overviewTab = (
-    <div className="space-y-6">
+  const manageTab = (
+    <div className='space-y-6'>
       {node.last_error ? <NodeErrorBanner message={node.last_error} /> : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <NodeSectionCard title="中继运行状态" description="frps 在线情况与负载摘要">
-          <div className="divide-y">
-            <NodeInfoRow label="运行状态">
+      <div className='grid gap-6 xl:grid-cols-2'>
+        <NodeSectionCard
+          title={t('relay.runStatus')}
+          description={t('relay.runStatusDesc')}
+        >
+          <div className='divide-y'>
+            <NodeInfoRow label={t('edge.runStatus')}>
               <NodeStatusBadge
-                label={getNodeStatusLabel(node.status)}
+                label={getNodeStatusLabel(node.status, t)}
                 tone={getNodeStatusTone(node.status)}
               />
             </NodeInfoRow>
-            <NodeInfoRow label="中继健康">
+            <NodeInfoRow label={t('relay.health')}>
               <NodeStatusBadge
-                label={getRelayStatusLabel(node.relay_status)}
+                label={getRelayStatusLabel(node.relay_status, t)}
                 tone={getRelayStatusTone(node.relay_status)}
               />
             </NodeInfoRow>
-            <NodeInfoRow label="最近心跳">
+            <NodeInfoRow label={t('kpiLastSeen')}>
               {isWSConnectedLastSeen(node.last_seen_at)
-                ? 'WS 已连接'
+                ? t('wsConnected')
                 : isMeaningfulTime(node.last_seen_at)
-                  ? `${formatRelativeTime(node.last_seen_at)} · ${formatDateTime(node.last_seen_at)}`
-                  : '暂无'}
+                  ? `${formatRelativeTime(node.last_seen_at, t)} · ${formatDateTime(node.last_seen_at)}`
+                  : t('na')}
             </NodeInfoRow>
-            <NodeInfoRow label="活动连接 / 代理数">
-              {node.relay_frps_connections ?? '—'} / {node.relay_frps_proxy_count ?? '—'}
+            <NodeInfoRow label={t('relay.connections')}>
+              {node.relay_frps_connections ?? '—'} /{' '}
+              {node.relay_frps_proxy_count ?? '—'}
             </NodeInfoRow>
-            <NodeInfoRow label="IP 地址">
+            <NodeInfoRow label={t('edge.ip')}>
               {node.ip || '—'}
-              {node.ip_manual_override ? '（已锁定）' : ''}
+              {node.ip_manual_override ? t('lockedSuffix') : ''}
             </NodeInfoRow>
           </div>
         </NodeSectionCard>
 
         <NodeSectionCard
-          title="网络端口"
-          description="frps 控制面与 HTTP 虚拟主机配置"
+          title={t('relay.portsTitle')}
+          description={t('relay.portsDesc')}
           action={
-            <Button variant="outline" size="sm" className="h-8" asChild>
-              <Link href={`/apply-logs?node_id=${encodeURIComponent(node.node_id)}`}>
-                <FileText className="size-3.5 mr-1.5" />
-                应用记录
+            <Button variant='outline' size='sm' className='h-8' asChild>
+              <Link
+                href={`/apply-logs?node_id=${encodeURIComponent(node.node_id)}`}
+              >
+                <FileText className='size-3.5 mr-1.5' />
+                {t('applyLogs')}
               </Link>
             </Button>
           }
         >
-          <div className="divide-y">
-            <NodeInfoRow label="绑定控制端口">{node.relay_bind_port || '—'}</NodeInfoRow>
-            <NodeInfoRow label="VHost HTTP 端口">{node.relay_vhost_http_port || '—'}</NodeInfoRow>
-            <NodeInfoRow label="Agent 接入地址">
-              <span className="break-all">{node.relay_agent_access_addr || '—'}</span>
+          <div className='divide-y'>
+            <NodeInfoRow label={t('relay.bindPort')}>
+              {node.relay_bind_port || '—'}
             </NodeInfoRow>
-            <NodeInfoRow label="最近应用">
+            <NodeInfoRow label={t('relay.vhostPort')}>
+              {node.relay_vhost_http_port || '—'}
+            </NodeInfoRow>
+            <NodeInfoRow label={t('relay.agentAddr')}>
+              <span className='break-all'>
+                {node.relay_agent_access_addr || '—'}
+              </span>
+            </NodeInfoRow>
+            <NodeInfoRow label={t('edge.latestApply')}>
               <NodeStatusBadge
-                label={getApplyLabel(node.latest_apply_result)}
+                label={getApplyLabel(node.latest_apply_result, t)}
                 tone={getApplyTone(node.latest_apply_result)}
               />
             </NodeInfoRow>
-            <NodeInfoRow label="Relay 版本">{node.version || 'unknown'}</NodeInfoRow>
-            <NodeInfoRow label="frps 核心版本">{node.ext_version || 'unknown'}</NodeInfoRow>
+            <NodeInfoRow label={t('relay.relayVersion')}>
+              {node.version || 'unknown'}
+            </NodeInfoRow>
+            <NodeInfoRow label={t('relay.frpsVersion')}>
+              {node.ext_version || 'unknown'}
+            </NodeInfoRow>
           </div>
         </NodeSectionCard>
       </div>
-    </div>
-  );
 
-  const manageTab = (
-    <div className="space-y-6">
-      <NodeSectionCard title="FRPS WebUI" description="控制 frps 内置 Web 管理界面是否启用及其监听端口">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-xl border px-4 py-4">
-            <div className="space-y-1">
-              <Label>启用 Web 管理界面</Label>
-              <p className="text-xs text-muted-foreground">
-                开启后，节点将启动 frps 的内置管理服务。
+      <NodeSectionCard
+        title={t('relay.webuiTitle')}
+        description={t('relay.webuiDesc')}
+      >
+        <div className='space-y-4'>
+          <div className='flex items-center justify-between rounded-xl border px-4 py-4'>
+            <div className='space-y-1'>
+              <Label>{t('relay.enableWebui')}</Label>
+              <p className='text-xs text-muted-foreground'>
+                {t('relay.enableWebuiHint')}
               </p>
             </div>
             <Switch
@@ -326,80 +390,92 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
             />
           </div>
 
-          <div className="rounded-xl border p-4 space-y-3">
-            <Label htmlFor="web_server_port" className="text-xs font-semibold">Web 管理界面端口</Label>
-            <div className="flex max-w-sm items-center gap-2">
+          <div className='rounded-xl border p-4 space-y-3'>
+            <Label htmlFor='web_server_port' className='text-xs font-semibold'>
+              {t('relay.webuiPort')}
+            </Label>
+            <div className='flex max-w-sm items-center gap-2'>
               <Input
-                id="web_server_port"
-                type="number"
+                id='web_server_port'
+                type='number'
                 min={1}
                 max={65535}
                 value={webServerPort}
                 onChange={(e) => setWebServerPort(e.target.value)}
-                placeholder="例如: 17500"
-                className="bg-card text-xs h-9"
-                disabled={savePortMutation.isPending || systemConfigsQuery.isLoading}
+                placeholder={t('relay.webuiPortPlaceholder')}
+                className='bg-card text-xs h-9'
+                disabled={
+                  savePortMutation.isPending || systemConfigsQuery.isLoading
+                }
               />
               <Button
-                size="sm"
-                className="h-9"
+                size='sm'
+                className='h-9'
                 onClick={() => savePortMutation.mutate(webServerPort)}
-                disabled={savePortMutation.isPending || systemConfigsQuery.isLoading}
+                disabled={
+                  savePortMutation.isPending || systemConfigsQuery.isLoading
+                }
               >
                 {savePortMutation.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <Loader2 className='size-3.5 animate-spin' />
                 ) : (
-                  '保存'
+                  tc('save')
                 )}
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              当前实际监听端口：{resolvedPort} （修改后在下次节点心跳同步时生效，默认为绑定端口 + 500）。
+            <p className='text-[11px] text-muted-foreground'>
+              {t('relay.actualPort', { port: resolvedPort })}
             </p>
           </div>
 
           {webUiUrl ? (
-            <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className='flex flex-wrap items-center gap-3 text-sm'>
               <a
                 href={webUiUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center font-medium text-primary hover:underline"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center font-medium text-primary hover:underline'
               >
-                打开 FRPS WebUI
-                <ExternalLink className="size-3.5 ml-1.5" />
+                {t('relay.openWebui')}
+                <ExternalLink className='size-3.5 ml-1.5' />
               </a>
-              <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded border">
+              <span className='text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded border'>
                 {webUiUrl}
               </span>
               <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-foreground"
+                variant='ghost'
+                size='icon'
+                className='size-7 text-muted-foreground hover:text-foreground'
                 onClick={() => {
                   void navigator.clipboard.writeText(webUiUrl);
-                  toast.success('链接已复制到剪贴板');
+                  toast.success(t('relay.copiedLink'));
                 }}
-                title="复制链接"
+                title={t('relay.copyLink')}
               >
-                <Copy className="size-3.5" />
+                <Copy className='size-3.5' />
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">WebUI 已禁用或未配置绑定端口。</p>
+            <p className='text-sm text-muted-foreground'>
+              {t('relay.webuiDisabled')}
+            </p>
           )}
         </div>
       </NodeSectionCard>
 
-      <InstallCommand node={node} variant="relay" />
+      <InstallCommand node={node} variant='relay' />
 
-      <NodeSectionCard title="节点元数据">
-        <div className="divide-y">
-          <NodeInfoRow label="节点 ID">
-            <span className="font-mono text-xs break-all">{node.node_id}</span>
+      <NodeSectionCard title={t('relay.metadata')}>
+        <div className='divide-y'>
+          <NodeInfoRow label={t('kpiNodeId')}>
+            <span className='font-mono text-xs break-all'>{node.node_id}</span>
           </NodeInfoRow>
-          <NodeInfoRow label="创建时间">{formatDateTime(node.created_at)}</NodeInfoRow>
-          <NodeInfoRow label="更新时间">{formatDateTime(node.updated_at)}</NodeInfoRow>
+          <NodeInfoRow label={t('relay.createdAt')}>
+            {formatDateTime(node.created_at)}
+          </NodeInfoRow>
+          <NodeInfoRow label={t('relay.updatedAt')}>
+            {formatDateTime(node.updated_at)}
+          </NodeInfoRow>
         </div>
       </NodeSectionCard>
     </div>
@@ -409,40 +485,50 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
     <>
       <NodeDetailShell
         title={node.name}
-        typeLabel="Relay"
-        typeTone="warning"
+        typeLabel='Relay'
+        typeTone='warning'
         statusBadges={[
-          { label: getNodeStatusLabel(node.status), tone: getNodeStatusTone(node.status) },
           {
-            label: getRelayStatusLabel(node.relay_status),
+            label: getNodeStatusLabel(node.status, t),
+            tone: getNodeStatusTone(node.status),
+          },
+          {
+            label: getRelayStatusLabel(node.relay_status, t),
             tone: getRelayStatusTone(node.relay_status),
           },
         ]}
         actions={headerActions}
         kpis={[
-          { label: '节点 ID', value: node.node_id, icon: Fingerprint },
-          { label: 'Relay 版本', value: node.version || 'unknown', icon: Server },
-          { label: 'frps 核心', value: node.ext_version || 'unknown', icon: Network },
+          { label: t('kpiNodeId'), value: node.node_id, icon: Fingerprint },
           {
-            label: '最近心跳',
+            label: t('relay.relayVersion'),
+            value: node.version || 'unknown',
+            icon: Server,
+          },
+          {
+            label: t('relay.kpiFrps'),
+            value: node.ext_version || 'unknown',
+            icon: Network,
+          },
+          {
+            label: t('kpiLastSeen'),
             value: isWSConnectedLastSeen(node.last_seen_at)
-              ? 'WS 已连接'
+              ? t('wsConnected')
               : isMeaningfulTime(node.last_seen_at)
-                ? formatRelativeTime(node.last_seen_at)
-                : '暂无',
+                ? formatRelativeTime(node.last_seen_at, t)
+                : t('na'),
             icon: Activity,
           },
         ]}
-        overview={overviewTab}
-        dashboard={
+        overview={
           <NodeObservability
             nodeId={node.id}
-            variant="compact"
-            connectionHint="中继承载活动连接数"
+            variant='compact'
+            connectionHint={t('relay.connectionHint')}
           />
         }
         manage={manageTab}
-        defaultTab="overview"
+        defaultTab='overview'
       />
 
       <NodeEditorDialog
@@ -468,19 +554,21 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除中继节点</AlertDialogTitle>
+            <AlertDialogTitle>{t('relay.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确认删除中继节点「{node.name}」吗？删除后该节点需要重新创建并重新接入。
+              {t('relay.deleteDesc', { name: node.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              {tc('cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className='bg-destructive text-white hover:bg-destructive/90'
               disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate()}
             >
-              {deleteMutation.isPending ? '删除中...' : '确认删除'}
+              {deleteMutation.isPending ? t('deleting') : t('confirmDelete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

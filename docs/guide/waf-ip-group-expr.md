@@ -8,7 +8,7 @@
 
 ```json
 {
-  "lookback_minutes": 60,
+  "lookback": "1h",
   "rules": [
     {
       "name": "单 IP 404 高频扫描",
@@ -22,16 +22,16 @@
 
 | 字段 | 类型 | 作用 |
 | --- | --- | --- |
-| `lookback_minutes` | number | 每次执行时回看多少分钟内的请求日志。未填写时默认 60 分钟，最小 5 分钟，最大 43200 分钟。 |
+| `lookback` | string | 回看窗口时长，使用 Go Duration 写法，例如 `30m`、`1h`、`90m`。未填写时默认 `1h`，最大 30 天。兼容旧字段 `lookback_minutes`（整数分钟）。 |
 | `rules` | array | 自动规则列表。任意一条规则命中时，该 IP 会进入自动 IP 组名单。 |
 | `rules[].name` | string | 规则名称，只用于界面展示和错误提示。 |
 | `rules[].expr` | string | Expr 表达式，必须返回布尔值。 |
 
 ## 执行口径
 
-自动规则不是逐条请求判断，而是先按单个客户端 IP 聚合：
+自动 IP 组先按单个客户端 IP 聚合指标，再对每个 IP 执行规则表达式：
 
-1. Server 读取最近 `lookback_minutes` 分钟内的请求日志。
+1. Server 读取最近 `lookback` 时长内的请求日志。
 2. 按 `remote_addr` 归一化后的 IP 分组。
 3. 为每个 IP 计算请求数、404 数、直连 IP Host 次数等指标。
 4. 逐个 IP 执行 `rules[].expr`。
@@ -61,8 +61,14 @@ Host 是否为“通过 IP 访问”按请求日志中的 `Host` 字段判断：
 
 如果内置的 `status_404_count` 和 `status_404_ratio` 不能满足您的需求，您可以使用以下内置方法来匹配任意状态码的请求数与占比：
 
-* **`StatusCount(code)`**: 获取当前 IP 在回看窗口内返回指定状态码的请求数（如 `StatusCount(403) > 10`）
-* **`StatusRatio(code)`**: 获取当前 IP 在回看窗口内返回指定状态码的请求数占该 IP 总请求数的比例（如 `StatusRatio(502) >= 0.5`）
+* **`StatusCount(code)`**: 获取当前 IP 在回看窗口内返回指定状态码（或状态码类）的请求数。
+  * 精确状态码：`StatusCount(403) > 10`
+  * 状态码类（`1xx`–`5xx`，大小写不敏感）：`StatusCount("4xx") > 50`
+* **`StatusRatio(code)`**: 获取上述计数占该 IP 总请求数的比例。
+  * 精确状态码：`StatusRatio(502) >= 0.5`
+  * 状态码类：`StatusRatio("4xx") >= 0.8`、`StatusRatio("5xx") >= 0.3`
+
+状态码类会汇总该百位区间内全部状态码，例如 `"4xx"` 包含 400–499，`"2xx"` 包含 200–299。
 
 ## Expr 常用写法
 
@@ -109,7 +115,7 @@ Host 是否为“通过 IP 访问”按请求日志中的 `Host` 字段判断：
 
 ```json
 {
-  "lookback_minutes": 60,
+  "lookback": "1h",
   "rules": [
     {
       "name": "高频 404 扫描",
@@ -123,7 +129,7 @@ IP 直连访问异常：
 
 ```json
 {
-  "lookback_minutes": 30,
+  "lookback": "30m",
   "rules": [
     {
       "name": "IP 直连访问异常",
@@ -137,7 +143,7 @@ IP 直连访问异常：
 
 ```json
 {
-  "lookback_minutes": 120,
+  "lookback": "2h",
   "rules": [
     {
       "name": "异常错误率",
@@ -147,11 +153,25 @@ IP 直连访问异常：
 }
 ```
 
+使用状态码类写法（与 `client_error_count` / `server_error_count` 等价思路）：
+
+```json
+{
+  "lookback": "2h",
+  "rules": [
+    {
+      "name": "高 4xx 或 5xx 占比",
+      "expr": "request_count > 100 && (StatusRatio(\"4xx\") >= 0.8 || StatusRatio(\"5xx\") >= 0.3)"
+    }
+  ]
+}
+```
+
 排除可信 IP：
 
 ```json
 {
-  "lookback_minutes": 60,
+  "lookback": "1h",
   "rules": [
     {
       "name": "排除可信 IP 的 404 扫描",

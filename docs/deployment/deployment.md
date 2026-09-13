@@ -2,7 +2,7 @@
 
 你会学到：OpenFlare 的推荐部署方式、Server 与 Agent 的运行要求、源码启动方式、联调步骤、升级与卸载入口。
 
-生产环境建议使用 PostgreSQL 作为 Server 数据库，并通过 `config.yaml` 或环境变量配置 `APP_SESSION_SECRET` 等参数。完整 Docker Compose 部署还需 Redis 与 ClickHouse（见仓库根目录 `docker-compose.yaml`）。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
+生产环境建议使用 PostgreSQL 作为 Server 数据库，并通过 `config.yaml` 或环境变量配置 `APP_SESSION_SECRET` 等参数。完整 Docker Compose 部署需要 Redis；ClickHouse 可选，用于海量访问日志与观测时序（见仓库根目录 `docker-compose.yaml`）。Agent 支持 Docker 部署与本地安装脚本两种方式，Docker 镜像已内置 OpenResty 二进制。日志库判定与切换见 [日志存储解耦](../design/logstore.md)。
 
 ## 部署拓扑
 
@@ -47,33 +47,13 @@ Internal Service (192.168.x.x)
 
 ## 前置条件
 
-Server：
-
-| 项目 | 要求 |
-| --- | --- |
-| Go | `1.25+`，仅源码运行需要 |
-| Node.js | `18+`，仅源码构建管理端需要 |
-| 数据库 | 可写 SQLite 文件目录，或可访问的 PostgreSQL 实例 |
-| 端口 | 默认监听 `3000` |
-
-Agent：
-
-| 项目 | 要求 |
-| --- | --- |
-| 系统 | 安装脚本支持 Linux 和 macOS；systemd 服务仅在 Linux + systemd 环境创建 |
-| 架构 | `amd64` 或 `arm64` |
-| OpenResty | 本地部署需要可执行 `openresty`，或通过 `--openresty-path` 指定路径 |
-| Docker | 仅 Docker 部署 Agent 镜像时需要 |
-| 网络 | Agent 节点必须能访问 Server 地址 |
-| GeoIP | WAF 地域规则使用 Agent 本地 MaxMind mmdb；Agent 内置初始库并会定期更新 |
-
 ### 硬件配置推荐
 
-| 组件 | 最低硬件配额 | 推荐硬件配额 | 说明 |
-| --- | --- | --- | --- |
-| **Server 控制面** | 1 核 CPU / 1 GB 内存 / 10 GB 磁盘 | 2 核 CPU / 4 GB 内存 / 50 GB+ 磁盘 | 磁盘用量需根据访问日志留存时长与并发流量合理扩容 |
+| 组件 | 参考配置（入门）                    | 参考配置（生产） | 说明 |
+| --- |-------------------------------| --- | --- |
+| **Server 控制面** | 1 核 CPU / 2 GB 内存 / 20 GB 磁盘  | 2 核 CPU / 4 GB 内存 / 50 GB+ 磁盘 | 磁盘用量需根据访问日志留存时长与并发流量合理扩容 |
 | **Agent 数据面** | 1 核 CPU / 512 MB 内存 / 2 GB 磁盘 | 2 核 CPU / 2 GB 内存 / 10 GB+ 磁盘 | 根据 OpenResty 的并发代理连接量与 WAF 拦截处理扩容 |
-| **Relay 中继节点**| 1 核 CPU / 1 GB 内存 / 5 GB 磁盘 | 2 核 CPU / 2 GB 内存 / 20 GB 磁盘 | frps 传输中继吞吐量主要受带宽与 CPU 吞吐能力限制 |
+| **Relay 中继节点**| 1 核 CPU / 1 GB 内存 / 5 GB 磁盘   | 2 核 CPU / 2 GB 内存 / 20 GB 磁盘 | frps 传输中继吞吐量主要受带宽与 CPU 吞吐能力限制 |
 | **OpenFlared 客户端**| 1 核 CPU / 256 MB 内存 / 1 GB 磁盘 | 1 核 CPU / 512 MB 内存 / 5 GB 磁盘 | 独立运行于内网，自身资源占用极小，保障网络吞吐即可 |
 
 ## Docker Compose 部署 Server
@@ -123,10 +103,13 @@ docker pull ghcr.io/rain-kl/openflare-agent:latest
 docker rm -f openflare-agent 2>/dev/null || true
 docker run -d --name openflare-agent --restart unless-stopped \
   -p 80:80 -p 443:443/tcp -p 443:443/udp \
+  -v openflare-agent-pages:/data/var/lib/openflare/pages \
   -e OPENFLARE_SERVER_URL=http://your-server:3000 \
   -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
+
+命名卷 `openflare-agent-pages` 持久化 Pages 部署目录，重建容器时无需重新拉取静态站点包。
 
 ## Agent 接入（脚本安装）
 
@@ -166,41 +149,3 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
 systemctl status openflare-agent
 journalctl -u openflare-agent -f
 ```
-
-## 手动运行 Agent
-
-源码运行：
-
-```bash
-
-export LOG_LEVEL='info'
-go run ./cmd/agent -config /path/to/agent.json
-```
-
-编译后二进制运行：
-
-```bash
-
-go build -o openflare-agent ./cmd/agent
-export LOG_LEVEL='info'
-./openflare-agent -config /path/to/agent.json
-```
-
-最小 `agent.json` 示例：
-
-```json
-{
-  "server_url": "http://127.0.0.1:3000",
-  "agent_token": "replace-with-node-auth-token",
-  "data_dir": "./data",
-  "openresty_path": "openresty",
-  "heartbeat_interval": 10000,
-  "request_timeout": 10000
-}
-```
-
-未配置 `openresty_path` 时，Agent 默认调用 `openresty`。
-
-默认情况下，Agent 在 HTTP 心跳成功后会尝试升级为 WebSocket。升级成功时，Server 发布或激活配置会立即通知 Agent；如果 WebSocket 无法建立或意外断开，Agent 会自动退回 HTTP 心跳同步。
-
-WAF 地域规则依赖 Agent 本地 `GeoLite2-Country.mmdb`。Agent 启动时会在 `data_dir/etc/openflare/GeoLite2-Country.mmdb` 初始化内置数据库，并按配置周期尝试更新；更新失败只记录警告，不影响配置同步与 OpenResty reload。

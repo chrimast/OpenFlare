@@ -1,51 +1,55 @@
 'use client';
 
-import {useEffect} from 'react';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {useForm} from 'react-hook-form';
-import {z} from 'zod';
+import { useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
-import {Input} from '@/components/ui/input';
-import type {ProxyRouteItem} from '@/lib/services/openflare';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import type { ProxyRouteItem } from '@/lib/services/openflare';
 
-import {normalizeLimitRate, validateLimitRate} from '../../components/helpers';
-import {proxyRouteFormIds} from '../helpers';
-import {useRouteSectionSave} from '../hooks/use-route-section-save';
-import {SectionShell} from './section-shell';
+import { useTranslations } from 'next-intl';
 
-const rateLimitSchema = z
-  .object({
-    limit_conn_per_server: z.string(),
-    limit_conn_per_ip: z.string(),
-    limit_rate: z.string(),
-  })
-  .superRefine((value, context) => {
-    for (const field of ['limit_conn_per_server', 'limit_conn_per_ip'] as const) {
-      const rawValue = value[field].trim();
-      if (!rawValue) {
-        continue;
-      }
-      if (!/^\d+$/.test(rawValue)) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [field],
-          message: '请输入大于等于 0 的整数',
-        });
-      }
-    }
+import {
+  normalizeLimitRate,
+  normalizeLimitReqPerIP,
+  validateLimitRate,
+  validateLimitReqPerIP,
+} from '../../components/helpers';
+import { proxyRouteFormIds } from '../helpers';
+import { useRouteSectionSave } from '../hooks/use-route-section-save';
+import { SectionShell } from './section-shell';
 
-    const limitRateError = validateLimitRate(value.limit_rate);
-    if (limitRateError) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['limit_rate'],
-        message: limitRateError,
-      });
-    }
-  });
+type RateLimitValues = {
+  limit_conn_per_server: string;
+  limit_conn_per_ip: string;
+  limit_rate: string;
+  limit_req_per_ip: string;
+};
 
-type RateLimitValues = z.infer<typeof rateLimitSchema>;
+function formatConnValue(value: number | null | undefined) {
+  if (value === null || value === undefined || value === 0) {
+    return '';
+  }
+  return String(value);
+}
+
+function parseConnValue(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return 0;
+  }
+  return Number(trimmed);
+}
 
 interface LimitsSectionProps {
   route: ProxyRouteItem;
@@ -53,62 +57,117 @@ interface LimitsSectionProps {
   onSavingChange?: (saving: boolean) => void;
 }
 
-export function LimitsSection({ route, onRouteUpdate, onSavingChange }: LimitsSectionProps) {
-  const { saving, save } = useRouteSectionSave(route, onRouteUpdate, onSavingChange);
+export function LimitsSection({
+  route,
+  onRouteUpdate,
+  onSavingChange,
+}: LimitsSectionProps) {
+  const t = useTranslations('proxyRoutes');
+  const rateLimitSchema = z
+    .object({
+      limit_conn_per_server: z.string(),
+      limit_conn_per_ip: z.string(),
+      limit_rate: z.string(),
+      limit_req_per_ip: z.string(),
+    })
+    .superRefine((value, context) => {
+      for (const field of [
+        'limit_conn_per_server',
+        'limit_conn_per_ip',
+      ] as const) {
+        const rawValue = value[field].trim();
+        if (!rawValue) {
+          continue;
+        }
+        if (!/^-1$|^\d+$/.test(rawValue)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: t('validation.enterIntegerOrMinusOne'),
+          });
+        }
+      }
+
+      const limitRateError = validateLimitRate(value.limit_rate, t);
+      if (limitRateError) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['limit_rate'],
+          message: limitRateError,
+        });
+      }
+
+      const limitReqError = validateLimitReqPerIP(value.limit_req_per_ip, t);
+      if (limitReqError) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['limit_req_per_ip'],
+          message: limitReqError,
+        });
+      }
+    });
+  const { saving, save } = useRouteSectionSave(
+    route,
+    onRouteUpdate,
+    onSavingChange,
+  );
 
   const form = useForm<RateLimitValues>({
     resolver: zodResolver(rateLimitSchema),
     defaultValues: {
-      limit_conn_per_server: route.limit_conn_per_server
-        ? String(route.limit_conn_per_server)
-        : '',
-      limit_conn_per_ip: route.limit_conn_per_ip ? String(route.limit_conn_per_ip) : '',
+      limit_conn_per_server: formatConnValue(route.limit_conn_per_server),
+      limit_conn_per_ip: formatConnValue(route.limit_conn_per_ip),
       limit_rate: route.limit_rate || '',
+      limit_req_per_ip: route.limit_req_per_ip || '',
     },
   });
 
   useEffect(() => {
     form.reset({
-      limit_conn_per_server: route.limit_conn_per_server
-        ? String(route.limit_conn_per_server)
-        : '',
-      limit_conn_per_ip: route.limit_conn_per_ip ? String(route.limit_conn_per_ip) : '',
+      limit_conn_per_server: formatConnValue(route.limit_conn_per_server),
+      limit_conn_per_ip: formatConnValue(route.limit_conn_per_ip),
       limit_rate: route.limit_rate || '',
+      limit_req_per_ip: route.limit_req_per_ip || '',
     });
   }, [form, route]);
 
   return (
     <SectionShell
-      title="流量限制"
-      description="站点限流，空值或 0 表示关闭。"
+      title={t('limits')}
+      description={t('limitsDesc')}
       formId={proxyRouteFormIds.limits}
       saving={saving}
     >
       <Form {...form}>
         <form
           id={proxyRouteFormIds.limits}
-          className="grid gap-5 md:grid-cols-2"
+          className='grid gap-5 md:grid-cols-2'
           onSubmit={form.handleSubmit(async (values) => {
             await save(
               {
-                limit_conn_per_server: Number(values.limit_conn_per_server.trim() || '0'),
-                limit_conn_per_ip: Number(values.limit_conn_per_ip.trim() || '0'),
+                limit_conn_per_server: parseConnValue(
+                  values.limit_conn_per_server,
+                ),
+                limit_conn_per_ip: parseConnValue(values.limit_conn_per_ip),
                 limit_rate: normalizeLimitRate(values.limit_rate),
+                limit_req_per_ip: normalizeLimitReqPerIP(
+                  values.limit_req_per_ip,
+                ),
               },
-              '流量限制已保存',
+              t('limitsSaved'),
             );
           })}
         >
           <FormField
             control={form.control}
-            name="limit_conn_per_server"
+            name='limit_conn_per_server'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>并发限制</FormLabel>
+                <FormLabel>{t('connLimit')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="120" {...field} />
+                  <Input placeholder='120' {...field} />
                 </FormControl>
-                <FormDescription>限制当前站点最大并发连接数。</FormDescription>
+                <FormDescription>{t('connLimitHint')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -116,14 +175,14 @@ export function LimitsSection({ route, onRouteUpdate, onSavingChange }: LimitsSe
 
           <FormField
             control={form.control}
-            name="limit_conn_per_ip"
+            name='limit_conn_per_ip'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>单 IP 限制</FormLabel>
+                <FormLabel>{t('ipLimit')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="12" {...field} />
+                  <Input placeholder='12' {...field} />
                 </FormControl>
-                <FormDescription>限制单个 IP 的最大并发数。</FormDescription>
+                <FormDescription>{t('ipLimitHint')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -131,14 +190,29 @@ export function LimitsSection({ route, onRouteUpdate, onSavingChange }: LimitsSe
 
           <FormField
             control={form.control}
-            name="limit_rate"
+            name='limit_rate'
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>限速</FormLabel>
+              <FormItem>
+                <FormLabel>{t('rateLimit')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="512k/1m" {...field} />
+                  <Input placeholder={t('rateLimitPlaceholder')} {...field} />
                 </FormControl>
-                <FormDescription>限制单请求带宽，例如 512k 或 1m。</FormDescription>
+                <FormDescription>{t('rateLimitHint')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='limit_req_per_ip'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('reqLimit')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('reqLimitPlaceholder')} {...field} />
+                </FormControl>
+                <FormDescription>{t('reqLimitHint')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

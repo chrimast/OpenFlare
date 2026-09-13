@@ -1,57 +1,27 @@
-import {z} from 'zod';
+import { z } from 'zod';
 
-export const managedDomainSchema = z.object({
-  domain: z
-    .string()
-    .trim()
-    .min(1, '请输入域名')
-    .max(255, '域名不能超过 255 个字符')
-    .refine(
-      (value) => !value.includes('://') && !value.includes('/'),
-      '域名格式不合法',
-    )
-    .refine(
-      (value) =>
-        /^(?:\*\.)?(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/.test(
-          value,
-        ),
-      '域名格式不合法',
-    )
-    .refine(
-      (value) =>
-        !value.includes('*') ||
-        (value.startsWith('*.') && value.indexOf('*', 1) === -1),
-      '通配符域名仅支持 *.example.com 格式',
-    ),
-  cert_id: z.string(),
-  enabled: z.boolean(),
-  remark: z.string().max(255, '备注不能超过 255 个字符'),
-});
+import type { TranslateFn } from './website-utils';
 
-export const manualImportSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, '请输入证书名称')
-    .max(255, '证书名称不能超过 255 个字符'),
-  cert_pem: z.string().trim().min(1, '请输入证书 PEM 内容'),
-  key_pem: z.string().trim().min(1, '请输入私钥 PEM 内容'),
-  remark: z.string().max(255, '备注不能超过 255 个字符'),
-});
+export function createManualImportSchema(t: TranslateFn) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t('validation.nameRequired'))
+      .max(255, t('validation.nameTooLong')),
+    cert_pem: z.string().trim().min(1, t('validation.certPemRequired')),
+    key_pem: z.string().trim().min(1, t('validation.keyPemRequired')),
+    remark: z.string().max(255, t('validation.remarkTooLong')),
+  });
+}
 
-export type ManagedDomainFormValues = z.infer<typeof managedDomainSchema>;
-export type ManualImportFormValues = z.infer<typeof manualImportSchema>;
+export type ManualImportFormValues = z.infer<
+  ReturnType<typeof createManualImportSchema>
+>;
 
 export type FileImportFormValues = {
   name: string;
   remark: string;
-};
-
-export const defaultManagedDomainValues: ManagedDomainFormValues = {
-  domain: '',
-  cert_id: '',
-  enabled: true,
-  remark: '',
 };
 
 export const defaultManualImportValues: ManualImportFormValues = {
@@ -66,22 +36,29 @@ export const defaultFileImportValues: FileImportFormValues = {
   remark: '',
 };
 
-export const acmeApplySchema = z.object({
-  name: z.string().trim().min(1, '请输入证书名称').max(255),
-  primary_domain: z.string().trim().min(1, '请输入主域名'),
-  other_domains: z.string(),
-  dns_account_id: z.number().min(1, '请选择 DNS 账号'),
-  acme_account_id: z.number(),
-  key_algorithm: z.string(),
-  auto_renew: z.boolean(),
-  disable_cname: z.boolean(),
-  skip_dns: z.boolean(),
-  dns1: z.string(),
-  dns2: z.string(),
-  remark: z.string().max(255),
-});
+export function createAcmeApplySchema(t: TranslateFn) {
+  return z.object({
+    name: z.string().trim().min(1, t('validation.nameRequired')).max(255),
+    primary_domain: z
+      .string()
+      .trim()
+      .min(1, t('validation.primaryDomainRequired')),
+    other_domains: z.string(),
+    dns_account_id: z.number().min(1, t('validation.dnsAccountRequired')),
+    acme_account_id: z.number(),
+    key_algorithm: z.string(),
+    auto_renew: z.boolean(),
+    disable_cname: z.boolean(),
+    skip_dns: z.boolean(),
+    dns1: z.string(),
+    dns2: z.string(),
+    remark: z.string().max(255),
+  });
+}
 
-export type AcmeApplyFormValues = z.infer<typeof acmeApplySchema>;
+export type AcmeApplyFormValues = z.infer<
+  ReturnType<typeof createAcmeApplySchema>
+>;
 
 export const defaultAcmeApplyValues: AcmeApplyFormValues = {
   name: '',

@@ -58,6 +58,8 @@ find_go_files() {
     -o -path './frontend/out' \
     -o -path './internal/router/dist' \
     -o -path './internal/router/root/dist' \
+    -o -path './backend/plugins/drivers/driver_http/dist' \
+    -o -path './plugins/drivers/driver_http/dist' \
     -o -path './vendor' \) -prune \
     -o -type f -name '*.go' -print
 }

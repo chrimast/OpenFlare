@@ -20,6 +20,16 @@
 为提高协作效率，我们建议您在提交 PR 前，先通过 Issue 简要说明动机与背景。  
 
 
+## 合并上游
+
+`.gitattributes` 对 `backend/openflare/`、`frontend/` 等路径使用 `merge=ours`。该驱动不会自动生效，请在仓库根目录执行一次：
+
+```bash
+git config include.path ../.gitconfig
+# worktree 安全写法：
+git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
+```
+
 ## 贡献步骤
 
 1. **Fork 本仓库** 并创建您的分支（建议使用有意义的分支名）。

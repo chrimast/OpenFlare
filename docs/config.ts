@@ -73,6 +73,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
         { text: '概览', link: '' },
         { text: '快速开始', link: 'quick-start' },
         { text: 'TLS 证书与自动续期', link: 'certificates' },
+        { text: 'Zone 域名迁移', link: 'zone-domain-migration' },
         { text: '新建反代配置', link: 'proxy-config' },
         { text: 'Pages 静态托管使用', link: 'pages-usage' },
         { text: '内网穿透与隧道使用', link: 'tunnel-usage' },
@@ -125,14 +126,22 @@ function sidebarDesign(): DefaultTheme.SidebarItem[] {
       items: [
         { text: '产品边界', link: '' },
         { text: '系统架构', link: 'architecture' },
+        { text: 'Zone 与域名资源设计', link: 'zone-design' },
+        { text: 'Cloudflare DNS 指向设计', link: 'cloudflare-pointing' },
         { text: 'Agent 与发布模型', link: 'agent-design' },
         { text: '内网穿透隧道设计', link: 'tunnel-design' },
         { text: 'WAF 设计', link: 'waf-design' },
+        { text: 'WAF 可编排规则设计', link: 'waf-orchestration-design' },
         { text: 'Pages 静态托管设计', link: 'pages-design' },
+        { text: '边缘缓存策略设计', link: 'edge-cache-design' },
+        { text: '源站错误页设计', link: 'origin-error-page' },
+        { text: '边缘可观测与业务流量统计', link: 'observability-design' },
+        { text: '观测数据传输模型', link: 'observability-transport-model' },
+        { text: '观测上报协议与表结构', link: 'observability-data-model' },
+        { text: '日志存储解耦', link: 'logstore' },
         { text: 'Uptime Kuma 监控同步设计', link: 'kuma-design' },
         { text: '登录验证码设计', link: 'login-captcha' }
       ]
     }
   ]
 }
-

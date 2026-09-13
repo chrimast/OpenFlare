@@ -1,16 +1,22 @@
-import type {AxiosProgressEvent, InternalAxiosRequestConfig} from 'axios';
+import type { AxiosProgressEvent, InternalAxiosRequestConfig } from 'axios';
 
 import apiClient from '@/lib/services/core/api-client';
-import {apiConfig} from '@/lib/services/core/config';
-import type {ApiResponse} from '@/lib/services/core';
+import { apiConfig } from '@/lib/services/core/config';
+import type { ApiResponse } from '@/lib/services/core';
 
-import {OpenFlareBaseService} from './base.service';
+import { OpenFlareBaseService } from './base.service';
 import type {
   PagesDeployment,
   PagesDeploymentFile,
+  PagesDeploymentUploadFromURLPayload,
   PagesDeploymentUploadPayload,
   PagesProject,
   PagesProjectPayload,
+  PagesSource,
+  PagesSourceActionPayload,
+  PagesSourceActionReceipt,
+  PagesSourceUpdatePayload,
+  PagesSourceUpdateResult,
 } from './types';
 
 export class PagesService extends OpenFlareBaseService {
@@ -39,16 +45,50 @@ export class PagesService extends OpenFlareBaseService {
     return this.post<void>(`/${id}/delete`);
   }
 
+  static getSource(projectId: number): Promise<PagesSource> {
+    return this.get<PagesSource>(`/${projectId}/source`);
+  }
+
+  static updateSource(
+    projectId: number,
+    payload: PagesSourceUpdatePayload,
+  ): Promise<PagesSourceUpdateResult> {
+    return this.post<PagesSourceUpdateResult>(
+      `/${projectId}/source/update`,
+      payload,
+    );
+  }
+
+  static deleteSource(projectId: number): Promise<PagesSource> {
+    return this.post<PagesSource>(`/${projectId}/source/delete`);
+  }
+
+  static checkSource(projectId: number): Promise<PagesSourceActionReceipt> {
+    return this.post<PagesSourceActionReceipt>(
+      `/${projectId}/source/check`,
+      {},
+    );
+  }
+
+  static syncSource(
+    projectId: number,
+    payload: PagesSourceActionPayload = {},
+  ): Promise<PagesSourceActionReceipt> {
+    return this.post<PagesSourceActionReceipt>(
+      `/${projectId}/source/sync`,
+      payload,
+    );
+  }
+
   static listDeployments(projectId: number): Promise<PagesDeployment[]> {
     return this.get<PagesDeployment[]>(`/${projectId}/deployments`);
   }
 
   static listDeploymentFiles(
-    projectId: number,
     deploymentId: number,
   ): Promise<PagesDeploymentFile[]> {
     return this.get<PagesDeploymentFile[]>(
-      `/${projectId}/deployments/${deploymentId}/files`,
+      `/deployments/${deploymentId}/files`,
     );
   }
 
@@ -58,13 +98,22 @@ export class PagesService extends OpenFlareBaseService {
   ): Promise<PagesDeployment> {
     const formData = new FormData();
     formData.append('package', payload.file);
-    formData.append('root_dir', payload.rootDir ?? '');
-    formData.append('entry_file', payload.entryFile ?? 'index.html');
 
     return this.postFormData<PagesDeployment>(
       `/${projectId}/deployments/upload`,
       formData,
       payload.onProgress,
+    );
+  }
+
+  static uploadDeploymentFromURL(
+    projectId: number,
+    payload: PagesDeploymentUploadFromURLPayload,
+  ): Promise<PagesDeployment> {
+    return this.post<PagesDeployment>(
+      `/${projectId}/deployments/upload-from-url`,
+      payload,
+      { timeout: apiConfig.uploadTimeout } as InternalAxiosRequestConfig,
     );
   }
 
@@ -81,9 +130,7 @@ export class PagesService extends OpenFlareBaseService {
     projectId: number,
     deploymentId: number,
   ): Promise<void> {
-    return this.post<void>(
-      `/${projectId}/deployments/${deploymentId}/delete`,
-    );
+    return this.post<void>(`/${projectId}/deployments/${deploymentId}/delete`);
   }
 
   private static async postFormData<T>(

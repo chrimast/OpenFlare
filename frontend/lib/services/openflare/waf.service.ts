@@ -1,43 +1,48 @@
-import {OpenFlareBaseService} from './base.service';
+import { OpenFlareBaseService } from './base.service';
 import type {
   WAFIPGroup,
   WAFIPGroupAutoTestPayload,
   WAFIPGroupAutoTestResult,
   WAFIPGroupPayload,
   WAFIPGroupSyncResult,
-  WAFRuleGroup,
-  WAFRuleGroupPayload,
+  WAFCreateRulePayload,
+  WAFRule,
+  WAFSaveRuleGraphPayload,
   WAFSiteRuleGroups,
+  WAFUpdateRuleMetaPayload,
 } from './types';
 
 export class WafService extends OpenFlareBaseService {
   protected static override readonly basePath: string = '/api/v1/d/waf';
 
-  static async listRuleGroups(): Promise<WAFRuleGroup[]> {
-    return this.get<WAFRuleGroup[]>('/rule-groups');
+  static async listRuleGroups(): Promise<WAFRule[]> {
+    return this.get<WAFRule[]>('/rule-groups');
   }
 
-  static async getRuleGroup(id: number): Promise<WAFRuleGroup> {
-    return this.get<WAFRuleGroup>(`/rule-groups/${id}`);
+  static async getRule(id: number): Promise<WAFRule> {
+    return this.get<WAFRule>(`/rule-groups/${id}`);
   }
 
-  static async createRuleGroup(payload: WAFRuleGroupPayload): Promise<WAFRuleGroup> {
-    return this.post<WAFRuleGroup>('/rule-groups', payload);
+  static async createRule(payload: WAFCreateRulePayload): Promise<WAFRule> {
+    return this.post<WAFRule>('/rule-groups', payload);
   }
 
-  static async updateRuleGroup(
+  static async saveRuleGraph(
     id: number,
-    payload: WAFRuleGroupPayload,
-  ): Promise<WAFRuleGroup> {
-    return this.post<WAFRuleGroup>(`/rule-groups/${id}/update`, payload);
+    payload: WAFSaveRuleGraphPayload,
+  ): Promise<WAFRule> {
+    return this.post<WAFRule>(`/rule-groups/${id}/graph`, payload);
+  }
+
+  static async updateRuleMeta(
+    id: number,
+    payload: WAFUpdateRuleMetaPayload,
+  ): Promise<WAFRule> {
+    return this.post<WAFRule>(`/rule-groups/${id}/meta`, payload);
   }
 
   static async deleteRuleGroup(id: number): Promise<void> {
     return this.post<void>(`/rule-groups/${id}/delete`);
-  }
-
-  static async updateRuleGroupSites(id: number, ids: number[]): Promise<WAFRuleGroup> {
-    return this.post<WAFRuleGroup>(`/rule-groups/${id}/sites`, { ids });
   }
 
   static async listSiteRuleGroups(routeId: number): Promise<WAFSiteRuleGroups> {
@@ -65,7 +70,10 @@ export class WafService extends OpenFlareBaseService {
     return this.post<WAFIPGroup>('/ip-groups', payload);
   }
 
-  static async updateIPGroup(id: number, payload: WAFIPGroupPayload): Promise<WAFIPGroup> {
+  static async updateIPGroup(
+    id: number,
+    payload: WAFIPGroupPayload,
+  ): Promise<WAFIPGroup> {
     return this.post<WAFIPGroup>(`/ip-groups/${id}/update`, payload);
   }
 

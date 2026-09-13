@@ -1,9 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import {motion, type Variants} from 'motion/react';
+import { motion, type Variants } from 'motion/react';
 
-import {getVariants, type IconProps, IconWrapper, useAnimateIconContext,} from '@/components/animate-ui/icons/icon';
+import {
+  getVariants,
+  type IconProps,
+  IconWrapper,
+  useAnimateIconContext,
+} from '@/components/animate-ui/icons/icon';
 
 type ChevronDownProps = IconProps<keyof typeof animations>;
 
@@ -39,21 +44,21 @@ function IconComponent({ size, ...props }: ChevronDownProps) {
 
   return (
     <motion.svg
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns='http://www.w3.org/2000/svg'
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
       strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap='round'
+      strokeLinejoin='round'
       {...props}
     >
       <motion.path
-        d="m6 9 6 6 6-6"
+        d='m6 9 6 6 6-6'
         variants={variants.path}
-        initial="initial"
+        initial='initial'
         animate={controls}
       />
     </motion.svg>

@@ -8,10 +8,10 @@
 
 ## 前置条件
 
-1. **获取 Tunnel Token**：在 OpenFlare 管理端的「内网穿透」或「隧道管理」页面中，创建一个新的隧道实例，系统会自动生成唯一的 `tunnel_id` 与 `tunnel_token`（形如 `tun-<32hex>`）。
+1. **获取 Tunnel Token**：在管理端「节点管理」中新增一个类型为 **Tunnel** 的节点，保存后进入节点详情页即可查看该节点专属的接入 Token。
 2. **网络出方向权限**：内网服务器无需任何公网入方向 IP 或端口映射，但必须能够通过网络访问公网上的 **OpenFlare Server 地址** 以及对应的 **TunnelRelay 节点中继端口 (默认 7000)**。
 3. **软件依赖**（仅限宿主机直接部署）：
-   - 本地需有可执行的 `frpc` 二进制文件（建议版本为 `v0.61.0+` 或最新稳定版 `v0.69.0`），或通过参数显式指定路径。
+   - 本地需有可执行的 `frpc` 二进制文件，或通过参数显式指定路径。
 
 ---
 
@@ -34,7 +34,7 @@
 
 ---
 
-## Docker 运行（推荐）
+## Docker 运行
 
 Docker 部署是内网运行最简单也最安全的方式。官方的 `openflared` 镜像已经内置了客户端控制器以及 `frpc v0.69.0` 二进制运行时，无需额外搭建环境。
 
@@ -51,40 +51,6 @@ docker run -d --name openflared --restart unless-stopped \
 
 ---
 
-## 宿主机手动运行
-
-如果您需要直接在内网的 Linux/macOS/Windows 宿主机上独立运行：
-
-### 1. 编译二进制
-
-```bash
-go build -o bin/flared ./cmd/flared
-```
-
-### 2. 准备 `flared.json`
-
-在程序同级目录下创建 `flared.json` 配置文件：
-
-```json
-{
-  "server_url": "http://your-server-ip:3000",
-  "tunnel_token": "your-tunnel-auth-token",
-  "frpc_path": "/usr/local/bin/frpc",
-  "data_dir": "./data",
-  "heartbeat_interval": "10s",
-  "sync_interval": "30s"
-}
-```
-
-### 3. 运行服务
-
-```bash
-export LOG_LEVEL='info'
-./flared -config ./flared.json
-```
-
----
-
 ## 启动与验证
 
 ### 1. 自动同步逻辑
@@ -92,8 +58,8 @@ export LOG_LEVEL='info'
 启动成功后，OpenFlared 将执行以下工作流：
 - **心跳与配置获取**：周期性向 Server 的 `/api/v1/tunnel/heartbeat` 和 `/api/v1/tunnel/config/active` 接口发起同步，验证 Token 并检测配置版本。
 - **文件渲染**：当检测到配置版本（或校验和 Checksum）变化时，会自动拉取该隧道的完整路由规则。如果绑定了多个中继 Relay，将为每个 Relay 分别在 `data_dir` 下渲染出 `frpc_{relayNodeID}.toml`。
-- **热重载或重启**：拉起对应的 `frpc` 子进程，或在配置文件发生改变时执行 `frpc reload` / 重启动作，以确保流量映射保持最新。
-- **异常自恢复**：如果本地 `frpc` 隧道进程异常退出，主控程序会在 5 秒的退避惩罚后自动尝试重新启动。
+- **配置变更重启**：当配置或校验和变化时，重新拉起对应的 `frpc` 子进程，以确保流量映射保持最新。
+- **异常自恢复**：如果本地 `frpc` 隧道进程异常退出，主控程序会按指数退避（初始 1 秒，上限 60 秒）自动重启。
 
 ### 2. 查看日志与连接状态
 
@@ -113,6 +79,6 @@ frpc process missing, starting {"relay_id": "..."}
 
 ### 3. 管理端确认
 
-打开管理后台的 **「内网穿透」** 页面：
-- 查看对应隧道的在线状态，此时应当绿灯显示 **「在线」**。
-- 您可以清晰地看到该隧道目前连接了哪些中继节点，以及各内网服务的穿透路由详情。
+打开管理后台的 **「节点管理」**，进入对应 Tunnel 节点的详情页：
+- 查看节点在线状态与 flared 运行状态（WebSocket 已连接 / 运行中 / 离线）。
+- 查看当前应用版本与最近一次应用记录。

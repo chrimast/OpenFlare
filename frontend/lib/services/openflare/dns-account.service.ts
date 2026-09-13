@@ -1,8 +1,9 @@
-import {OpenFlareBaseService} from './base.service';
-import type {DnsAccountItem, DnsAccountMutationPayload} from './types';
+import { OpenFlareBaseService } from './base.service';
+import type { DnsAccountItem, DnsAccountMutationPayload } from './types';
 
 export class DnsAccountService extends OpenFlareBaseService {
-  protected static override readonly basePath: string = '/api/v1/d/dns-accounts';
+  protected static override readonly basePath: string =
+    '/api/v1/d/dns-accounts';
 
   static async list(): Promise<DnsAccountItem[]> {
     return this.get<DnsAccountItem[]>('/');

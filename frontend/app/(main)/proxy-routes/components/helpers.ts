@@ -3,44 +3,58 @@ import type {
   ProxyRouteCustomHeader,
   ProxyRouteItem,
   ProxyRouteMutationPayload,
+  ZoneDomainItem,
 } from '@/lib/services/openflare';
+import { ZoneService } from '@/lib/services/openflare';
 
-export const proxyRouteConfigSections = [
-  {
-    key: 'domains' as const,
-    label: '域名设置',
-    description: '维护站点标识、域名列表和证书绑定。',
-  },
-  {
-    key: 'limits' as const,
-    label: '流量限制',
-    description: '设置连接数和限速。',
-  },
-  {
-    key: 'proxy' as const,
-    label: '反向代理',
-    description: '配置主回源和上游地址。',
-  },
-  {
-    key: 'cache' as const,
-    label: '缓存',
-    description: '配置站点缓存策略。',
-  },
-  {
-    key: 'waf' as const,
-    label: 'WAF',
-    description: '绑定 WAF 规则组，并查看当前站点生效策略。',
-  },
-  {
-    key: 'auth' as const,
-    label: '认证配置',
-    description: '配置基础鉴权访问，需要输入账号密码才能访问网站。',
-  },
-] satisfies ReadonlyArray<{
-  key: ProxyRouteConfigSection;
-  label: string;
-  description: string;
-}>;
+export type TranslateFn = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
+const proxyRouteConfigSectionKeys = [
+  'domains',
+  'limits',
+  'proxy',
+  'cache',
+  'waf',
+  'auth',
+] as const satisfies ReadonlyArray<ProxyRouteConfigSection>;
+
+export function getProxyRouteConfigSections(t: TranslateFn) {
+  return [
+    {
+      key: 'domains' as const,
+      label: t('sections.domains'),
+      description: t('sections.domainsDesc'),
+    },
+    {
+      key: 'limits' as const,
+      label: t('sections.limits'),
+      description: t('sections.limitsDesc'),
+    },
+    {
+      key: 'proxy' as const,
+      label: t('sections.proxy'),
+      description: t('sections.proxyDesc'),
+    },
+    {
+      key: 'cache' as const,
+      label: t('sections.cache'),
+      description: t('sections.cacheDesc'),
+    },
+    {
+      key: 'waf' as const,
+      label: t('sections.waf'),
+      description: t('sections.wafDesc'),
+    },
+    {
+      key: 'auth' as const,
+      label: t('sections.auth'),
+      description: t('sections.authDesc'),
+    },
+  ];
+}
 
 const domainPattern =
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
@@ -48,18 +62,18 @@ const domainPattern =
 export function getProxyRouteConfigSection(
   value: string | null | undefined,
 ): ProxyRouteConfigSection {
-  return proxyRouteConfigSections.some((section) => section.key === value)
+  return proxyRouteConfigSectionKeys.some((key) => key === value)
     ? (value as ProxyRouteConfigSection)
     : 'domains';
 }
 
-export function validateDomain(domain: string): string | null {
+export function validateDomain(domain: string, t: TranslateFn): string | null {
   const normalized = domain.trim().toLowerCase();
   if (!normalized) {
-    return '请输入域名';
+    return t('validation.enterDomain');
   }
   if (!domainPattern.test(normalized)) {
-    return '域名格式不合法';
+    return t('validation.invalidDomain');
   }
   return null;
 }
@@ -77,21 +91,59 @@ export function parseOriginUrl(originUrl: string) {
   };
 }
 
-export function getUpstreamSummary(route: ProxyRouteItem): string {
+/** Domain FQDNs bound to a proxy route (from zone_domains). */
+export function getRouteDomainNames(route: ProxyRouteItem): string[] {
+  return (route.zone_domains ?? []).map((item) => item.domain).filter(Boolean);
+}
+
+export function getRoutePrimaryDomain(route: ProxyRouteItem): string {
+  return getRouteDomainNames(route)[0] ?? '';
+}
+
+export function getRouteDomainsLabel(
+  route: ProxyRouteItem,
+  t: TranslateFn,
+): string {
+  const names = getRouteDomainNames(route);
+  return names.length > 0 ? names.join(', ') : t('unboundDomain');
+}
+
+/** Upstream address labels for display (supports multi-upstream). */
+export function getUpstreamLabels(
+  route: ProxyRouteItem,
+  t: TranslateFn,
+): string[] {
   if (route.upstream_type === 'pages') {
-    return route.pages_project_id
-      ? `Pages 项目 #${route.pages_project_id}`
-      : 'Pages 项目未绑定';
+    return [
+      route.pages_project_id
+        ? t('pagesProjectId', { id: route.pages_project_id })
+        : t('pagesUnbound'),
+    ];
   }
   if (route.upstream_type === 'tunnel') {
     const protocol = route.tunnel_target_protocol || 'http';
-    const target = route.tunnel_target_addr || '未配置目标';
-    return `Tunnel → ${protocol}://${target}`;
+    const target = route.tunnel_target_addr || t('tunnelTargetUnset');
+    return [`Tunnel → ${protocol}://${target}`];
   }
-  if (route.upstream_list.length <= 1) {
-    return route.origin_url;
+  const list = (route.upstream_list ?? []).filter(Boolean);
+  if (list.length > 0) {
+    return list;
   }
-  return `${route.upstream_list.length} 个上游，主上游 ${route.origin_url}`;
+  return route.origin_url ? [route.origin_url] : [];
+}
+
+export function getUpstreamSummary(
+  route: ProxyRouteItem,
+  t: TranslateFn,
+): string {
+  const labels = getUpstreamLabels(route, t);
+  if (labels.length === 0) {
+    return t('upstreamUnset');
+  }
+  if (labels.length === 1) {
+    return labels[0];
+  }
+  return labels.join(' · ');
 }
 
 const originHostPattern =
@@ -99,8 +151,10 @@ const originHostPattern =
 const headerKeyPattern = /^[A-Za-z0-9_-]+$/;
 const limitRatePattern = /^\d+(?:[kKmM])?$/;
 
-export function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : '请求失败，请稍后重试。';
+export function getErrorMessage(error: unknown, fallback?: string) {
+  return error instanceof Error
+    ? error.message
+    : (fallback ?? '请求失败，请稍后重试。');
 }
 
 export function linesFromTextarea(value: string) {
@@ -110,23 +164,23 @@ export function linesFromTextarea(value: string) {
     .filter(Boolean);
 }
 
-export function validateDomains(domains: string[]) {
+export function validateDomains(domains: string[], t: TranslateFn) {
   if (domains.length === 0) {
-    return '请至少填写一个域名';
+    return t('validation.enterAtLeastOneDomain');
   }
 
   const seen = new Set<string>();
   for (const domain of domains) {
     const normalized = domain.trim().toLowerCase();
-    const error = validateDomain(normalized);
+    const error = validateDomain(normalized, t);
     if (error && normalized) {
-      return `域名格式不合法：${domain}`;
+      return t('validation.invalidDomainWithValue', { domain });
     }
     if (!normalized) {
       continue;
     }
     if (seen.has(normalized)) {
-      return `域名重复：${domain}`;
+      return t('validation.duplicateDomain', { domain });
     }
     seen.add(normalized);
   }
@@ -134,10 +188,10 @@ export function validateDomains(domains: string[]) {
   return null;
 }
 
-export function parseOriginUrls(value: string) {
+export function parseOriginUrls(value: string, t: TranslateFn) {
   const urls = linesFromTextarea(value);
   if (urls.length === 0) {
-    return { urls: [], error: '请至少填写一个上游地址' };
+    return { urls: [], error: t('validation.enterAtLeastOneUpstream') };
   }
 
   let sharedScheme = '';
@@ -146,25 +200,31 @@ export function parseOriginUrls(value: string) {
     try {
       parsed = new URL(originUrl);
     } catch {
-      return { urls: [], error: `上游地址格式不合法：${originUrl}` };
+      return {
+        urls: [],
+        error: t('validation.invalidUpstream', { url: originUrl }),
+      };
     }
 
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return {
         urls: [],
-        error: `上游地址必须以 http:// 或 https:// 开头：${originUrl}`,
+        error: t('validation.upstreamMustBeHttp', { url: originUrl }),
       };
     }
 
     if (!parsed.hostname) {
-      return { urls: [], error: `上游地址缺少主机名：${originUrl}` };
+      return {
+        urls: [],
+        error: t('validation.upstreamMissingHost', { url: originUrl }),
+      };
     }
 
     if (urls.length > 1) {
       if ((parsed.pathname && parsed.pathname !== '/') || parsed.search) {
         return {
           urls: [],
-          error: '多上游模式暂不支持带路径或查询参数的地址',
+          error: t('validation.multiUpstreamNoPath'),
         };
       }
 
@@ -173,7 +233,7 @@ export function parseOriginUrls(value: string) {
       } else if (sharedScheme !== parsed.protocol) {
         return {
           urls: [],
-          error: '同一站点的多个上游必须使用相同协议',
+          error: t('validation.multiUpstreamSameProtocol'),
         };
       }
     }
@@ -182,7 +242,7 @@ export function parseOriginUrls(value: string) {
   return { urls, error: null };
 }
 
-export function validateOriginHost(value: string) {
+export function validateOriginHost(value: string, t: TranslateFn) {
   const normalized = value.trim();
   if (!normalized) {
     return null;
@@ -192,12 +252,12 @@ export function validateOriginHost(value: string) {
     /[/\\\s]/.test(normalized) ||
     !originHostPattern.test(normalized)
   ) {
-    return '回源 Host 格式不合法';
+    return t('validation.invalidOriginHost');
   }
   return null;
 }
 
-export function parseCustomHeadersText(value: string) {
+export function parseCustomHeadersText(value: string, t: TranslateFn) {
   const lines = linesFromTextarea(value);
   const headers: ProxyRouteCustomHeader[] = [];
 
@@ -206,7 +266,7 @@ export function parseCustomHeadersText(value: string) {
     if (separatorIndex <= 0) {
       return {
         headers: [],
-        error: `自定义请求头格式不合法：${line}`,
+        error: t('validation.invalidHeader', { line }),
       };
     }
 
@@ -216,7 +276,7 @@ export function parseCustomHeadersText(value: string) {
     if (!headerKeyPattern.test(key)) {
       return {
         headers: [],
-        error: `自定义请求头名称不合法：${key}`,
+        error: t('validation.invalidHeaderName', { key }),
       };
     }
 
@@ -230,39 +290,60 @@ export function customHeadersToText(headers: ProxyRouteCustomHeader[]) {
   return headers.map((header) => `${header.key}: ${header.value}`).join('\n');
 }
 
-export function validateLimitRate(value: string) {
+export function validateLimitRate(value: string, t: TranslateFn) {
   const normalized = value.trim();
-  if (!normalized || normalized === '0') {
+  if (!normalized || normalized === '0' || normalized === '-1') {
     return null;
   }
   if (!limitRatePattern.test(normalized)) {
-    return '限速格式不合法，请使用 512k、1m 或纯数字';
+    return t('validation.invalidLimitRate');
   }
   return null;
 }
 
 export function normalizeLimitRate(value: string) {
   const normalized = value.trim().toLowerCase();
-  return normalized === '0' ? '' : normalized;
+  if (normalized === '0') return '';
+  return normalized;
+}
+
+const limitReqPattern = /^\d+r\/[sm]$/i;
+
+export function validateLimitReqPerIP(value: string, t: TranslateFn) {
+  const normalized = value.trim();
+  if (!normalized || normalized === '0' || normalized === '-1') {
+    return null;
+  }
+  if (!limitReqPattern.test(normalized)) {
+    return t('validation.invalidLimitReq');
+  }
+  return null;
+}
+
+export function normalizeLimitReqPerIP(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized || normalized === '0') return '';
+  return normalized;
 }
 
 export function validateCacheRules(
-  policy: 'url' | 'suffix' | 'path_prefix' | 'path_exact',
+  policy: 'static' | 'all' | 'url' | 'suffix' | 'path_prefix' | 'path_exact',
   rules: string[],
+  t: TranslateFn,
 ) {
-  if (policy === 'url') {
+  if (policy === 'static' || policy === 'all' || policy === 'url') {
     return null;
   }
 
   if (rules.length === 0) {
-    return '当前缓存策略至少需要一条规则';
+    return t('validation.cacheRuleRequired');
   }
 
   if (policy === 'suffix') {
     for (const rule of rules) {
       const normalized = rule.replace(/^\./, '');
       if (!normalized || /[/\\\s]/.test(normalized)) {
-        return `缓存后缀格式不合法：${rule}`;
+        return t('validation.invalidCacheSuffix', { rule });
       }
     }
     return null;
@@ -270,7 +351,7 @@ export function validateCacheRules(
 
   for (const rule of rules) {
     if (!rule.startsWith('/') || rule.includes('://') || /[\s]/.test(rule)) {
-      return `缓存路径规则格式不合法：${rule}`;
+      return t('validation.invalidCachePath', { rule });
     }
   }
 
@@ -284,12 +365,11 @@ export function buildPayloadFromRoute(
   const primaryOrigin =
     route.upstream_type === 'pages'
       ? parseOriginUrl('http://127.0.0.1')
-      : parseOriginUrl(route.origin_url);
+      : parseOriginUrl(route.origin_url || 'http://127.0.0.1');
 
   return {
     site_name: route.site_name,
-    domain: route.primary_domain,
-    domains: route.domains,
+    zone_domain_ids: route.zone_domain_ids ?? [],
     origin_id: null,
     origin_url: route.origin_url,
     origin_scheme: primaryOrigin.scheme,
@@ -297,21 +377,28 @@ export function buildPayloadFromRoute(
     origin_port: primaryOrigin.port,
     origin_uri: primaryOrigin.uri,
     origin_host: route.origin_host || '',
-    upstreams: route.upstream_list.slice(1),
+    upstreams: (route.upstream_list ?? []).slice(1),
     enabled: route.enabled,
     enable_https: route.enable_https,
-    cert_id: route.cert_id,
-    cert_ids: route.cert_ids,
-    domain_cert_ids: route.domain_cert_ids,
     redirect_http: route.redirect_http,
     limit_conn_per_server: route.limit_conn_per_server,
     limit_conn_per_ip: route.limit_conn_per_ip,
     limit_rate: route.limit_rate,
+    limit_req_per_ip: route.limit_req_per_ip,
     cache_enabled: route.cache_enabled,
-    cache_policy: route.cache_policy || 'url',
-    cache_rules: route.cache_rule_list,
-    custom_headers: route.custom_header_list,
-    remark: route.remark || '',
+    cache_policy: (() => {
+      if (!route.cache_enabled) {
+        return 'static';
+      }
+      const policy = (route.cache_policy || '').trim();
+      // Legacy empty/url → all (same as backend displayCachePolicy).
+      if (!policy || policy === 'url' || policy === 'all') {
+        return 'all';
+      }
+      return policy;
+    })(),
+    cache_rules: route.cache_rule_list ?? [],
+    custom_headers: route.custom_header_list ?? [],
     basic_auth_enabled: route.basic_auth_enabled,
     basic_auth_username: route.basic_auth_username,
     basic_auth_password: route.basic_auth_password,
@@ -322,4 +409,13 @@ export function buildPayloadFromRoute(
     pages_project_id: route.pages_project_id ?? null,
     ...overrides,
   };
+}
+
+/** Load all Zone domains across registered Zones for route binding selectors. */
+export async function listAllZoneDomains(): Promise<ZoneDomainItem[]> {
+  const zones = await ZoneService.list();
+  const overviews = await Promise.all(
+    zones.map((zone) => ZoneService.getOverview(zone.id)),
+  );
+  return overviews.flatMap((overview) => overview.domains ?? []);
 }

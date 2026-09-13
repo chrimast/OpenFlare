@@ -1,9 +1,9 @@
 'use client';
 
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {useMemo, useState} from 'react';
-import {FileKey, Plus, RefreshCw, Trash2} from 'lucide-react';
-import {toast} from 'sonner';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { FileKey, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -15,35 +15,53 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {Button} from '@/components/ui/button';
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
-import {EmptyStateWithBorder} from '@/components/layout/empty';
-import {ErrorInline} from '@/components/layout/error';
-import {LoadingStateWithBorder} from '@/components/layout/loading';
-import type {TlsCertificateItem} from '@/lib/services/openflare';
-import {TlsCertificateService} from '@/lib/services/openflare';
-import {formatDateTime} from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { EmptyStateWithBorder } from '@/components/layout/empty';
+import { ErrorInline } from '@/components/layout/error';
+import { LoadingStateWithBorder } from '@/components/layout/loading';
+import type { TlsCertificateItem } from '@/lib/services/openflare';
+import { TlsCertificateService } from '@/lib/services/openflare';
+import { formatDateTime } from '@/lib/utils';
 
-import {CertificateApplyDialog} from '../websites/components/certificate-apply-dialog';
-import {CertificateDetailDialog} from '../websites/components/certificate-detail-dialog';
-import {CertificateEditorDialog} from '../websites/components/certificate-editor-dialog';
-import {CertificateImportDialog} from '../websites/components/certificate-import-dialog';
-import {WebsiteStatusBadge} from '../websites/components/status-badge';
-import {getCertificateStatus, getErrorMessage} from '../websites/components/website-utils';
+import { CertificateApplyDialog } from '../websites/components/certificate-apply-dialog';
+import { CertificateDetailDialog } from '../websites/components/certificate-detail-dialog';
+import { CertificateEditorDialog } from '../websites/components/certificate-editor-dialog';
+import { CertificateImportDialog } from '../websites/components/certificate-import-dialog';
+import { WebsiteStatusBadge } from '../websites/components/status-badge';
+import { useTranslations } from 'next-intl';
+
+import {
+  getCertificateStatus,
+  getErrorMessage,
+} from '../websites/components/website-utils';
 
 const certificatesQueryKey = ['openflare', 'tls-certificates'];
 
 type CertificateApplyMode = 'edit-acme' | 'convert-upload';
 
 export default function CertificatesPage() {
+  const t = useTranslations('certificates');
+  const tc = useTranslations('common');
   const queryClient = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<TlsCertificateItem | null>(null);
-  const [selectedCertificateId, setSelectedCertificateId] = useState<number | null>(null);
-  const [applyCertificate, setApplyCertificate] = useState<TlsCertificateItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TlsCertificateItem | null>(
+    null,
+  );
+  const [selectedCertificateId, setSelectedCertificateId] = useState<
+    number | null
+  >(null);
+  const [applyCertificate, setApplyCertificate] =
+    useState<TlsCertificateItem | null>(null);
   const [applyMode, setApplyMode] = useState<CertificateApplyMode>('edit-acme');
 
   const certificatesQuery = useQuery({
@@ -54,20 +72,20 @@ export default function CertificatesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => TlsCertificateService.deleteById(id),
     onSuccess: async () => {
-      toast.success('证书已删除');
+      toast.success(t('deleted'));
       setDeleteTarget(null);
-      await queryClient.invalidateQueries({queryKey: certificatesQueryKey});
+      await queryClient.invalidateQueries({ queryKey: certificatesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const renewMutation = useMutation({
     mutationFn: (id: number) => TlsCertificateService.renew(id),
     onSuccess: async (cert) => {
-      toast.success(`证书 ${cert.name} 续期任务已提交`);
-      await queryClient.invalidateQueries({queryKey: certificatesQueryKey});
+      toast.success(t('renewSubmitted', { name: cert.name }));
+      await queryClient.invalidateQueries({ queryKey: certificatesQueryKey });
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => toast.error(getErrorMessage(error, t('requestFailed'))),
   });
 
   const certificates = useMemo(
@@ -87,140 +105,180 @@ export default function CertificatesPage() {
   };
 
   return (
-    <div className="py-6 px-1 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <FileKey className="size-5 text-primary" />
-          <h1 className="text-2xl font-semibold tracking-tight">证书</h1>
+    <div className='py-6 px-1 space-y-6'>
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-center gap-2'>
+          <FileKey className='size-5 text-primary' />
+          <h1 className='text-2xl font-semibold tracking-tight'>
+            {t('title')}
+          </h1>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className='flex flex-wrap gap-2'>
           <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => void queryClient.invalidateQueries({queryKey: certificatesQueryKey})}
+            variant='outline'
+            size='sm'
+            className='h-7 text-xs'
+            onClick={() =>
+              void queryClient.invalidateQueries({
+                queryKey: certificatesQueryKey,
+              })
+            }
           >
-            <RefreshCw className="size-3.5 mr-1" />
-            刷新证书
+            <RefreshCw className='size-3.5 mr-1' />
+            {t('refresh')}
           </Button>
           <Button
-            variant="secondary"
-            size="sm"
-            className="h-7 text-xs"
+            variant='secondary'
+            size='sm'
+            className='h-7 text-xs'
             onClick={() => setImportOpen(true)}
           >
-            导入证书
+            {t('importCert')}
           </Button>
-          <Button size="sm" className="h-7 text-xs" onClick={() => setApplyOpen(true)}>
-            <Plus className="size-3.5 mr-1" />
-            申请证书
+          <Button
+            size='sm'
+            className='h-7 text-xs'
+            onClick={() => setApplyOpen(true)}
+          >
+            <Plus className='size-3.5 mr-1' />
+            {t('applyTitle')}
           </Button>
         </div>
       </div>
 
-      <Card className="border-dashed shadow-none">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">证书列表</CardTitle>
-          <CardDescription>
-            展示证书有效期、备注和状态，支持查看详情、编辑内容或删除证书。
-          </CardDescription>
+      <Card className='border-dashed shadow-none'>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-base font-semibold'>
+            {t('listTitle')}
+          </CardTitle>
+          <CardDescription>{t('listDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {certificatesQuery.isLoading ? (
-            <LoadingStateWithBorder icon={FileKey} description="加载证书列表中..." />
+            <LoadingStateWithBorder
+              icon={FileKey}
+              description={t('loadingList')}
+            />
           ) : certificatesQuery.isError ? (
-            <div className="p-8 border border-dashed rounded-lg">
+            <div className='p-8 border border-dashed rounded-lg'>
               <ErrorInline
-                message={getErrorMessage(certificatesQuery.error)}
+                message={getErrorMessage(
+                  certificatesQuery.error,
+                  t('requestFailed'),
+                )}
                 onRetry={() => void certificatesQuery.refetch()}
-                className="justify-center"
+                className='justify-center'
               />
             </div>
           ) : certificates.length === 0 ? (
-            <EmptyStateWithBorder
-              icon={FileKey}
-              description="暂无证书，点击右上角「导入证书」或「申请证书」开始录入。"
-            />
+            <EmptyStateWithBorder icon={FileKey} description={t('emptyList')} />
           ) : (
-            <div className="space-y-3">
+            <div className='space-y-3'>
               {certificates.map((certificate) => {
-                const status = getCertificateStatus(certificate);
+                const status = getCertificateStatus(certificate, t);
 
                 return (
                   <div
                     key={certificate.id}
-                    className="rounded-lg border bg-card px-4 py-3"
+                    className='rounded-lg border bg-card px-4 py-3'
                   >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold">{certificate.name}</p>
-                          <WebsiteStatusBadge label={status.label} tone={status.tone} />
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                      <div className='space-y-2'>
+                        <div className='flex flex-wrap items-center gap-2'>
+                          <p className='text-sm font-semibold'>
+                            {certificate.name}
+                          </p>
+                          <WebsiteStatusBadge
+                            label={status.label}
+                            tone={status.tone}
+                          />
                         </div>
-                        <div className="text-xs leading-5 text-muted-foreground space-y-0.5">
-                          <p>生效：{formatDateTime(certificate.not_before)}</p>
-                          <p>到期：{formatDateTime(certificate.not_after)}</p>
+                        <div className='text-xs leading-5 text-muted-foreground space-y-0.5'>
                           <p>
-                            来源：
-                            {certificate.provider === 'acme' ? 'ACME 申请' : '手动上传'}
+                            {t('notBeforeLabel', {
+                              value: formatDateTime(certificate.not_before),
+                            })}
+                          </p>
+                          <p>
+                            {t('notAfterLabel', {
+                              value: formatDateTime(certificate.not_after),
+                            })}
+                          </p>
+                          <p>
+                            {t('sourceLabel', {
+                              value:
+                                certificate.provider === 'acme'
+                                  ? t('sourceAcme')
+                                  : t('sourceUpload'),
+                            })}
                           </p>
                           {certificate.apply_status === 'applying' ? (
-                            <p className="text-blue-600">
-                              状态：
-                              {certificate.provider === 'upload'
-                                ? '转换申请中...'
-                                : '申请中...'}
+                            <p className='text-blue-600'>
+                              {t('statusLabel', {
+                                value:
+                                  certificate.provider === 'upload'
+                                    ? t('converting')
+                                    : t('applying'),
+                              })}
                             </p>
                           ) : null}
                           {certificate.apply_status === 'error' ? (
-                            <p className="text-destructive">
-                              状态：
-                              {certificate.provider === 'upload' ? '转换失败' : '申请失败'}
-                              （{certificate.apply_message}）
+                            <p className='text-destructive'>
+                              {t('statusError', {
+                                value:
+                                  certificate.provider === 'upload'
+                                    ? t('convertFailed')
+                                    : t('applyFailed'),
+                                message: certificate.apply_message,
+                              })}
                             </p>
                           ) : null}
-                          <p>备注：{certificate.remark || '暂无备注'}</p>
+                          <p>
+                            {t('remarkLabel', {
+                              value: certificate.remark || t('noRemark'),
+                            })}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-1">
+                      <div className='flex flex-wrap gap-1'>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
+                          variant='outline'
+                          size='sm'
+                          className='h-7 text-xs'
                           onClick={() => {
                             setSelectedCertificateId(certificate.id);
                             setDetailOpen(true);
                           }}
                         >
-                          查看
+                          {t('view')}
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
+                          variant='outline'
+                          size='sm'
+                          className='h-7 text-xs'
                           onClick={() => handleOpenEditor(certificate)}
                         >
-                          编辑
+                          {t('edit')}
                         </Button>
                         {certificate.provider === 'acme' ? (
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
+                            variant='outline'
+                            size='sm'
+                            className='h-7 text-xs'
                             disabled={renewMutation.isPending}
                             onClick={() => renewMutation.mutate(certificate.id)}
                           >
-                            续期
+                            {t('renew')}
                           </Button>
                         ) : null}
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs text-destructive"
+                          variant='outline'
+                          size='sm'
+                          className='h-7 text-xs text-destructive'
                           onClick={() => setDeleteTarget(certificate)}
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className='size-3' />
                         </Button>
                       </div>
                     </div>
@@ -236,7 +294,7 @@ export default function CertificatesPage() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onImported={(certificate) =>
-          toast.success(`证书 ${certificate.name} 已导入`)
+          toast.success(t('imported', { name: certificate.name }))
         }
       />
 
@@ -244,7 +302,7 @@ export default function CertificatesPage() {
         open={applyOpen && !applyCertificate}
         onOpenChange={setApplyOpen}
         onApplied={(certificate) =>
-          toast.success(`证书 ${certificate.name} 申请任务已提交`)
+          toast.success(t('applySubmitted', { name: certificate.name }))
         }
       />
 
@@ -261,8 +319,8 @@ export default function CertificatesPage() {
             setApplyCertificate(null);
             toast.success(
               applyMode === 'convert-upload'
-                ? `证书 ${certificate.name} 转换申请已提交`
-                : `证书 ${certificate.name} 配置已更新，重新申请中...`,
+                ? t('convertSubmitted', { name: certificate.name })
+                : t('reapplySubmitted', { name: certificate.name }),
             );
           }}
         />
@@ -291,7 +349,9 @@ export default function CertificatesPage() {
         certificateId={selectedCertificateId}
         open={editorOpen}
         onOpenChange={setEditorOpen}
-        onSaved={(certificate) => toast.success(`证书 ${certificate.name} 已更新`)}
+        onSaved={(certificate) =>
+          toast.success(t('updated', { name: certificate.name }))
+        }
         onConvert={(certificate) => {
           setEditorOpen(false);
           setApplyMode('convert-upload');
@@ -306,18 +366,20 @@ export default function CertificatesPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除证书</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确认删除证书 {deleteTarget?.name} 吗？
+              {t('deleteDesc', { name: deleteTarget?.name ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tc('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              onClick={() =>
+                deleteTarget && deleteMutation.mutate(deleteTarget.id)
+              }
             >
-              删除
+              {tc('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,4 @@
-# 部署 Relay (Tunnel 中继)
+# 部署 Relay（Tunnel 中继）
 
 你会学到：TunnelRelay 节点的职责、`openflare-relay` 的配置项与环境变量、使用 Docker 运行 Relay 的方法，以及如何通过源码手动构建并部署 Relay。
 
@@ -15,7 +15,7 @@
    - 必须确保 `bindPort`（frpc 连接端口，默认 `7000`）可被公网/内网客户端访问。
    - 必须确保 `vhostHTTPPort`（HTTP Vhost 端口，默认 `8080`）处于空闲状态，Agent 将在此端口上与 frps 进行流量传递。
 3. **软件依赖**（仅限宿主机直接部署）：
-   - 本地需有可执行的 `frps` 二进制文件（建议版本为 `v0.61.0+` 或最新稳定版 `v0.69.0`），或通过参数显式指定路径。
+   - 本地需有可执行的 `frps` 二进制文件，或通过参数显式指定路径。
 
 ---
 
@@ -40,9 +40,9 @@
 
 ---
 
-## Docker 运行（推荐）
+## Docker 运行
 
-Docker 运行是 TunnelRelay 节点最便捷的部署方案。官方镜像内置了 `openflare-relay` 控制器与 `frps v0.69.0` 运行时，开箱即用。
+Docker 运行是 TunnelRelay 节点最便捷的部署方案。官方镜像内置了 `openflare-relay` 控制器与 `frps` 运行时，开箱即用。
 
 ```bash
 docker pull ghcr.io/rain-kl/openflare-relay:latest
@@ -67,39 +67,6 @@ docker run -d --name openflare-relay --restart unless-stopped \
 
 ---
 
-## 宿主机手动运行
-
-如果您倾向于在物理机或虚拟机上直接运行：
-
-### 1. 编译二进制
-
-```bash
-go build -o bin/openflare-relay ./cmd/relay
-```
-
-### 2. 准备 `relay.json`
-
-在程序同级目录下创建 `relay.json` 配置文件：
-
-```json
-{
-  "server_url": "http://127.0.0.1:3000",
-  "agent_token": "your-relay-node-agent-token",
-  "frps_path": "/usr/local/bin/frps",
-  "data_dir": "./data",
-  "heartbeat_interval": "10s",
-  "request_timeout": "10s"
-}
-```
-
-### 3. 运行服务
-
-```bash
-export LOG_LEVEL='info'
-./openflare-relay -config ./relay.json
-```
-
----
 
 ## 启动与验证
 
@@ -110,11 +77,6 @@ export LOG_LEVEL='info'
 docker logs -f openflare-relay
 ```
 
-如果是在 Linux 上通过 Systemd 托管的，可执行：
-```bash
-journalctl -u openflare-relay -f
-```
-
 ### 2. 验证运行状态
 
 启动成功后，Relay 将进行以下工作：
@@ -122,7 +84,7 @@ journalctl -u openflare-relay -f
 - 从控制面获取最新的 frps 基础配置（包括 `bindPort`、`vhostHTTPPort` 与自动生成的隧道认证凭证 `auth_token`）。
 - 在本地自动渲染出 `data/frps.toml` 配置文件。
 - 自动拉起子进程 `frps -c data/frps.toml`。
-- 如果进程意外崩溃，Relay 将在 2 秒后自动拉起它。
+- 如果进程意外退出，Relay 会按指数退避（初始 1 秒，上限 60 秒）自动重启 frps。
 
 ### 3. 管理端确认
 

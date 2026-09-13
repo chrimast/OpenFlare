@@ -1,21 +1,20 @@
 'use client';
 
-import {Download, Eye, MoreHorizontal, Pencil, Play, Trash2} from 'lucide-react';
+import { Download, Eye, Pencil, Play, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-import {Badge} from '@/components/ui/badge';
-import {Button} from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from '@/components/ui/table';
-import type {WAFIPGroup} from '@/lib/services/openflare';
-import {formatDateTime} from '@/lib/utils';
-
-import {ipGroupTypeLabels} from './helpers';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import type { WAFIPGroup, WAFIPGroupType } from '@/lib/services/openflare';
+import { formatDateTime } from '@/lib/utils';
 
 interface IPGroupsTableProps {
   groups: WAFIPGroup[];
@@ -36,87 +35,117 @@ export function IPGroupsTable({
   onSync,
   onTest,
 }: IPGroupsTableProps) {
+  const t = useTranslations('ipGroups');
+  const typeLabel = (type: WAFIPGroupType) => t(`types.${type}`);
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>名称</TableHead>
-          <TableHead>类型</TableHead>
-          <TableHead>状态</TableHead>
-          <TableHead>IP 数</TableHead>
-          <TableHead>引用次数</TableHead>
-          <TableHead>同步状态</TableHead>
-          <TableHead>更新时间</TableHead>
-          <TableHead className="w-[80px] text-right">操作</TableHead>
+          <TableHead>{t('columns.name')}</TableHead>
+          <TableHead>{t('columns.type')}</TableHead>
+          <TableHead>{t('columns.status')}</TableHead>
+          <TableHead>{t('columns.ipCount')}</TableHead>
+          <TableHead>{t('columns.refCount')}</TableHead>
+          <TableHead>{t('columns.syncStatus')}</TableHead>
+          <TableHead>{t('columns.updatedAt')}</TableHead>
+          <TableHead className='w-[168px] text-right'>
+            {t('columns.actions')}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {groups.map((group) => (
           <TableRow key={group.id}>
-            <TableCell className="font-medium">{group.name}</TableCell>
+            <TableCell className='font-medium'>{group.name}</TableCell>
             <TableCell>
-              <Badge variant="outline">{ipGroupTypeLabels[group.type]}</Badge>
+              <Badge variant='outline'>{typeLabel(group.type)}</Badge>
             </TableCell>
             <TableCell>
               <Badge variant={group.enabled ? 'default' : 'secondary'}>
-                {group.enabled ? '启用' : '停用'}
+                {group.enabled ? t('enabled') : t('disabled')}
               </Badge>
             </TableCell>
             <TableCell>{group.ip_list.length}</TableCell>
             <TableCell>{group.referenced_by_rule_count}</TableCell>
-            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+            <TableCell className='max-w-[200px] truncate text-sm text-muted-foreground'>
               {group.last_sync_status
                 ? `${group.last_sync_status}: ${group.last_sync_message}`
-                : '尚无同步记录'}
+                : t('noSyncRecord')}
             </TableCell>
-            <TableCell className="text-muted-foreground text-sm">
+            <TableCell className='text-sm text-muted-foreground'>
               {group.updated_at ? formatDateTime(group.updated_at) : '—'}
             </TableCell>
-            <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8">
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onView(group)}>
-                    <Eye className="size-4 mr-2" />
-                    查看
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit(group)}>
-                    <Pencil className="size-4 mr-2" />
-                    编辑
-                  </DropdownMenuItem>
-                  {group.type === 'automatic' ? (
-                    <DropdownMenuItem onClick={() => onTest(group)}>
-                      <Play className="size-4 mr-2" />
-                      测试规则
-                    </DropdownMenuItem>
-                  ) : null}
-                  {group.type === 'subscription' || group.type === 'automatic' ? (
-                    <DropdownMenuItem
-                      disabled={syncingId === group.id}
-                      onClick={() => onSync(group)}
-                    >
-                      <Download className="size-4 mr-2" />
-                      {syncingId === group.id
-                        ? '同步中...'
-                        : group.type === 'automatic'
-                          ? '立即执行'
-                          : '立即同步'}
-                    </DropdownMenuItem>
-                  ) : null}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => onDelete(group)}
+            <TableCell className='text-right'>
+              <div className='flex items-center justify-end gap-1'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='size-8'
+                  title={t('actions.view')}
+                  aria-label={t('actions.view')}
+                  onClick={() => onView(group)}
+                >
+                  <Eye />
+                </Button>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='size-8'
+                  title={t('actions.edit')}
+                  aria-label={t('actions.edit')}
+                  onClick={() => onEdit(group)}
+                >
+                  <Pencil />
+                </Button>
+                {group.type === 'automatic' ? (
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='size-8'
+                    title={t('actions.test')}
+                    aria-label={t('actions.test')}
+                    onClick={() => onTest(group)}
                   >
-                    <Trash2 className="size-4 mr-2" />
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <Play />
+                  </Button>
+                ) : null}
+                {group.type === 'subscription' || group.type === 'automatic' ? (
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='size-8'
+                    title={
+                      group.type === 'automatic'
+                        ? t('actions.runNow')
+                        : t('actions.syncNow')
+                    }
+                    aria-label={
+                      group.type === 'automatic'
+                        ? t('actions.runNow')
+                        : t('actions.syncNow')
+                    }
+                    disabled={syncingId === group.id}
+                    onClick={() => onSync(group)}
+                  >
+                    <Download />
+                  </Button>
+                ) : null}
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='size-8 text-destructive hover:text-destructive'
+                  title={t('actions.delete')}
+                  aria-label={t('actions.delete')}
+                  onClick={() => onDelete(group)}
+                >
+                  <Trash2 />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

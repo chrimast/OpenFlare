@@ -8,14 +8,13 @@ interface CommonControlledStateProps<T> {
 /**
  * 受控状态 Hook
  * 用于处理受控和非受控组件的状态管理
- * 
+ *
  * @example
  * ```tsx
  * const [value, setValue] = useControlledState({ value: propValue, onChange: console.log })
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useControlledState<T, Rest extends any[] = []>(
+export function useControlledState<T, Rest extends unknown[] = []>(
   props: CommonControlledStateProps<T> & {
     onChange?: (value: T, ...args: Rest) => void;
   },

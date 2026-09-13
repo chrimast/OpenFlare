@@ -1,19 +1,26 @@
 'use client';
 
 import ReactEChartsCore from 'echarts-for-react/lib/core';
-import type {EChartsCoreOption} from 'echarts/core';
+import type { EChartsCoreOption } from 'echarts/core';
 import * as echarts from 'echarts/core';
-import {MapChart, ScatterChart} from 'echarts/charts';
-import {GeoComponent, TooltipComponent} from 'echarts/components';
-import {CanvasRenderer} from 'echarts/renderers';
-import {useTheme} from 'next-themes';
-import {useRouter} from 'next/navigation';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import { MapChart, ScatterChart } from 'echarts/charts';
+import { GeoComponent, TooltipComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+import { useTheme } from 'next-themes';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import {EmptyState} from '@/components/layout/empty';
-import type {DashboardNodeHealth, DistributionItem} from '@/lib/services/openflare';
+import { EmptyState } from '@/components/layout/empty';
+import type {
+  DashboardNodeHealth,
+  DistributionItem,
+} from '@/lib/services/openflare';
 
-import {getNodeStatusLabel, getOpenrestyStatusLabel,} from '../../nodes/components/node-utils';
+import {
+  getNodeStatusLabel,
+  getOpenrestyStatusLabel,
+} from '../../nodes/components/node-utils';
 import countryCentroidsJson from './data/country-centroids.json';
 import worldGeoJson from './data/world-geo.json';
 
@@ -133,7 +140,9 @@ const countryCentroids = countryCentroidsJson as Record<string, number[]>;
 
 type CountryCentroid = [number, number];
 
-function toCountryCentroid(coords: number[] | undefined): CountryCentroid | null {
+function toCountryCentroid(
+  coords: number[] | undefined,
+): CountryCentroid | null {
   if (!coords || coords.length < 2) {
     return null;
   }
@@ -145,17 +154,50 @@ function resolveCountryCentroid(geoName: string): CountryCentroid | null {
   if (!trimmed) {
     return null;
   }
-  const direct = toCountryCentroid(countryCentroids[trimmed]);
-  if (direct) {
-    return direct;
-  }
-  const lower = trimmed.toLowerCase();
-  for (const [name, coordinates] of Object.entries(countryCentroids)) {
-    if (name.toLowerCase() === lower) {
-      return toCountryCentroid(coordinates);
+  const candidates = new Set<string>([trimmed]);
+  // ipinfo-style names: "Hong Kong, Hong Kong, HK"
+  for (const part of trimmed.split(',').map((item) => item.trim())) {
+    if (part) {
+      candidates.add(part);
     }
   }
-  return null;
+  // trailing ISO2 often present after city/region
+  const isoMatch = trimmed.match(/\b([A-Z]{2})\b/g);
+  if (isoMatch) {
+    for (const code of isoMatch) {
+      candidates.add(code);
+    }
+  }
+
+  for (const candidate of candidates) {
+    const direct = toCountryCentroid(countryCentroids[candidate]);
+    if (direct) {
+      return direct;
+    }
+    const lower = candidate.toLowerCase();
+    for (const [name, coordinates] of Object.entries(countryCentroids)) {
+      if (name.toLowerCase() === lower) {
+        return toCountryCentroid(coordinates);
+      }
+    }
+  }
+
+  // Soft contains match for longer composite labels (prefer longer country names).
+  const lowerFull = trimmed.toLowerCase();
+  let best: { length: number; coords: CountryCentroid } | null = null;
+  for (const [name, coordinates] of Object.entries(countryCentroids)) {
+    const lowerName = name.toLowerCase();
+    if (lowerFull.includes(lowerName) && lowerName.length >= 4) {
+      const coords = toCountryCentroid(coordinates);
+      if (!coords) {
+        continue;
+      }
+      if (!best || lowerName.length > best.length) {
+        best = { length: lowerName.length, coords };
+      }
+    }
+  }
+  return best?.coords ?? null;
 }
 
 function getNodeCoordinates(node: DashboardNodeHealth, index: number) {
@@ -235,7 +277,9 @@ export function WorldStageMap({
   nodes: DashboardNodeHealth[];
   sourceCountries: DistributionItem[];
 }) {
-  const {resolvedTheme} = useTheme();
+  const t = useTranslations('dashboard.map');
+  const tn = useTranslations('nodes');
+  const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const router = useRouter();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -268,7 +312,7 @@ export function WorldStageMap({
       setContainerSize((previous) =>
         previous.width === nextWidth && previous.height === nextHeight
           ? previous
-          : {width: nextWidth, height: nextHeight},
+          : { width: nextWidth, height: nextHeight },
       );
     };
 
@@ -423,8 +467,7 @@ export function WorldStageMap({
   }, [containerSize]);
 
   const computedLayoutSize = useMemo(
-    () =>
-      `${Math.round(baseWorldMapLayoutSizePercent * responsiveMapScale)}%`,
+    () => `${Math.round(baseWorldMapLayoutSizePercent * responsiveMapScale)}%`,
     [responsiveMapScale],
   );
   const computedZoom = useMemo(
@@ -442,9 +485,7 @@ export function WorldStageMap({
         backgroundColor: isDark
           ? 'rgba(24,24,27,0.96)'
           : 'rgba(255,255,255,0.98)',
-        borderColor: isDark
-          ? 'rgba(63,63,70,0.8)'
-          : 'rgba(228,228,231,0.9)',
+        borderColor: isDark ? 'rgba(63,63,70,0.8)' : 'rgba(228,228,231,0.9)',
         borderWidth: 1,
         textStyle: {
           color: isDark ? '#fafafa' : '#18181b',
@@ -465,7 +506,7 @@ export function WorldStageMap({
           ) {
             return [
               `<div style="font-weight:600;margin-bottom:6px;">${payload.name ?? data.name}</div>`,
-              `<div>最近 24 小时来源请求 ${data.value.toLocaleString('zh-CN')}</div>`,
+              `<div>${t('sourceRequests', { count: data.value.toLocaleString('zh-CN') })}</div>`,
             ].join('');
           }
 
@@ -475,14 +516,22 @@ export function WorldStageMap({
 
           const locationLine = data.derivedFromGeo
             ? data.geoName
-            : `${data.geoName} · 预设落点`;
+            : `${data.geoName} · ${t('presetPin')}`;
 
           return [
             `<div style="font-weight:600;margin-bottom:6px;">${data.name}</div>`,
             `<div>${locationLine}</div>`,
-            `<div>请求量 ${data.requestCount.toLocaleString('zh-CN')} · 错误数 ${data.errorCount.toLocaleString('zh-CN')}</div>`,
-            `<div>活动事件 ${data.activeEventCount} · 节点状态 ${getNodeStatusLabel(data.status)}</div>`,
-            `<div>OpenResty 状态 ${getOpenrestyStatusLabel(data.openrestyStatus)}</div>`,
+            `<div>${t('requestsErrors', {
+              requests: data.requestCount.toLocaleString('zh-CN'),
+              errors: data.errorCount.toLocaleString('zh-CN'),
+            })}</div>`,
+            `<div>${t('eventsStatus', {
+              events: data.activeEventCount,
+              status: getNodeStatusLabel(data.status, tn),
+            })}</div>`,
+            `<div>${t('openrestyStatus', {
+              status: getOpenrestyStatusLabel(data.openrestyStatus, tn),
+            })}</div>`,
           ].join('');
         },
       },
@@ -572,19 +621,17 @@ export function WorldStageMap({
       mapNodes,
       mapPalette,
       responsiveMapScale,
+      t,
+      tn,
     ],
   );
 
   if (!mapReady) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className='flex h-full items-center justify-center'>
         <EmptyState
-          title={mapFailed ? '全球地图加载失败' : '全球地图加载中'}
-          description={
-            mapFailed
-              ? 'ECharts 世界地图资源未能成功注册，请稍后刷新重试。'
-              : '正在按需初始化全球地图，这一步会延后到首屏内容稳定后执行。'
-          }
+          title={mapFailed ? t('loadFailed') : t('loading')}
+          description={mapFailed ? t('loadFailedDesc') : t('loadingDesc')}
         />
       </div>
     );
@@ -593,16 +640,16 @@ export function WorldStageMap({
   const chartReady = containerSize.width > 0 && containerSize.height > 0;
 
   return (
-    <div ref={chartContainerRef} className="h-full min-h-0 w-full">
+    <div ref={chartContainerRef} className='h-full min-h-0 w-full'>
       {chartReady ? (
         <ReactEChartsCore
           echarts={echarts}
           option={mapOption}
           notMerge
           lazyUpdate
-          opts={{renderer: 'canvas'}}
+          opts={{ renderer: 'canvas' }}
           onEvents={{
-            click: (params: {data?: MapNodeDatum}) => {
+            click: (params: { data?: MapNodeDatum }) => {
               if (params.data?.route) {
                 router.push(params.data.route);
               }
@@ -614,11 +661,11 @@ export function WorldStageMap({
           }}
         />
       ) : (
-        <div className="flex h-full items-center justify-center">
+        <div className='flex h-full items-center justify-center'>
           <EmptyState
-            title="全球地图加载中"
-            description="正在测量地图容器尺寸..."
-            iconSize="sm"
+            title={t('loading')}
+            description={t('measuring')}
+            iconSize='sm'
           />
         </div>
       )}
