@@ -90,12 +90,24 @@ func (b *localBackend) Test(_ context.Context) error {
 	return os.MkdirAll(b.root, storageDirPerm)
 }
 
+func isWithinRoot(root, target string) bool {
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return false
+	}
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return false
+	}
+	rel, err := filepath.Rel(absRoot, absTarget)
+	return err == nil && !strings.HasPrefix(rel, "..")
+}
+
 func (b *localBackend) path(key string) (string, error) {
 	if filepath.IsAbs(key) {
 		cleanPath := filepath.Clean(key)
-		absRoot, err := filepath.Abs(b.root)
-		if err != nil {
-			return "", err
+		if isWithinRoot(b.root, cleanPath) {
+			return cleanPath, nil
 		}
 		absPath, err := filepath.Abs(cleanPath)
 		if err != nil {
