@@ -111,7 +111,11 @@ export function MemberMoveDialog({
           )}
         </FieldGroup>
         <DialogFooter>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
+          <Button
+            variant='outline'
+            disabled={pending}
+            onClick={() => onOpenChange(false)}
+          >
             {tCommon('cancel')}
           </Button>
           <Button
