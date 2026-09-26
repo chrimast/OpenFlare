@@ -1,0 +1,27 @@
+{
+  "cloudflare": {
+    "move": "移动",
+    "batchMove": "批量移动",
+    "batchRemove": "批量删除",
+    "selectedCount": "已选择 {count} 项",
+    "clearSelection": "取消选择",
+    "moveDialog": {
+      "titleSingle": "移动域名「{domain}」",
+      "titleBatch": "批量移动域名（共 {count} 项）",
+      "targetGroupLabel": "目标指向分组",
+      "targetGroupPlaceholder": "请选择目标分组",
+      "noOtherGroups": "没有其他可用的指向分组，请先创建分组",
+      "submit": "确认移动",
+      "moving": "移动中..."
+    },
+    "batchRemoveDialog": {
+      "title": "确认批量删除域名",
+      "desc": "确认从当前分组移出已选中的 {count} 个域名吗？这将同时清理 Cloudflare 上的解析记录。",
+      "confirm": "确认删除",
+      "removing": "删除中..."
+    },
+    "memberMoved": "域名移动成功",
+    "batchMoved": "成功移动 {count} 个域名",
+    "batchRemoved": "成功删除 {count} 个域名"
+  }
+}
