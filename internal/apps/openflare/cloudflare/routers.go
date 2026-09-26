@@ -358,6 +358,88 @@ func SyncMemberHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response.OK(&SyncReceipt{TaskID: taskID}))
 }
 
+// MoveMemberHandler moves a member to a target group.
+// @Summary 移动 Cloudflare 指向成员到其他分组
+// @Tags openflare-cloudflare
+// @Accept json
+// @Produce json
+// @Security SessionCookie
+// @Param id path int true "原分组 ID"
+// @Param memberId path int true "成员 ID"
+// @Param body body cloudflare.MemberMoveInput true "目标分组参数"
+// @Success 200 {object} response.Any{data=cloudflare.MemberItem}
+// @Failure 400 {object} response.Any
+// @Failure 404 {object} response.Any
+// @Router /api/v1/d/cloudflare/groups/{id}/members/{memberId}/move [post]
+func MoveMemberHandler(c *gin.Context) {
+	groupID, memberID, ok := memberParams(c)
+	if !ok {
+		return
+	}
+	var input MemberMoveInput
+	if !apiutil.BindJSON(c, &input) {
+		return
+	}
+	item, err := MoveMember(c.Request.Context(), groupID, memberID, input.TargetGroupID)
+	if abortLogic(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OK(item))
+}
+
+// BatchMoveMembersHandler moves multiple members to a target group.
+// @Summary 批量移动 Cloudflare 指向成员
+// @Tags openflare-cloudflare
+// @Accept json
+// @Produce json
+// @Security SessionCookie
+// @Param id path int true "原分组 ID"
+// @Param body body cloudflare.MemberBatchMoveInput true "批量移动参数"
+// @Success 200 {object} response.Any
+// @Failure 400 {object} response.Any
+// @Failure 404 {object} response.Any
+// @Router /api/v1/d/cloudflare/groups/{id}/members/batch-move [post]
+func BatchMoveMembersHandler(c *gin.Context) {
+	id, ok := apiutil.IDParam(c)
+	if !ok {
+		return
+	}
+	var input MemberBatchMoveInput
+	if !apiutil.BindJSON(c, &input) {
+		return
+	}
+	if abortLogic(c, BatchMoveMembers(c.Request.Context(), id, input)) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OKNil())
+}
+
+// BatchRemoveMembersHandler removes multiple members.
+// @Summary 批量移出 Cloudflare 指向成员
+// @Tags openflare-cloudflare
+// @Accept json
+// @Produce json
+// @Security SessionCookie
+// @Param id path int true "分组 ID"
+// @Param body body cloudflare.MemberBatchRemoveInput true "批量移出参数"
+// @Success 200 {object} response.Any
+// @Failure 400 {object} response.Any
+// @Router /api/v1/d/cloudflare/groups/{id}/members/batch-remove [post]
+func BatchRemoveMembersHandler(c *gin.Context) {
+	id, ok := apiutil.IDParam(c)
+	if !ok {
+		return
+	}
+	var input MemberBatchRemoveInput
+	if !apiutil.BindJSON(c, &input) {
+		return
+	}
+	if abortLogic(c, BatchRemoveMembers(c.Request.Context(), id, input)) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OKNil())
+}
+
 // ListAvailableDomainsHandler lists ZoneDomains not assigned to another group.
 // @Summary 获取可加入 Cloudflare 指向的域名
 // @Tags openflare-cloudflare

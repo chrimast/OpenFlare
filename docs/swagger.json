@@ -6355,6 +6355,190 @@
                 }
             }
         },
+        "/api/v1/d/cloudflare/groups/{id}/members/batch-move": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-cloudflare"
+                ],
+                "summary": "批量移动 Cloudflare 指向成员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "原分组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量移动参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cloudflare.MemberBatchMoveInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/cloudflare/groups/{id}/members/batch-remove": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-cloudflare"
+                ],
+                "summary": "批量移出 Cloudflare 指向成员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "分组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量移出参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cloudflare.MemberBatchRemoveInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/cloudflare/groups/{id}/members/{memberId}/move": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-cloudflare"
+                ],
+                "summary": "移动 Cloudflare 指向成员到其他分组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "原分组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "成员 ID",
+                        "name": "memberId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "目标分组参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cloudflare.MemberMoveInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudflare.MemberItem"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/d/cloudflare/groups/{id}/members/{memberId}/remove": {
             "post": {
                 "security": [
@@ -14253,7 +14437,7 @@
                         }
                     },
                     "400": {
-                        "description": "用户名或密码错误、帐号已禁用等",
+                        "description": "用户名或密码错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -15132,6 +15316,31 @@
                 }
             }
         },
+        "cloudflare.MemberBatchMoveInput": {
+            "type": "object",
+            "properties": {
+                "member_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "target_group_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "cloudflare.MemberBatchRemoveInput": {
+            "type": "object",
+            "properties": {
+                "member_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "cloudflare.MemberCreateInput": {
             "type": "object",
             "properties": {
@@ -15174,6 +15383,14 @@
                     "type": "integer"
                 },
                 "zone_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "cloudflare.MemberMoveInput": {
+            "type": "object",
+            "properties": {
+                "target_group_id": {
                     "type": "integer"
                 }
             }
