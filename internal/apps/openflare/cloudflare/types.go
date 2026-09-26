@@ -63,6 +63,22 @@ type MemberUpdateInput struct {
 	Proxied bool `json:"proxied"`
 }
 
+// MemberMoveInput contains the target group ID for moving a member.
+type MemberMoveInput struct {
+	TargetGroupID uint `json:"target_group_id"`
+}
+
+// MemberBatchMoveInput contains the member IDs and target group ID for batch moving.
+type MemberBatchMoveInput struct {
+	MemberIDs     []uint `json:"member_ids"`
+	TargetGroupID uint   `json:"target_group_id"`
+}
+
+// MemberBatchRemoveInput contains the member IDs for batch deletion.
+type MemberBatchRemoveInput struct {
+	MemberIDs []uint `json:"member_ids"`
+}
+
 // MemberItem is the admin-facing member state.
 type MemberItem struct {
 	ID           uint       `json:"id"`

@@ -19,4 +19,7 @@ const (
 	errSyncFailed              = "Cloudflare DNS 同步失败"
 	errDeleteRemoteFailed      = "删除 Cloudflare DNS 记录失败"
 	errTaskDispatchFailed      = "无法投递 Cloudflare 同步任务"
+	errTargetGroupSame         = "目标分组不能为当前分组"
+	errTargetGroupInvalid      = "目标分组不存在"
+	errNoMembersSelected       = "未选择任何成员"
 )
