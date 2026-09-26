@@ -1,8 +1,8 @@
 'use client';
 
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Search, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   AlertDialog,
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EmptyStateWithBorder } from '@/components/layout/empty';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -59,6 +60,14 @@ export function IPGroupViewDialog({
   const [deleteTarget, setDeleteTarget] = useState<IPGroupViewEntry | null>(
     null,
   );
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setSearchKeyword('');
+      setDeleteTarget(null);
+    }
+  }, [open]);
 
   const entries = useMemo(
     () =>
@@ -67,6 +76,13 @@ export function IPGroupViewDialog({
         : [],
     [group, t],
   );
+
+  const trimmedKeyword = searchKeyword.trim().toLowerCase();
+
+  const filteredEntries = useMemo(() => {
+    if (!trimmedKeyword) return entries;
+    return entries.filter((e) => e.ip.toLowerCase().includes(trimmedKeyword));
+  }, [entries, trimmedKeyword]);
 
   const showAutomaticMeta = group?.type === 'automatic';
 
@@ -78,6 +94,7 @@ export function IPGroupViewDialog({
           onOpenChange(nextOpen);
           if (!nextOpen) {
             setDeleteTarget(null);
+            setSearchKeyword('');
           }
         }}
       >
@@ -90,10 +107,16 @@ export function IPGroupViewDialog({
             </DialogTitle>
             <DialogDescription>
               {group
-                ? t('viewDialog.summary', {
-                    type: t(`types.${group.type}`),
-                    count: entries.length,
-                  })
+                ? trimmedKeyword
+                  ? t('viewDialog.summaryFiltered', {
+                      type: t(`types.${group.type}`),
+                      count: entries.length,
+                      matched: filteredEntries.length,
+                    })
+                  : t('viewDialog.summary', {
+                      type: t(`types.${group.type}`),
+                      count: entries.length,
+                    })
                 : t('viewDialog.fallbackDesc')}
             </DialogDescription>
           </DialogHeader>
@@ -122,64 +145,95 @@ export function IPGroupViewDialog({
                   {t('viewDialog.subscriptionHint')}
                 </p>
               ) : null}
-              <div className='rounded-lg border border-dashed'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('viewDialog.ipAddress')}</TableHead>
-                      {showAutomaticMeta ? (
-                        <>
-                          <TableHead>{t('viewDialog.capturedAt')}</TableHead>
-                          <TableHead>{t('viewDialog.banRemaining')}</TableHead>
-                        </>
-                      ) : null}
-                      <TableHead className='w-[80px] text-right'>
-                        {t('viewDialog.actions')}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {entries.map((entry) => (
-                      <TableRow key={entry.ip}>
-                        <TableCell className='font-mono text-sm'>
-                          {entry.ip}
-                        </TableCell>
+              <div className='relative'>
+                <Search className='pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  placeholder={t('viewDialog.searchPlaceholder')}
+                  className='pl-8 pr-8'
+                />
+                {searchKeyword ? (
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='absolute right-1 top-1/2 size-7 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                    onClick={() => setSearchKeyword('')}
+                  >
+                    <X className='size-3.5' />
+                    <span className='sr-only'>
+                      {t('viewDialog.clearSearch')}
+                    </span>
+                  </Button>
+                ) : null}
+              </div>
+              {filteredEntries.length === 0 ? (
+                <EmptyStateWithBorder
+                  description={t('viewDialog.noSearchResult')}
+                />
+              ) : (
+                <div className='rounded-lg border border-dashed'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('viewDialog.ipAddress')}</TableHead>
                         {showAutomaticMeta ? (
                           <>
-                            <TableCell className='text-sm text-muted-foreground'>
-                              {entry.capturedAt
-                                ? formatDateTime(entry.capturedAt)
-                                : '—'}
-                            </TableCell>
-                            <TableCell className='text-sm'>
-                              {entry.banRemaining ?? '—'}
-                            </TableCell>
+                            <TableHead>{t('viewDialog.capturedAt')}</TableHead>
+                            <TableHead>
+                              {t('viewDialog.banRemaining')}
+                            </TableHead>
                           </>
                         ) : null}
-                        <TableCell className='text-right'>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='size-8 text-destructive hover:text-destructive'
-                            disabled={removingIp === entry.ip}
-                            onClick={() => setDeleteTarget(entry)}
-                          >
-                            {removingIp === entry.ip ? (
-                              <Loader2 className='size-4 animate-spin' />
-                            ) : (
-                              <Trash2 className='size-4' />
-                            )}
-                            <span className='sr-only'>
-                              {t('viewDialog.deleteIp', { ip: entry.ip })}
-                            </span>
-                          </Button>
-                        </TableCell>
+                        <TableHead className='w-[80px] text-right'>
+                          {t('viewDialog.actions')}
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEntries.map((entry) => (
+                        <TableRow key={entry.ip}>
+                          <TableCell className='font-mono text-sm'>
+                            {entry.ip}
+                          </TableCell>
+                          {showAutomaticMeta ? (
+                            <>
+                              <TableCell className='text-sm text-muted-foreground'>
+                                {entry.capturedAt
+                                  ? formatDateTime(entry.capturedAt)
+                                  : '—'}
+                              </TableCell>
+                              <TableCell className='text-sm'>
+                                {entry.banRemaining ?? '—'}
+                              </TableCell>
+                            </>
+                          ) : null}
+                          <TableCell className='text-right'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='size-8 text-destructive hover:text-destructive'
+                              disabled={removingIp === entry.ip}
+                              onClick={() => setDeleteTarget(entry)}
+                            >
+                              {removingIp === entry.ip ? (
+                                <Loader2 className='size-4 animate-spin' />
+                              ) : (
+                                <Trash2 className='size-4' />
+                              )}
+                              <span className='sr-only'>
+                                {t('viewDialog.deleteIp', { ip: entry.ip })}
+                              </span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           )}
 
