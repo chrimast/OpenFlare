@@ -388,6 +388,114 @@ func RemoveMember(ctx context.Context, groupID, memberID uint) error {
 	return repository.DeleteCFPointingMember(ctx, member)
 }
 
+// MoveMember transfers a member from sourceGroupID to targetGroupID.
+func MoveMember(ctx context.Context, sourceGroupID, memberID, targetGroupID uint) (*MemberItem, error) {
+	if targetGroupID == 0 || targetGroupID == sourceGroupID {
+		return nil, errors.New(errTargetGroupSame)
+	}
+	targetGroup, err := repository.GetCFPointingGroup(ctx, targetGroupID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(errTargetGroupInvalid)
+		}
+		return nil, err
+	}
+	member, err := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
+	if err != nil {
+		return nil, err
+	}
+	member.GroupID = targetGroupID
+	member.SyncStatus = model.CFMemberSyncPending
+	member.LastError = ""
+	if err = repository.SaveCFPointingMember(ctx, member); err != nil {
+		return nil, err
+	}
+	if targetGroup.Enabled {
+		if _, err = DispatchMemberSync(ctx, member.ID, "cloudflare_member_move"); err != nil {
+			logger.WarnF(ctx, "[Cloudflare] dispatch move sync failed: member_id=%d error=%v", member.ID, err)
+		}
+	}
+	domain, err := repository.GetZoneDomainByID(ctx, member.ZoneDomainID)
+	if err != nil {
+		return nil, err
+	}
+	return memberItem(member, domain), nil
+}
+
+// BatchMoveMembers transfers multiple members from sourceGroupID to targetGroupID.
+func BatchMoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatchMoveInput) error {
+	if len(input.MemberIDs) == 0 {
+		return errors.New(errNoMembersSelected)
+	}
+	if input.TargetGroupID == 0 || input.TargetGroupID == sourceGroupID {
+		return errors.New(errTargetGroupSame)
+	}
+	targetGroup, err := repository.GetCFPointingGroup(ctx, input.TargetGroupID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errTargetGroupInvalid)
+		}
+		return err
+	}
+	for _, memberID := range uniqueIDs(input.MemberIDs) {
+		member, getErr := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
+		if getErr != nil {
+			continue
+		}
+		member.GroupID = input.TargetGroupID
+		member.SyncStatus = model.CFMemberSyncPending
+		member.LastError = ""
+		if saveErr := repository.SaveCFPointingMember(ctx, member); saveErr != nil {
+			logger.ErrorF(ctx, "[Cloudflare] batch move save member failed: member_id=%d error=%v", memberID, saveErr)
+			continue
+		}
+		if targetGroup.Enabled {
+			if _, syncErr := DispatchMemberSync(ctx, member.ID, "cloudflare_member_move"); syncErr != nil {
+				logger.WarnF(ctx, "[Cloudflare] dispatch batch move sync failed: member_id=%d error=%v", member.ID, syncErr)
+			}
+		}
+	}
+	return nil
+}
+
+// BatchRemoveMembers deletes multiple members and their remote A records.
+func BatchRemoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatchRemoveInput) error {
+	if len(input.MemberIDs) == 0 {
+		return errors.New(errNoMembersSelected)
+	}
+	for _, memberID := range uniqueIDs(input.MemberIDs) {
+		member, err := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
+		if err != nil {
+			continue
+		}
+		if delErr := DeleteManagedRecord(ctx, member.ID); delErr != nil {
+			logger.WarnF(ctx, "[Cloudflare] delete remote record failed during batch remove: member_id=%d error=%v", member.ID, delErr)
+		}
+		if err = repository.DeleteCFPointingMember(ctx, member); err != nil {
+			logger.ErrorF(ctx, "[Cloudflare] delete member failed during batch remove: member_id=%d error=%v", member.ID, err)
+		}
+	}
+	return nil
+}
+
+func uniqueIDs(ids []uint) []uint {
+	if len(ids) == 0 {
+		return ids
+	}
+	seen := make(map[uint]struct{}, len(ids))
+	result := make([]uint, 0, len(ids))
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		if _, exists := seen[id]; !exists {
+			seen[id] = struct{}{}
+			result = append(result, id)
+		}
+	}
+	return result
+}
+
 // DeleteGroup removes every managed remote A record and then local state.
 func DeleteGroup(ctx context.Context, groupID uint) error {
 	if _, err := repository.GetCFPointingGroup(ctx, groupID); err != nil {

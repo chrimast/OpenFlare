@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
+  ArrowRightLeft,
   Cloud,
   Loader2,
   Plus,
@@ -16,6 +17,16 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +36,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import {
   Table,
@@ -41,10 +53,12 @@ import {
   cloudflareQueryKey,
   NodeService,
   type CloudflareGroupPayload,
+  type CloudflareMember,
 } from '@/lib/services/openflare';
 import { getErrorMessage } from '../../../websites/components/website-utils';
 import { GroupDialog } from '../../components/group-dialog';
 import { MemberAddDialog } from '../../components/member-add-dialog';
+import { MemberMoveDialog } from '../../components/member-move-dialog';
 
 function getGroupIdFromPathname(pathname: string | null): number {
   const match = pathname?.match(/^\/cloudflare\/groups\/([^/]+)$/);
@@ -53,6 +67,7 @@ function getGroupIdFromPathname(pathname: string | null): number {
 
 export function CloudflareGroupDetailPageClient() {
   const t = useTranslations('cloudflare');
+  const tCommon = useTranslations('common');
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -63,6 +78,13 @@ export function CloudflareGroupDetailPageClient() {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [selectedMemberIDs, setSelectedMemberIDs] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [movingMembers, setMovingMembers] = useState<CloudflareMember[]>([]);
+  const [batchRemoveOpen, setBatchRemoveOpen] = useState(false);
+
   const detailQuery = useQuery({
     queryKey: [...cloudflareQueryKey, 'groups', groupID],
     queryFn: () => CloudflareService.getGroup(groupID),
@@ -76,6 +98,10 @@ export function CloudflareGroupDetailPageClient() {
   const nodesQuery = useQuery({
     queryKey: ['openflare', 'nodes'],
     queryFn: () => NodeService.listNodes(),
+  });
+  const groupsQuery = useQuery({
+    queryKey: [...cloudflareQueryKey, 'groups'],
+    queryFn: () => CloudflareService.listGroups(),
   });
   const invalidate = async () =>
     queryClient.invalidateQueries({ queryKey: cloudflareQueryKey });
@@ -150,12 +176,80 @@ export function CloudflareGroupDetailPageClient() {
   const removeMutation = useMutation({
     mutationFn: (memberID: number) =>
       CloudflareService.removeMember(groupID, memberID),
-    onSuccess: async () => {
+    onSuccess: async (_, memberID) => {
       toast.success(t('memberDeleted'));
+      setSelectedMemberIDs((prev) => {
+        const next = new Set(prev);
+        next.delete(memberID);
+        return next;
+      });
       await invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
+  const moveMutation = useMutation({
+    mutationFn: async ({
+      targetGroupId,
+      membersToMove,
+    }: {
+      targetGroupId: number;
+      membersToMove: CloudflareMember[];
+    }) => {
+      if (membersToMove.length === 1) {
+        return CloudflareService.moveMember(
+          groupID,
+          membersToMove[0].id,
+          targetGroupId,
+        );
+      }
+      return CloudflareService.batchMoveMembers(
+        groupID,
+        membersToMove.map((m) => m.id),
+        targetGroupId,
+      );
+    },
+    onSuccess: async (_, variables) => {
+      if (variables.membersToMove.length === 1) {
+        toast.success(t('memberMoved'));
+      } else {
+        toast.success(
+          t('batchMoved', { count: variables.membersToMove.length }),
+        );
+      }
+      setMoveDialogOpen(false);
+      setSelectedMemberIDs((prev) => {
+        const next = new Set(prev);
+        for (const m of variables.membersToMove) {
+          next.delete(m.id);
+        }
+        return next;
+      });
+      await invalidate();
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+  const batchRemoveMutation = useMutation({
+    mutationFn: (memberIds: number[]) =>
+      CloudflareService.batchRemoveMembers(groupID, memberIds),
+    onSuccess: async (_, memberIds) => {
+      toast.success(t('batchRemoved', { count: memberIds.length }));
+      setBatchRemoveOpen(false);
+      setSelectedMemberIDs(new Set());
+      await invalidate();
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+
+  const handleSingleMove = (member: CloudflareMember) => {
+    setMovingMembers([member]);
+    setMoveDialogOpen(true);
+  };
+
+  const handleBatchMove = (selectedList: CloudflareMember[]) => {
+    if (selectedList.length === 0) return;
+    setMovingMembers(selectedList);
+    setMoveDialogOpen(true);
+  };
 
   if (!mounted || detailQuery.isLoading)
     return (
@@ -173,6 +267,12 @@ export function CloudflareGroupDetailPageClient() {
       </div>
     );
   const { group, members } = detailQuery.data;
+
+  const selectedMembers = members.filter((m) => selectedMemberIDs.has(m.id));
+  const allSelected =
+    members.length > 0 && selectedMembers.length === members.length;
+  const isIndeterminate =
+    selectedMembers.length > 0 && selectedMembers.length < members.length;
 
   return (
     <div className='flex w-full flex-col gap-6 py-6 px-1'>
@@ -246,9 +346,41 @@ export function CloudflareGroupDetailPageClient() {
       </Card>
 
       <Card className='border-dashed shadow-none'>
-        <CardHeader>
-          <CardTitle className='text-base'>{t('members')}</CardTitle>
-          <CardDescription>{t('membersDesc')}</CardDescription>
+        <CardHeader className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <CardTitle className='text-base'>{t('members')}</CardTitle>
+            <CardDescription>{t('membersDesc')}</CardDescription>
+          </div>
+          {selectedMembers.length > 0 && (
+            <div className='flex flex-wrap items-center gap-2'>
+              <Badge variant='secondary' className='text-xs'>
+                {t('selectedCount', { count: selectedMembers.length })}
+              </Badge>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => handleBatchMove(selectedMembers)}
+              >
+                <ArrowRightLeft data-icon='inline-start' />
+                {t('batchMove')}
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setBatchRemoveOpen(true)}
+              >
+                <Trash2 data-icon='inline-start' />
+                {t('batchRemove')}
+              </Button>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setSelectedMemberIDs(new Set())}
+              >
+                {t('clearSelection')}
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {members.length === 0 ? (
@@ -259,6 +391,27 @@ export function CloudflareGroupDetailPageClient() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className='w-12'>
+                    <Checkbox
+                      checked={
+                        allSelected
+                          ? true
+                          : isIndeterminate
+                            ? 'indeterminate'
+                            : false
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedMemberIDs(
+                            new Set(members.map((m) => m.id)),
+                          );
+                        } else {
+                          setSelectedMemberIDs(new Set());
+                        }
+                      }}
+                      aria-label='Select all'
+                    />
+                  </TableHead>
                   <TableHead>{t('columns.domain')}</TableHead>
                   <TableHead>{t('columns.desiredIp')}</TableHead>
                   <TableHead>{t('columns.status')}</TableHead>
@@ -270,7 +423,29 @@ export function CloudflareGroupDetailPageClient() {
               </TableHeader>
               <TableBody>
                 {members.map((member) => (
-                  <TableRow key={member.id}>
+                  <TableRow
+                    key={member.id}
+                    data-state={
+                      selectedMemberIDs.has(member.id) ? 'selected' : undefined
+                    }
+                  >
+                    <TableCell className='w-12'>
+                      <Checkbox
+                        checked={selectedMemberIDs.has(member.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedMemberIDs((prev) => {
+                            const next = new Set(prev);
+                            if (checked) {
+                              next.add(member.id);
+                            } else {
+                              next.delete(member.id);
+                            }
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${member.domain}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className='font-medium'>{member.domain}</div>
                       {member.last_error ? (
@@ -308,6 +483,14 @@ export function CloudflareGroupDetailPageClient() {
                     </TableCell>
                     <TableCell>
                       <div className='flex justify-end gap-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => handleSingleMove(member)}
+                        >
+                          <ArrowRightLeft data-icon='inline-start' />
+                          {t('move')}
+                        </Button>
                         <Button
                           variant='outline'
                           size='sm'
@@ -352,6 +535,43 @@ export function CloudflareGroupDetailPageClient() {
           addMutation.mutate({ domainIDs, proxied })
         }
       />
+      <MemberMoveDialog
+        open={moveDialogOpen}
+        onOpenChange={setMoveDialogOpen}
+        members={movingMembers}
+        groups={groupsQuery.data ?? []}
+        currentGroupId={groupID}
+        pending={moveMutation.isPending}
+        onSubmit={(targetGroupId) =>
+          moveMutation.mutate({
+            targetGroupId,
+            membersToMove: movingMembers,
+          })
+        }
+      />
+      <AlertDialog open={batchRemoveOpen} onOpenChange={setBatchRemoveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('batchRemoveDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('batchRemoveDialog.desc', { count: selectedMembers.length })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={batchRemoveMutation.isPending}
+              onClick={() =>
+                batchRemoveMutation.mutate(selectedMembers.map((m) => m.id))
+              }
+            >
+              {batchRemoveMutation.isPending
+                ? t('batchRemoveDialog.removing')
+                : t('batchRemoveDialog.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

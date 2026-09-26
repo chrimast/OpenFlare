@@ -1,0 +1,27 @@
+{
+  "cloudflare": {
+    "move": "Move",
+    "batchMove": "Batch Move",
+    "batchRemove": "Batch Delete",
+    "selectedCount": "{count} selected",
+    "clearSelection": "Clear selection",
+    "moveDialog": {
+      "titleSingle": "Move domain \"{domain}\"",
+      "titleBatch": "Batch move domains ({count} items)",
+      "targetGroupLabel": "Target pointing group",
+      "targetGroupPlaceholder": "Select target group",
+      "noOtherGroups": "No other pointing groups available. Please create one first.",
+      "submit": "Confirm move",
+      "moving": "Moving..."
+    },
+    "batchRemoveDialog": {
+      "title": "Confirm batch domain deletion",
+      "desc": "Are you sure you want to remove {count} selected domains from the current group? This will also clean up DNS records on Cloudflare.",
+      "confirm": "Confirm delete",
+      "removing": "Deleting..."
+    },
+    "memberMoved": "Domain moved successfully",
+    "batchMoved": "Successfully moved {count} domains",
+    "batchRemoved": "Successfully deleted {count} domains"
+  }
+}

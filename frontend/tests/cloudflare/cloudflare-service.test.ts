@@ -55,4 +55,29 @@ describe('CloudflareService', () => {
       undefined,
     );
   });
+
+  it('calls move and batch member endpoints with correct paths and payloads', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(response({}));
+
+    await CloudflareService.moveMember(7, 9, 8);
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/api/v1/d/cloudflare/groups/7/members/9/move',
+      { target_group_id: 8 },
+      undefined,
+    );
+
+    await CloudflareService.batchMoveMembers(7, [9, 10], 8);
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/api/v1/d/cloudflare/groups/7/members/batch-move',
+      { member_ids: [9, 10], target_group_id: 8 },
+      undefined,
+    );
+
+    await CloudflareService.batchRemoveMembers(7, [9, 10]);
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/api/v1/d/cloudflare/groups/7/members/batch-remove',
+      { member_ids: [9, 10] },
+      undefined,
+    );
+  });
 });

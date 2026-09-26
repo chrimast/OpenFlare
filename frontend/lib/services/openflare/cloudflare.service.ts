@@ -102,4 +102,35 @@ export class CloudflareService extends OpenFlareBaseService {
       `/groups/${groupId}/members/${memberId}/sync`,
     );
   }
+
+  static moveMember(
+    groupId: number,
+    memberId: number,
+    targetGroupId: number,
+  ): Promise<CloudflareMember> {
+    return this.post<CloudflareMember>(
+      `/groups/${groupId}/members/${memberId}/move`,
+      { target_group_id: targetGroupId },
+    );
+  }
+
+  static batchMoveMembers(
+    groupId: number,
+    memberIds: number[],
+    targetGroupId: number,
+  ): Promise<void> {
+    return this.post<void>(`/groups/${groupId}/members/batch-move`, {
+      member_ids: memberIds,
+      target_group_id: targetGroupId,
+    });
+  }
+
+  static batchRemoveMembers(
+    groupId: number,
+    memberIds: number[],
+  ): Promise<void> {
+    return this.post<void>(`/groups/${groupId}/members/batch-remove`, {
+      member_ids: memberIds,
+    });
+  }
 }

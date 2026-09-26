@@ -493,6 +493,22 @@ definitions:
       updated_at:
         type: string
     type: object
+  cloudflare.MemberBatchMoveInput:
+    properties:
+      member_ids:
+        items:
+          type: integer
+        type: array
+      target_group_id:
+        type: integer
+    type: object
+  cloudflare.MemberBatchRemoveInput:
+    properties:
+      member_ids:
+        items:
+          type: integer
+        type: array
+    type: object
   cloudflare.MemberCreateInput:
     properties:
       proxied:
@@ -521,6 +537,11 @@ definitions:
       zone_domain_id:
         type: integer
       zone_id:
+        type: integer
+    type: object
+  cloudflare.MemberMoveInput:
+    properties:
+      target_group_id:
         type: integer
     type: object
   cloudflare.MemberUpdateInput:
@@ -8268,6 +8289,52 @@ paths:
       summary: 添加 Cloudflare 指向成员
       tags:
       - openflare-cloudflare
+  /api/v1/d/cloudflare/groups/{id}/members/{memberId}/move:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 原分组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 成员 ID
+        in: path
+        name: memberId
+        required: true
+        type: integer
+      - description: 目标分组参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/cloudflare.MemberMoveInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/cloudflare.MemberItem'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Any'
+      security:
+      - SessionCookie: []
+      summary: 移动 Cloudflare 指向成员到其他分组
+      tags:
+      - openflare-cloudflare
   /api/v1/d/cloudflare/groups/{id}/members/{memberId}/remove:
     post:
       parameters:
@@ -8359,6 +8426,74 @@ paths:
       security:
       - SessionCookie: []
       summary: 更新 Cloudflare 指向成员
+      tags:
+      - openflare-cloudflare
+  /api/v1/d/cloudflare/groups/{id}/members/batch-move:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 原分组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 批量移动参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/cloudflare.MemberBatchMoveInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Any'
+      security:
+      - SessionCookie: []
+      summary: 批量移动 Cloudflare 指向成员
+      tags:
+      - openflare-cloudflare
+  /api/v1/d/cloudflare/groups/{id}/members/batch-remove:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 分组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 批量移出参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/cloudflare.MemberBatchRemoveInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Any'
+      security:
+      - SessionCookie: []
+      summary: 批量移出 Cloudflare 指向成员
       tags:
       - openflare-cloudflare
   /api/v1/d/cloudflare/groups/{id}/sync:
