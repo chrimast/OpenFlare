@@ -436,7 +436,7 @@ func BatchMoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatch
 		}
 		return err
 	}
-	for _, memberID := range input.MemberIDs {
+	for _, memberID := range uniqueIDs(input.MemberIDs) {
 		member, getErr := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
 		if getErr != nil {
 			continue
@@ -462,7 +462,7 @@ func BatchRemoveMembers(ctx context.Context, sourceGroupID uint, input MemberBat
 	if len(input.MemberIDs) == 0 {
 		return errors.New(errNoMembersSelected)
 	}
-	for _, memberID := range input.MemberIDs {
+	for _, memberID := range uniqueIDs(input.MemberIDs) {
 		member, err := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
 		if err != nil {
 			continue
@@ -475,6 +475,24 @@ func BatchRemoveMembers(ctx context.Context, sourceGroupID uint, input MemberBat
 		}
 	}
 	return nil
+}
+
+func uniqueIDs(ids []uint) []uint {
+	if len(ids) == 0 {
+		return ids
+	}
+	seen := make(map[uint]struct{}, len(ids))
+	result := make([]uint, 0, len(ids))
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		if _, exists := seen[id]; !exists {
+			seen[id] = struct{}{}
+			result = append(result, id)
+		}
+	}
+	return result
 }
 
 // DeleteGroup removes every managed remote A record and then local state.
