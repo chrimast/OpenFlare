@@ -51,6 +51,7 @@ type snapshotRoute struct {
 	Upstreams          []string                         `json:"upstreams,omitempty"`
 	Enabled            bool                             `json:"enabled"`
 	EnableHTTPS        bool                             `json:"enable_https"`
+	EnableHTTP2        bool                             `json:"enable_http2"`
 	DomainCertIDs      []uint                           `json:"domain_cert_ids,omitempty"`
 	RedirectHTTP       bool                             `json:"redirect_http"`
 	LimitConnPerServer int                              `json:"limit_conn_per_server,omitempty"`
@@ -289,6 +290,7 @@ func buildSnapshotRoutes(ctx context.Context, routes []*model.ProxyRoute) ([]sna
 			Upstreams:          upstreams,
 			Enabled:            route.Enabled,
 			EnableHTTPS:        route.EnableHTTPS,
+			EnableHTTP2:        route.EnableHTTP2,
 			DomainCertIDs:      domainCertIDs,
 			RedirectHTTP:       route.RedirectHTTP,
 			LimitConnPerServer: route.LimitConnPerServer,
@@ -548,7 +550,7 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 		ProxyReadTimeout:           getIntConfig(model.ConfigKeyOpenRestyProxyReadTimeout, defaultOpenRestyProxyTimeout),
 		WebsocketEnabled:           getBoolConfig(model.ConfigKeyOpenRestyWebsocketEnabled, true),
 		HTTP3Enabled:               getBoolConfig(model.ConfigKeyOpenRestyHTTP3Enabled, true),
-		ProxyRequestBuffering:      getBoolConfig(model.ConfigKeyOpenRestyProxyRequestBufferingEnabled, false),
+		ProxyRequestBuffering:      getBoolConfig(model.ConfigKeyOpenRestyProxyRequestBufferingEnabled, true),
 		ProxyBufferingEnabled:      getBoolConfig(model.ConfigKeyOpenRestyProxyBufferingEnabled, true),
 		ProxyBuffers:               getStringConfig(model.ConfigKeyOpenRestyProxyBuffers, "16 16k"),
 		ProxyBufferSize:            getStringConfig(model.ConfigKeyOpenRestyProxyBufferSize, "8k"),

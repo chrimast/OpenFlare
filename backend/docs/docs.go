@@ -6707,6 +6707,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/d/cloudflare/groups/{id}/members/batch-proxy": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-cloudflare"
+                ],
+                "summary": "批量开启 Cloudflare 橙云",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "分组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量开启橙云参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cloudflare.MemberBatchProxyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/d/cloudflare/groups/{id}/members/batch-remove": {
             "post": {
                 "security": [
@@ -15902,6 +15959,15 @@ const docTemplate = `{
                 },
                 "primary_node_id": {
                     "type": "integer"
+                },
+                "record_content": {
+                    "type": "string"
+                },
+                "record_type": {
+                    "type": "string"
+                },
+                "target_mode": {
+                    "type": "string"
                 }
             }
         },
@@ -15935,6 +16001,15 @@ const docTemplate = `{
                 "primary_node": {
                     "$ref": "#/definitions/cloudflare.NodeOption"
                 },
+                "record_content": {
+                    "type": "string"
+                },
+                "record_type": {
+                    "type": "string"
+                },
+                "target_mode": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -15951,6 +16026,17 @@ const docTemplate = `{
                 },
                 "target_group_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "cloudflare.MemberBatchProxyInput": {
+            "type": "object",
+            "properties": {
+                "member_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -20542,6 +20628,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/proxy_route.CustomHeaderInput"
                     }
                 },
+                "enable_http2": {
+                    "type": "boolean"
+                },
                 "enable_https": {
                     "type": "boolean"
                 },
@@ -20657,6 +20746,9 @@ const docTemplate = `{
                 },
                 "custom_headers": {
                     "type": "string"
+                },
+                "enable_http2": {
+                    "type": "boolean"
                 },
                 "enable_https": {
                     "type": "boolean"
