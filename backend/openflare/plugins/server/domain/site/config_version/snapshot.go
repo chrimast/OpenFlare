@@ -102,6 +102,7 @@ type snapshotWAFDocument struct {
 }
 
 type openRestyConfigSnapshot struct {
+	TrustedProxyCIDRs          []string `json:"trusted_proxy_cidrs"`
 	DefaultServerReturnStatus  int      `json:"default_server_return_status"`
 	WorkerProcesses            string   `json:"worker_processes"`
 	WorkerConnections          int      `json:"worker_connections"`
@@ -569,6 +570,7 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 		CacheLockTimeout:           getStringConfig(model.ConfigKeyOpenRestyCacheLockTimeout, "5s"),
 		CacheUseStale:              getStringConfig(model.ConfigKeyOpenRestyCacheUseStale, "error timeout updating http_500 http_502 http_503 http_504"),
 		MainConfigTemplate:         getStringConfig(model.ConfigKeyOpenRestyMainConfigTemplate, model.DefaultOpenRestyMainConfigTemplate),
+		TrustedProxyCIDRs:          getTrustedProxyCIDRsConfig(ctx),
 		DefaultLimitConnPerServer:  getNonNegIntConfig(model.ConfigKeyOpenRestyDefaultLimitConnPerServer, 0),
 		DefaultLimitConnPerIP:      getNonNegIntConfig(model.ConfigKeyOpenRestyDefaultLimitConnPerIP, 0),
 		DefaultLimitRate:           strings.ToLower(strings.TrimSpace(getStringConfig(model.ConfigKeyOpenRestyDefaultLimitRate, ""))),
@@ -589,6 +591,26 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 	}
 	snapshot.CachePath = normalizeProxyCachePathForSnapshot(snapshot.CacheEnabled, snapshot.CachePath)
 	return snapshot
+}
+
+func parseTrustedProxyCIDRs(value string) []string {
+	var cidrs []string
+	if err := json.Unmarshal([]byte(value), &cidrs); err != nil || cidrs == nil {
+		return []string{}
+	}
+	return cidrs
+}
+
+func getTrustedProxyCIDRsConfig(ctx context.Context) []string {
+	config, err := repository.GetSystemConfigByKey(ctx, model.ConfigKeyOpenRestyTrustedProxyCIDRs)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return openrestyrender.DefaultTrustedProxyCIDRs()
+	}
+	if err != nil {
+		logger.ErrorF(ctx, "[OpenFlareConfig] read trusted proxy CIDRs failed: error=%v", err)
+		return []string{}
+	}
+	return parseTrustedProxyCIDRs(config.Value)
 }
 
 func parseOriginErrorPageStatusCodes(raw string) []string {
