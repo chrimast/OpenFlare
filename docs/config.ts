@@ -2,7 +2,7 @@ import {type DefaultTheme, defineAdditionalConfig} from 'vitepress'
 
 export default defineAdditionalConfig({
   description:
-    'OpenFlare 是轻量、自托管的 OpenResty 控制面，用于管理反向代理、配置发布、节点同步、TLS 证书与基础观测。',
+    'OpenFlare 是新一代分布式反向代理与边缘安全网关，为多节点 OpenResty / Nginx 提供集群编排、Zero-Reload 动态配置同步、边缘 WAF、PoW 防 CC 盾与内网穿透。',
 
   themeConfig: {
     nav: nav(),

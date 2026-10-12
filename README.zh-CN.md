@@ -2,11 +2,10 @@
 
 # OpenFlare
 
-**[English](./README.md) | [简体中文](./README.zh-CN.md)**
+**新一代分布式反向代理与边缘安全网关**  
+*Next-Gen Distributed Reverse Proxy & Edge Gateway for OpenResty / Nginx*
 
-OpenFlare 是开源 CDN 编排与边缘安全平台。它支持反向代理、集中式配置同步、内网穿透（Tunnels）、动态 WAF 防护以及防 CC 挑战。
-
-</div>
+**[简体中文](./README.zh-CN.md) | [English](./README.md)**
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/LICENSE">
@@ -20,65 +19,120 @@ OpenFlare 是开源 CDN 编排与边缘安全平台。它支持反向代理、�
   </a>
 </p>
 
-> [!WARNING]
-> 使用 `admin` 用户初次登录系统后，务必修改默认密码 `12345678`。
->
-> BETA 版本为开发测试阶段的临时产物，可能存在未知问题，请勿在生产环境使用。
+</div>
 
-## 文档
+---
 
-**https://openflare.fyrn.link**
+## 📖 什么是 OpenFlare？
 
-常用入口：
+**OpenFlare** 是一套面向多服务器与分布式集群的**新一代开源反向代理与边缘安全网关平台**。
 
-* [快速开始](https://openflare.fyrn.link/guide/quick-start)
-* [部署说明](https://openflare.fyrn.link/deployment/deployment)
-* [配置项参考](https://openflare.fyrn.link/reference/configuration)
-* [系统设计](https://openflare.fyrn.link/design/)
+它并非简单的单机管理面板，而是将传统的 OpenResty / Nginx 升级为具备**多节点集群化编排、动态热更新、边缘 WAF 防护以及内网穿透能力**的现代化边缘网络基础设施：
 
-## 核心能力
+* ⚡ **告别手写配置与 Reload 抖动**：单一控制面板管理任意数量的边缘节点，配置差分毫秒级热同步（Zero-Reload），业务流量平滑无感。
+* 🛡️ **开箱即用的边缘安全防御**：内置 WAF 规则引擎、国家级 GeoIP 访问控制，以及**类似 Cloudflare Turnstile 的客户端密码学 PoW 防 CC 人机验证（5 秒盾）**，在边缘秒级阻断僵尸网络。
+* 🚇 **原生安全内网穿透（Tunnels）**：无需公网 IP 和复杂路由器端口映射，通过轻量级 `openflared` 客户端打通加密隧道，安全将内网 Web 服务接入边缘网关并享受全套安全防护。
+* 📦 **静态 Pages 边缘托管**：支持从 GitHub Release 产物或直传静态包全自动部署至各边缘节点本地分发，支持多版本回滚与 SPA 路由。
+* 🔒 **自动化证书与统一认证**：ACME 协议全自动申请与续期 Let's Encrypt 多域名证书，支持 GitHub OAuth 和标准 OIDC 企业单点登录。
 
-* **反代配置管理**：以网站规则为聚合边界，支持多域名绑定与多上游负载均衡，统一管理所有 OpenResty 节点的反代配置。
-* **安全内网穿透（Tunnels）**：开源版的 Cloudflare Tunnels。无须公网 IP 或暴露入向端口，通过 Relay 中继节点与 OpenFlared 客户端安全反向穿透内网 Web 服务至公网。
-* **边缘 WAF 安全防护**：提供全局与自定义规则组，支持手动/自动/订阅型 IP 组、MaxMind GeoIP 国家级地域准入、IP 组成员 Checksum 差分同步（无需 Nginx 重载）以及自定义拦截响应。
-* **防 CC 与人机挑战（PoW）**：内置高性能客户端密码学 Proof of Work 挑战（类似 Turnstile），在网关边缘秒级拦截并阻断僵尸网络与爬虫。
-* **Pages 静态托管**：支持上传或从受限 Remote URL、公开 GitHub Release asset 同步预构建产物；GitHub latest 可定时检查并可选自动发布。所有来源统一生成不可变部署，由边缘 Agent 拉取并通过 OpenResty 本地提供服务，支持回滚、SPA Fallback 与 API 反向代理。
-* **TLS 证书自动化**：支持证书动态上传、多域名证书自动匹配绑定，以及通过 ACME 协议向 Let's Encrypt 自动申请与续期证书。
-* **Uptime Kuma 监控同步**：与 Uptime Kuma 集成，自动差分同步监控站点列表，实时感知节点存活与服务可用状态。
-* **SSO 单点登录**：支持 GitHub OAuth 与标准 OIDC 协议，无缝接入企业身份提供商实现统一登录。
-* **统一观测**：聚合节点请求指标、实时访问日志明细、宿主机与 Nginx 资源快照、健康事件以及网络波动补传缓冲。
+---
 
-## 界面预览
+## 🌐 灵活的部署模式：独立自建 vs 协同 Cloudflare
 
-### 仪表盘总览
+OpenFlare 既可以作为独立的边缘网关使用，也可以与 Cloudflare 等公网 CDN 完美协作互补：
 
-![OpenFlare dashboard overview](./docs/assets/readme/dashboard-overview.png)
+### 1. 独立自建模式 (Standalone Edge Gateway)
+适用于多台 VPS、跨地域云服务器或 Homelab：
+* 自主搭建私有 CDN 与反向代理集群，数据和流量 100% 本地掌控。
+* 拥有完整的边缘防 CC 人机验证、自建 SSL 证书管理与内网穿透能力，无需采购昂贵的商业安全套餐。
 
-### 访问日志
+### 2. Cloudflare 源站防护盾模式 (Behind Cloudflare / Origin Shield)
+作为 Cloudflare 背后坚固的**源站集群网关**：
+* **防范源站真实 IP 泄露**：即使攻击者通过历史解析或漏洞绕过 Cloudflare 直连你的源站真实 IP，OpenFlare 边缘的 WAF 与 PoW 人机挑战仍会在第一时间将其阻断。
+* **全量私有访问日志沉淀**：弥补商业 CDN 免费版日志保留极短、明细不足的痛点，全量审计请求日志与监控指标。
+* **统一内网与跨服路由**：由 OpenFlare 统一承接来自 Cloudflare 的流量，智能分发至源站多服务或内网穿透应用。
 
-![OpenFlare version release](./docs/assets/readme/domain_overview.png)
+---
 
-### WAF 防护
+## 📊 横向对比：传统 Nginx vs Nginx Proxy Manager vs OpenFlare
 
-![OpenFlare version release](./docs/assets/readme/waf.png)
+| 维度 | 传统 Nginx (`nginx.conf`) | Nginx Proxy Manager (NPM) | **OpenFlare** |
+| :--- | :--- | :--- | :--- |
+| **集群架构** | 每台机器独立维护，频繁 SSH | 仅支持单机，无法多节点集群协同 | **原生分布式控制面 + 边缘 Agent 集群** |
+| **配置生效方式** | 每次需 `nginx -s reload`，连接可能抖动 | 频繁 Reload | **共享内存/差分热同步，Zero-Reload** |
+| **防 CC / 爬虫人机验证** | 仅支持简单的 `limit_req` 频率限制 | 不支持 | **内置类似 Turnstile 的 PoW 客户端挑战** |
+| **内网穿透 (Tunnels)** | 需繁琐集成第三方程式 (如 frp) | 不支持 | **内置 OpenFlared 穿透隧道，开箱即用** |
+| **WAF 与安全防护** | 需复杂编译配置 ModSecurity | 仅基础 Exploits 规则 | **动态 WAF、国家级 GeoIP、IP 组差分准入** |
+| **静态 Pages 托管** | 手动上传并配置静态目录 | 仅静态文件代理 | **自动化拉取 GitHub Release，版本回滚** |
+| **配合 Cloudflare** | 手动配置 `set_real_ip_from` 极其繁琐 | 需繁琐设置代理头部 | **原生还原真实 IP，完美充当源站护盾** |
 
-## 快速开始
+---
 
-### 硬件配置推荐
+## 🏗️ 架构拓扑
 
-| 组件 | 最低硬件配额                        | 推荐硬件配额 | 说明 |
-| --- |-------------------------------| --- | --- |
-| **Server 控制面** | 1 核 CPU / 2 GB 内存 / 20 GB 磁盘  | 2 核 CPU / 4 GB 内存 / 50 GB+ 磁盘 | 磁盘用量需根据访问日志留存时长与并发流量合理扩容 |
-| **Agent 数据面** | 1 核 CPU / 512 MB 内存 / 2 GB 磁盘 | 2 核 CPU / 2 GB 内存 / 10 GB+ 磁盘 | 根据 OpenResty 的并发代理连接量与 WAF 拦截处理扩容 |
-| **Relay 中继节点**| 1 核 CPU / 1 GB 内存 / 5 GB 磁盘   | 2 核 CPU / 2 GB 内存 / 20 GB 磁盘 | frps 传输中继吞吐量主要受带宽与 CPU 吞吐能力限制 |
-| **OpenFlared 客户端**| 1 核 CPU / 256 MB 内存 / 1 GB 磁盘 | 1 核 CPU / 512 MB 内存 / 5 GB 磁盘 | 独立运行于内网，自身资源占用极小，保障网络吞吐即可 |
+```mermaid
+flowchart TD
+    subgraph Visitors ["公网访客与客户端"]
+        User["公网访客 / 移动端"]
+        CF["Cloudflare CDN (可选代理层)"]
+    end
 
-### 1. 启动 Server
+    subgraph EdgePlane ["边缘数据面 (OpenResty Agent 节点)"]
+        Edge1["边缘节点 A (OpenResty)"]
+        Edge2["边缘节点 B (OpenResty)"]
+    end
 
-使用 docker-compose
+    subgraph ControlPlane ["控制面 (Control Plane)"]
+        Server["OpenFlare Server (Web 控制台)"]
+        DB[("PostgreSQL + Redis")]
+    end
+
+    subgraph Backend ["源站与内网服务"]
+        Origin["公网源站 Web 服务"]
+        subgraph PrivateNet ["私有网络 / Homelab"]
+            NAS["私有应用 / NAS"]
+            Client["OpenFlared 穿透客户端"]
+        end
+    end
+
+    User -->|直连 HTTPS 访问| Edge1
+    User -->|经 Cloudflare 代理| CF
+    CF -->|安全回源| Edge2
+
+    Server <-->|差分热同步 / 指标上报| Edge1
+    Server <-->|差分热同步 / 指标上报| Edge2
+    Server --- DB
+
+    Edge1 -->|反向代理| Origin
+    Edge2 -->|反向代理| Origin
+
+    Client <-->|加密穿透隧道| Edge1
+    NAS --- Client
+```
+
+---
+
+## 🖥️ 界面预览
+
+### 仪表盘与实时观测
+![OpenFlare 仪表盘总览](./docs/assets/readme/dashboard-overview.png)
+
+### 边缘 WAF 与访问控制
+![OpenFlare WAF 防护](./docs/assets/readme/waf.png)
+
+### 域名与流量分析
+![OpenFlare 域名访问概览](./docs/assets/readme/domain_overview.png)
+
+---
+
+## ⚡ 快速开始
+
+### 1. 启动 Server 控制端
+
+使用 `docker-compose` 快速启动控制面：
 
 ```bash
-# 下载环境变量模板并创建 .env 文件
+# 获取环境变量模板
 curl -o .env.example https://raw.githubusercontent.com/Rain-kl/OpenFlare/refs/heads/main/.env.example
 cp .env.example .env
 ```
@@ -130,40 +184,32 @@ services:
       start_period: 5s
 
 volumes:
-    openflare_uploads:
-    openflare_postgres_data:
-    openflare_redis_data:
+  openflare_uploads:
+  openflare_postgres_data:
+  openflare_redis_data:
 ```
 
-详细部署说明见 [部署文档](https://openflare.fyrn.link/deployment/deployment)。
+* **访问控制台**：`http://localhost:3000`
+* **默认账号密码**：`admin` / `12345678`
 
-访问地址：`http://localhost:3000`
+> [!WARNING]
+> 初次登录后，请务必在后台第一时间修改默认密码 `12345678`。  
+> BETA 版本处于开发与测试阶段，生产环境请提前做好数据备份。
 
-默认账号：
+### 2. 部署边缘 Agent 节点
 
-* 用户名：`admin`
-* 密码：`12345678`
-
-### 2. 安装 Agent
-
-安装 Agent 前请先在节点上安装 OpenResty，或改用内置 OpenResty 的 Agent Docker 镜像。
-
-你可以在控制面板的节点管理->详情->节点信息->节点标识与部署复制安装命令，或直接使用下面的脚本：
-
-#### Docker 部署
-
-Docker 部署可直接运行 Agent 镜像：
+在任意作为边缘代理的服务器上执行（需开放 80/443 端口）：
 
 ```bash
 docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
 docker run -d --name openflare-agent --restart unless-stopped \
   -p 80:80 -p 443:443/tcp -p 443:443/udp \
   -v openflare-agent-pages:/data/var/lib/openflare/pages \
-  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
-  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  -e OPENFLARE_SERVER_URL=http://<YOUR_SERVER_IP>:3000 \
+  -e OPENFLARE_AGENT_TOKEN=<YOUR_AGENT_TOKEN> \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
+*(Token 可在管理后台的「节点管理 -> 详情 -> 节点信息」中直接一键生成与复制)*
 
 ## Cordis / Wavelet 上游
 
@@ -179,9 +225,42 @@ git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
 
 ## 开源协议
 
-本项目采用 [Apache License 2.0](./LICENSE) 开源。
+## 📚 官方文档
 
-## Star History
+完整配置与进阶部署详见官方文档：**[https://openflare.fyrn.link](https://openflare.fyrn.link)**
+
+* [快速入门指南](https://openflare.fyrn.link/guide/quick-start)
+* [生产部署与架构说明](https://openflare.fyrn.link/deployment/deployment)
+* [配置项详细参考](https://openflare.fyrn.link/reference/configuration)
+* [系统底层设计](https://openflare.fyrn.link/design/)
+
+<details>
+<summary><b>🔍 查看各组件最低与推荐硬件配置要求</b></summary>
+
+| 组件 | 最低硬件配置 | 推荐硬件配置 | 说明 |
+| :--- | :--- | :--- | :--- |
+| **Server 控制面** | 1 核 CPU / 2 GB 内存 / 20 GB 磁盘 | 2 核 CPU / 4 GB 内存 / 50 GB+ 磁盘 | 根据访问日志存储时长和吞吐量灵活规划 |
+| **Agent 数据面** | 1 核 CPU / 512 MB 内存 / 2 GB 磁盘 | 2 核 CPU / 2 GB 内存 / 10 GB+ 磁盘 | 取决于并发代理量与 WAF 规则量 |
+| **Relay 中继节点** | 1 核 CPU / 1 GB 内存 / 5 GB 磁盘 | 2 核 CPU / 2 GB 内存 / 20 GB 磁盘 | 主要受网络带宽与并发吞吐限制 |
+| **OpenFlared 客户端** | 1 核 CPU / 256 MB 内存 / 1 GB 磁盘 | 1 核 CPU / 512 MB 内存 / 5 GB 磁盘 | 极低内存占用，保证网络连接畅通即可 |
+
+</details>
+
+---
+
+## ⚖️ 商标免责声明 (Trademark Disclaimer)
+
+OpenFlare is an independent, community-driven open-source project. It is not affiliated with, endorsed by, or sponsored by Cloudflare, Inc. Cloudflare and related trademarks are the property of their respective owners.
+
+OpenFlare 是一个由社区驱动的独立开源项目，与 Cloudflare, Inc. 无任何附属、认可或赞助关系。Cloudflare 及其相关商标均为其各自持有者的财产。
+
+---
+
+## 📄 开源协议
+
+本项目基于 [Apache License 2.0](./LICENSE) 协议开源。
+
+## ⭐ Star History
 
 <a href="https://www.star-history.com/?repos=Rain-kl%2FOpenFlare&type=date&legend=bottom-right">
  <picture>
