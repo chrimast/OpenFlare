@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -149,6 +150,79 @@ func TestTestIPGroupAutoConfigReturnsMatchedIPs(t *testing.T) {
 		delete(want, item)
 	}
 	assert.Empty(t, want)
+}
+
+func TestIPGroupAutomaticExcludesInternalIPs(t *testing.T) {
+	t.Cleanup(setupIPGroupSyncTestDB(t))
+	ctx := context.Background()
+	now := time.Now().UTC()
+	internalIPs := []string{
+		"10.0.0.1", "172.16.0.1", "172.31.255.254", "192.168.1.1",
+		"127.0.0.1", "169.254.1.1", "0.0.0.0", "224.0.0.1", "255.255.255.255",
+		"fc00::1", "fd12:3456::1", "fe80::1", "::1", "::", "ff02::1",
+		"::ffff:192.168.1.1", "::ffff:127.0.0.1",
+	}
+	for _, ip := range internalIPs {
+		seedWAFAccessLogs(t, ctx, now, ip, "app.example.com", 1, 0)
+	}
+	seedWAFAccessLogs(t, ctx, now, "192.168.1.2:1234", "app.example.com", 1, 0)
+	seedWAFAccessLogs(t, ctx, now, "[fd00::2]:1234", "app.example.com", 1, 0)
+	publicIPs := []string{"1.1.1.1", "172.32.0.1", "2606:4700:4700::1111"}
+	for _, ip := range publicIPs {
+		seedWAFAccessLogs(t, ctx, now, ip, "app.example.com", 1, 0)
+	}
+
+	autoConfig := json.RawMessage(`{"lookback":"1h","ttl":-1,"rules":[{"expr":"request_count > 0"}]}`)
+	preview, err := TestIPGroupAutoConfig(ctx, IPGroupAutoTestInput{AutoConfig: autoConfig})
+	if err != nil {
+		t.Fatalf("TestIPGroupAutoConfig(%s) error = %v", autoConfig, err)
+	}
+	if !slices.Equal(preview.MatchedIPs, publicIPs) || preview.MatchedCount != len(publicIPs) {
+		t.Errorf("TestIPGroupAutoConfig(%s) matched = %v (count %d), want %v", autoConfig, preview.MatchedIPs, preview.MatchedCount, publicIPs)
+	}
+
+	view, err := CreateIPGroup(ctx, IPGroupInput{
+		Name: "automatic public IPs", Type: wafIPGroupTypeAutomatic, Enabled: true, AutoConfig: autoConfig,
+	})
+	if err != nil {
+		t.Fatalf("CreateIPGroup(automatic public IPs) error = %v", err)
+	}
+	group, err := repository.GetOpenFlareWAFIPGroupByID(ctx, view.ID)
+	if err != nil {
+		t.Fatalf("GetOpenFlareWAFIPGroupByID(%d) error = %v", view.ID, err)
+	}
+	capturedAt := now.Add(-24 * time.Hour)
+	extIPs := make([]ipGroupExtIP, 0, len(internalIPs)+1)
+	for _, ip := range internalIPs {
+		extIPs = append(extIPs, ipGroupExtIP{IP: ip, CapturedAt: capturedAt})
+	}
+	extIPs = append(extIPs, ipGroupExtIP{IP: "8.8.8.8", CapturedAt: capturedAt})
+	extJSON, err := json.Marshal(extIPs)
+	if err != nil {
+		t.Fatalf("json.Marshal(extIPs) error = %v", err)
+	}
+	group.ExtIPs = string(extJSON)
+	if err := repository.UpdateOpenFlareWAFIPGroup(ctx, group); err != nil {
+		t.Fatalf("UpdateOpenFlareWAFIPGroup(%d) error = %v", group.ID, err)
+	}
+
+	result, err := SyncIPGroup(ctx, group.ID)
+	if err != nil {
+		t.Fatalf("SyncIPGroup(%d) error = %v", group.ID, err)
+	}
+	wantIPs := append(slices.Clone(publicIPs), "8.8.8.8")
+	slices.Sort(wantIPs)
+	if !slices.Equal(result.Group.IPList, wantIPs) || result.IPCount != len(wantIPs) {
+		t.Errorf("SyncIPGroup(%d) IPs = %v (count %d), want %v", group.ID, result.Group.IPList, result.IPCount, wantIPs)
+	}
+	gotExtIPs := make([]string, 0, len(result.Group.ExtIPs))
+	for _, item := range result.Group.ExtIPs {
+		gotExtIPs = append(gotExtIPs, item.IP)
+	}
+	slices.Sort(gotExtIPs)
+	if !slices.Equal(gotExtIPs, wantIPs) {
+		t.Errorf("SyncIPGroup(%d) ExtIPs = %v, want %v", group.ID, gotExtIPs, wantIPs)
+	}
 }
 
 func TestListDueOpenFlareWAFIPGroups(t *testing.T) {
