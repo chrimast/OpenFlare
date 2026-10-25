@@ -87,6 +87,8 @@ Server 的所有核心基础配置定义在 `config.yaml` 中，且均支持环�
 | `database.max_idle_conn` | `DB_MAX_IDLE_CONN` | 数据库连接池最大空闲连接数 | `16` |
 | `database.max_open_conn` | `DB_MAX_OPEN_CONN` | 数据库连接池最大打开连接数 | `128` |
 
+SQLite 文件数据库在启动时自动启用 WAL 模式；内存数据库保留 `memory` 模式。请确保数据库所在目录可写，以创建 `-wal` 和 `-shm` 文件。在线备份请使用管理端数据库导出（生成一致性快照），不要仅复制运行中的 `.db` 文件。
+
 ### 3. Redis 配置 (`redis:`)
 | 配置文件 YAML 路径 | 对应覆盖环境变量 | 作用说明 | 默认值 |
 | --- | --- | --- | --- |
