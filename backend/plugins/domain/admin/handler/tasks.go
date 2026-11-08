@@ -120,7 +120,7 @@ func ListTaskExecutions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.OK(gin.H{
-		"items":     executions,
+		"items":     localizeTaskExecutions(response.Locale(c), executions),
 		"total":     total,
 		"page":      req.Page,
 		"page_size": req.PageSize,
@@ -153,7 +153,8 @@ func GetTaskExecution(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.OK(execution))
+	localized := localizeTaskExecution(response.Locale(c), *execution)
+	c.JSON(http.StatusOK, response.OK(localized))
 }
 
 // RetryTask 重试失败的任务

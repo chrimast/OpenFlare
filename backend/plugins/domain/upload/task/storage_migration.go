@@ -48,7 +48,7 @@ var StorageMigrationMeta = contracts.TaskMetaDTO{
 	Params: []contracts.TaskParamDTO{
 		{
 			Name:        "target",
-			Label:       "目标存储配置 (JSON)",
+			Label:       "Target storage configuration (JSON)",
 			Type:        "text",
 			Required:    true,
 			Placeholder: `{"driver": "s3", "local": {"root": "."}, "s3": {"bucket": "my-bucket"}}`,

@@ -306,7 +306,7 @@ func TestCompleteTaskExecutionFlushesLog(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, TaskExecutionStatusSucceeded, found.Status)
 	assert.Contains(t, found.Log, "任务执行中的日志")
-	assert.Contains(t, found.Log, "任务执行成功")
+	assert.Contains(t, found.Log, "Task succeeded")
 }
 
 func TestPermanentErrorIsTerminalForLogFlush(t *testing.T) {

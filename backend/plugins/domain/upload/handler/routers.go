@@ -268,13 +268,13 @@ func BatchDownloadFiles(c *gin.Context) {
 
 		zipFileEntry, err := zipWriter.Create(fileName)
 		if err != nil {
-			logger.ErrorF(ctx, "ZIP 添加条目失败 [%s]: %v", fileName, err)
+			logger.ErrorF(ctx, "Failed to add ZIP entry [%s]: %v", fileName, err)
 			continue
 		}
 
 		obj, err := uploadstorage.OpenStoredObject(ctx, &upload)
 		if err != nil {
-			logger.ErrorF(ctx, "打包时读取文件失败: %v", err)
+			logger.ErrorF(ctx, "Failed to read file while creating archive: %v", err)
 			continue
 		}
 		rc := obj.Body
@@ -282,7 +282,7 @@ func BatchDownloadFiles(c *gin.Context) {
 		_, err = io.Copy(zipFileEntry, rc)
 		_ = rc.Close()
 		if err != nil {
-			logger.ErrorF(ctx, "写入 ZIP 流失败: %v", err)
+			logger.ErrorF(ctx, "Failed to write ZIP stream: %v", err)
 		}
 	}
 }

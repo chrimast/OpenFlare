@@ -47,11 +47,11 @@ var WarmImageCacheMeta = contracts.TaskMetaDTO{
 	Params: []contracts.TaskParamDTO{
 		{
 			Name:        "quality",
-			Label:       "图片质量",
+			Label:       "Image quality",
 			Type:        "string",
 			Required:    true,
 			Placeholder: "low / medium / high",
-			Description: "WebP 压缩质量，仅支持 low、medium、high",
+			Description: "WebP compression quality; must be low, medium or high",
 		},
 	},
 }
@@ -175,7 +175,7 @@ func (h *WarmImageCacheHandler) Execute(ctx context.Context, payload []byte) (*c
 
 		logger.InfoF(
 			ctx,
-			"批次完成，末尾 ID: %d，生成: %d，命中: %d，失败: %d",
+			"Batch completed, last ID: %d, generated: %d, hits: %d, failed: %d",
 			lastID,
 			batchGenerated,
 			batchCached,
@@ -184,7 +184,7 @@ func (h *WarmImageCacheHandler) Execute(ctx context.Context, payload []byte) (*c
 	}
 
 	msg := fmt.Sprintf(
-		"图片缓存预热完成，共处理 %d 张，生成 %d 张，命中 %d 张，失败 %d 张",
+		"Image cache warmup completed; processed %d, generated %d, hits %d, failed %d",
 		totalProcessed,
 		totalGenerated,
 		totalCached,

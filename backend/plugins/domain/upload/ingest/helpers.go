@@ -161,7 +161,7 @@ func createDedupRecord(ctx context.Context, existing models.Upload, req Request)
 	if err := persistUploadRecord(ctx, &newUpload, existing.FilePath); err != nil {
 		return Result{}, err
 	}
-	logger.InfoF(ctx, "文件触发秒传成功! ID: %d, Path: %s", newUpload.ID, existing.FilePath)
+	logger.InfoF(ctx, "Upload deduplication succeeded ID: %d, Path: %s", newUpload.ID, existing.FilePath)
 	return Result{
 		Upload:  newUpload,
 		Created: true,

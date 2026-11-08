@@ -153,7 +153,7 @@ func TestCreateProjectRejectsUnsafeFallbackPath(t *testing.T) {
 		SPAFallbackPath:    "/index.html; proxy_pass http://evil",
 	})
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "回退路径")
+	assert.Contains(t, err.Error(), "fallback path")
 }
 
 func TestCreateProjectRejectsUnsafeContentPaths(t *testing.T) {
@@ -402,7 +402,7 @@ func TestOpenDeploymentPackageRequiresActiveConfigSnapshot(t *testing.T) {
 
 	_, err = OpenDeploymentPackage(ctx, deployment.ID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "激活配置")
+	assert.Contains(t, err.Error(), "active configuration")
 
 	require.NoError(t, repository.DB(ctx).Create(&model.ConfigVersion{
 		Version:          "v2026-001",

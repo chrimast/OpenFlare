@@ -171,12 +171,12 @@ func ImportCertificateFile(c *gin.Context) {
 	remark := c.PostForm("remark")
 	certFile, err := c.FormFile("cert_file")
 	if err != nil {
-		response.AbortBadRequest(c, "缺少证书文件")
+		response.AbortBadRequest(c, "Missing certificate file")
 		return
 	}
 	keyFile, err := c.FormFile("key_file")
 	if err != nil {
-		response.AbortBadRequest(c, "缺少私钥文件")
+		response.AbortBadRequest(c, "Missing private key file")
 		return
 	}
 	certificate, err := CreateCertificateFromFiles(c.Request.Context(), name, certFile, keyFile, remark)

@@ -23,16 +23,17 @@ import (
 // @Accept json
 // @Produce json
 // @Security AgentTokenAuth
-// @Param body body agent.NodePayload true "节点上报数据"
-// @Success 200 {object} response.Any{data=agent.RegistrationResponse} "注册成功"
+// @Param body body protocol.RegisterNodeRequest true "节点上报数据；registration_key 为首次注册重试凭证"
+// @Success 200 {object} response.Any{data=agent.RegistrationResponseDocs} "注册成功"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
 // @Router /api/v1/agent/nodes/register [post]
 func RegisterHandler(c *gin.Context) {
-	var payload NodePayload
-	if !apiutil.BindJSON(c, &payload) {
+	var request protocol.RegisterNodeRequest
+	if !apiutil.BindJSON(c, &request) {
 		return
 	}
+	payload := request.NodePayload
 	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
 
 	var (
@@ -42,7 +43,7 @@ func RegisterHandler(c *gin.Context) {
 	if authNode, ok := NodeFromContext(c); ok {
 		result, err = RegisterWithAccessToken(c.Request.Context(), authNode, payload)
 	} else {
-		result, err = RegisterWithDiscovery(c.Request.Context(), payload)
+		result, err = RegisterWithDiscovery(c.Request.Context(), payload, request.RegistrationKey)
 	}
 	if response.AbortBadRequestOnError(c, err) {
 		return
@@ -270,12 +271,12 @@ func DownloadPagesProjectLatestPackageHandler(c *gin.Context) {
 func pagesUintParam(c *gin.Context, name string) (uint, bool) {
 	raw := c.Param(name)
 	if raw == "" {
-		response.AbortBadRequest(c, "无效的 ID")
+		response.AbortBadRequest(c, "Invalid ID")
 		return 0, false
 	}
 	id64, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil || id64 == 0 {
-		response.AbortBadRequest(c, "无效的 ID")
+		response.AbortBadRequest(c, "Invalid ID")
 		return 0, false
 	}
 	return uint(id64), true

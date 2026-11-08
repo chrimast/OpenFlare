@@ -22,7 +22,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 func versionParam(c *gin.Context) (string, bool) {
 	version := c.Param("id")
 	if version == "" {
-		response.AbortBadRequest(c, "无效的版本号")
+		response.AbortBadRequest(c, "Invalid version identifier")
 		return "", false
 	}
 	return version, true
