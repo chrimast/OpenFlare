@@ -13205,6 +13205,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
+                "description": "支持具体域名或最左侧完整标签为 * 的通配符域名，例如 *.s3.example.com；域名必须属于当前 Zone。",
                 "consumes": [
                     "application/json"
                 ],
@@ -13332,6 +13333,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
+                "description": "支持具体域名与通配符域名互相修改；通配符仅允许出现在最左侧完整标签，且域名必须属于当前 Zone。",
                 "consumes": [
                     "application/json"
                 ],
@@ -16134,6 +16136,11 @@ const docTemplate = `{
                 },
                 "target_mode": {
                     "type": "string"
+                },
+                "ttl": {
+                    "description": "TTL 为 1 时自动，否则为 60～86400 秒的整数；省略时创建默认自动，更新保留原值。",
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -16175,6 +16182,11 @@ const docTemplate = `{
                 },
                 "target_mode": {
                     "type": "string"
+                },
+                "ttl": {
+                    "description": "TTL 为 1 时自动，否则为 DNS-only 成员使用的秒数。",
+                    "type": "integer",
+                    "example": 1
                 },
                 "updated_at": {
                     "type": "string"
