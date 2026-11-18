@@ -67,6 +67,7 @@ var openRestyOptionValidators = map[string]func(key, value string) error{
 	model.ConfigKeyOriginErrorPageEnabled:                validateBooleanOption,
 	model.ConfigKeyOriginErrorPageStatusCodes:            validateOriginErrorPageStatusCodes,
 	model.ConfigKeyOriginErrorPageHTML:                   validateOriginErrorPageHTML,
+	model.ConfigKeyPoWPage:                               validatePoWPageOption,
 	model.ConfigKeyOriginErrorPageGetOnly:                validateBooleanOption,
 	model.ConfigKeySWOfflineEnabled:                      validateBooleanOption,
 	model.ConfigKeySWOfflineHTML:                         validateSWOfflineHTML,
@@ -77,7 +78,7 @@ var openRestyDefaultLimitRatePattern = regexp.MustCompile(`^\d+[kKmM]?$`)
 
 func validateOpenRestyOption(key, value string) error {
 	// HTML 按原始字节长度校验，避免 TrimSpace 影响上限判断
-	if key == model.ConfigKeyOriginErrorPageHTML || key == model.ConfigKeySWOfflineHTML {
+	if key == model.ConfigKeyOriginErrorPageHTML || key == model.ConfigKeySWOfflineHTML || key == model.ConfigKeySiteAuthHTML {
 		return validateOriginErrorPageHTML(key, value)
 	}
 	trimmed := strings.TrimSpace(value)
@@ -272,6 +273,19 @@ func validateOriginErrorPageHTML(key, value string) error {
 		return fmt.Errorf("%s must not exceed %d bytes (256 KiB)", key, maxOriginErrorPageHTMLBytes)
 	}
 	return nil
+}
+
+func validatePoWPageOption(key, value string) error {
+	var cfg openrestyrender.PoWPageConfig
+	decoder := json.NewDecoder(strings.NewReader(value))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&cfg); err != nil {
+		return fmt.Errorf("%s must be a valid PoW page configuration: %w", key, err)
+	}
+	if !json.Valid([]byte(value)) || strings.TrimSpace(value) == "null" {
+		return fmt.Errorf("%s must be a JSON object", key)
+	}
+	return openrestyrender.ValidatePoWPageConfig(cfg)
 }
 
 func validateSWOfflineHTML(key, value string) error {

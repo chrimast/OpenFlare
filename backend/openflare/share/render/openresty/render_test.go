@@ -61,6 +61,9 @@ func TestRenderMainConfigPreservesExplicitRealIPHeader(t *testing.T) {
 
 func TestRenderOpenRestyUsesDedicatedWAFIPGroupSharedDict(t *testing.T) {
 	block := renderOpenRestyObservabilityTemplateBlock()
+	if strings.Contains(block, "lua_shared_dict openflare_observability") || strings.Contains(block, "log_by_lua") {
+		t.Fatalf("health-only observability must not allocate unused counters or invoke an empty log hook:\n%s", block)
+	}
 	if !strings.Contains(block, "lua_shared_dict openflare_waf_config 1m;") {
 		t.Fatal("expected general WAF coordination dictionary to remain available")
 	}
@@ -299,7 +302,7 @@ func TestRenderPagesAPIProxyLocationBlock(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := renderPagesAPIProxyLocationBlock(tt.deployment)
+			got := renderPagesAPIProxyLocationBlock(tt.deployment, Route{})
 			if len(tt.expected) == 1 && tt.expected[0] == "" {
 				if got != "" {
 					t.Fatalf("expected empty output, got: %q", got)

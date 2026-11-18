@@ -1,69 +1,5 @@
 # AGENTS.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
-
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-## 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
-
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
-
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
 ## Skills（匹配任务时必读）
 
 | Skill | 何时使用 |
@@ -77,7 +13,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | `file-upload` | 上传/摄取、`upload.Ingest`、文件访问、`w_uploads` |
 | `cache-framework` | 业务缓存（RAM/Redis/DB）、失效、多节点同步 |
 | `push-notification` | 通知推送事件、统一触发器、带推送的业务 |
-| `release-guide` | Version Bump 提交信息（触发双语 Release） |
+| `release-guide` | Version Bump 双语提交信息（中英文以 `---` 分隔） |
 | `shadcn` | 添加/修改/组合 shadcn/ui 组件 |
 
 ## 硬性约束
@@ -144,10 +80,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 核心业务（如 `oauth`、`user`）禁止直接 import push/custom_events；经 `backend/openflare/plugins/server/listener` 发域事件，push 在 bootstrap 订阅。
 - 依赖任务/推送注册的测试须显式 `bootstrap.RegisterTasks()` / `RegisterPushDomainEvents()` 等，不依赖 `init()`。
 - API 错误必须 `response.Abort*` + `ErrorHandlerMiddleware`；禁止 Handler 直接 `c.JSON(..., response.Err(...))` 或用 HTTP 200 表示失败。
-
+- 根据单次任务工作量动态调整测试力度,不要改个文案就去跑全量测试。
 ### 文档与 Changelog
 
-- 内容变更同步**中文文档**（不同步英文）。
+- 内容变更同步**中文文档**。
 - 代码/配置变更写入 [`docs/changelog/index.md`](./docs/changelog/index.md) 的 `[Unreleased]`；纯文档变更不写 changelog。
 - Changelog：合并相近项；不记格式化/调试/无关重构；用户可读完整中文句；说明效果；不编造；不写密钥等敏感信息；空分类可省略。
 
@@ -156,9 +92,15 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **后端**：Go 1.25+、Gin、GORM、PostgreSQL、可选 ClickHouse、Redis、Asynq、Cobra、Viper、Swaggo、OTel、Zap、AWS SDK v2、Snowflake IDs
 - **前端**：Next.js App Router、TypeScript、Tailwind、pnpm、shadcn/ui
 
-## Git
 
-Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(auth): support email login`）。
+## Git 提交规范
+
+每次完成一个功能点开发或修复一个问题后，务必提交 Git commit , 禁止推送远程仓库。
+遵循 Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(auth): support email login`）。
+若涉及非琐碎改动（技术选型/架构重构/核心改动/踩坑复盘），必须将对应的 Agent Note（`.agents/notes/...`）与代码同批原子提交。
+- **改动范围约束**：仅允许提交自己明确修改的文件，严禁提交非本次任务修改的文件（杜绝盲目 `git add .` 或 `git commit -a` 卷入无关变动）。
+- **工作区保护**：严禁随意还原、丢弃或覆盖他人或当前工作区正在施工的文件。
+- **测试容错与告知**：若工作区正在施工的文件导致全局测试失败，仅验证本次修改相关的测试用例，跳过受无关施工影响的测试并明确告知跳过原因。
 
 ---
 
@@ -245,6 +187,7 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 
 - shadcn 用 `variant` + CSS 变量；业务 `className` 不硬编码颜色/背景/阴影。
 - 变体不足时扩展组件 variant，不写一次性颜色。
+- 卡片与内容分区统一采用**虚线外框、无阴影扁平设计**（`Pages` 与 `/admin/demo` 风格）：`frontend/components/ui/card.tsx` 已默认 `border-dashed shadow-none`，业务直接使用 `<Card>` 即可；**禁止**在卡片或列表项容器上添加 `shadow-sm`/`shadow-md` 等投影、`backdrop-blur-*` 毛玻璃或实线立体边框（`Dialog`、`Sheet`、`Popover` 等浮层除外）。自定义列表项/空状态/分块容器同样使用 `border border-dashed` 且不加阴影。
 
 ### 页面结构
 
@@ -254,7 +197,7 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 - 图标：Lucide 直接放标题容器，`size-5 text-primary`；禁止背景卡片/边框包裹。
 - 标题：仅 `h1 className="text-2xl font-semibold tracking-tight"`。
 - 多 Tab：各 Tab 独立文件；`page.tsx` 只管 Tabs 状态与触发器；禁止 `page.tsx` 仅转发同名空壳。
-- 单文件 > ~600 行或状态过重时拆局部 `components/`；跨页复用放 `frontend/components/common/`。标杆：`/admin/database`。
+- 单文件 > ~600 行或状态过重时拆局部 `components/`；跨页复用放 `frontend/components/common/`。目录拆分参考：`/admin/database`；视觉与卡片风格以 `Pages` 与 `/admin/demo` 为准。
 
 ### 组件放置
 
@@ -279,6 +222,16 @@ frontend/lib/services/<name>/
 ### 国际化 (i18n)
 
 - 使用 `next-intl`（无 URL locale 前缀 / provider 模式），兼容 `NEXT_STANDALONE_EXPORT`。
-- 语言：`zh-CN`、`en`；默认 `zh-CN`。优先级：cookie `NEXT_LOCALE` → 浏览器语言 → 默认。
-- 文案放在 `frontend/messages/fragments`。参考已有代码，按模块拆文件夹，en.json 和 zh-CN.json 是 ci 生成的(node scripts/merge-i18n-fragments.mjs)，禁止手动修改。
-- 禁止在页面/组件里直接写文案，文案必须支持 i18
+- 语言：`zh-CN`、`en`、`ru`；默认 `en`。优先级：cookie `NEXT_LOCALE` → 浏览器语言 → 默认。
+- 文案放在 `frontend/messages/fragments`。参考已有代码，按模块拆文件夹，`en.json`、`zh-CN.json` 和 `ru.json` 是通过 `node scripts/merge-i18n-fragments.mjs` 生成的，禁止手动修改。
+- 禁止在页面/组件里直接写文案，文案必须支持 i18n。
+
+### 文案规范
+
+- 展示于网站界面、文档页及内置 HTML 模板的所有前端文案须采用**正式、客观、克制的专业书面语**，禁止口语化表达。
+- **禁用写法**：
+  - 口语词、语气助词、网络梗与随意调侃（如「试试」「吧」「呢」「呀」「哦」「这个人很懒」「迷失在数字星云中」「你知道吗」「五秒盾」「过盾」「站长」「兜底」）。
+  - 随意缩写、非正式简称与开发俚语（如「反代」→「反向代理」、「控台」→「控制台」、「退登」→「退出登录」、「追平」→「同步」、「报错」→「错误」、「串给」→「分发给」、「灰云/橙云」→「仅 DNS / Cloudflare 代理」）。
+  - 情绪化感叹号（`！`/`!` 仅用于高危警告）与对话腔/随意第二人称（如「换个词试试？」「介绍一下自己吧」「发给你的」「这里可以」「请看」；改用客观陈述或「在此」「当前页面」「请查看」）。
+  - 残缺省略提示与错别字/异体字（如「空关闭」「0 关闭」→「留空表示关闭」「0 表示关闭」；统一使用「其他」而非「其它」、「模板」而非「模版」、「登录」而非「登陆」、「连接」而非「链接」）。
+- **多语言一致性**：修改文案语义时须同步校对 `zh-CN`、`en`、`ru` 三个 fragment 文件；英文与俄文同样须采用正式产品用语（避免 `you've`、`hasn't` 等非正式缩写及 `Did you know:`、`Try a different term?` 等对话腔），并保持占位符与富文本标签一致。

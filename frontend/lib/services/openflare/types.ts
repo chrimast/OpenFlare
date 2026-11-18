@@ -205,6 +205,7 @@ export type ProxyRouteConfigSection =
   | 'proxy'
   | 'cache'
   | 'waf'
+  | 'pow'
   | 'auth';
 
 export interface ProxyRouteCustomHeader {
@@ -262,6 +263,7 @@ export interface ProxyRouteItem {
   custom_headers: string;
   custom_header_list: ProxyRouteCustomHeader[];
   basic_auth_enabled: boolean;
+  site_auth_ttl_hours?: number;
   basic_auth_username: string;
   basic_auth_password: string;
   upstream_type: 'direct' | 'tunnel' | 'pages';
@@ -298,6 +300,7 @@ export interface ProxyRouteMutationPayload {
   cache_rules: string[];
   custom_headers: ProxyRouteCustomHeader[];
   basic_auth_enabled: boolean;
+  site_auth_ttl_hours?: number;
   basic_auth_username?: string;
   basic_auth_password?: string;
   upstream_type?: 'direct' | 'tunnel' | 'pages';
@@ -1150,6 +1153,7 @@ export interface DashboardSummary {
 
 export interface DashboardTraffic {
   request_count: number;
+  status_4xx_count?: number;
   unique_visitors: number;
   error_count: number;
   estimated_qps: number;
@@ -1327,6 +1331,10 @@ export interface ZoneDomainItem {
 export interface ZoneDomainMutationPayload {
   domain: string;
   cert_id: number | null;
+}
+
+export interface ZoneDomainCleanupResult {
+  deleted_count: number;
 }
 
 export interface ZoneOverview {

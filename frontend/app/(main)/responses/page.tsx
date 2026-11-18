@@ -12,15 +12,18 @@ import { useAuth } from '@/components/providers/auth-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OptionService } from '@/lib/services/openflare';
 
+import { SiteAuthPageTab } from './components/site-auth-page-tab';
 import { ErrorPageTab } from './components/error-page-tab';
 import { OfflinePageTab } from './components/offline-page-tab';
+import { PoWPageTab } from './components/pow-page-tab';
 import { useTranslations } from 'next-intl';
 
 import { OPTIONS_QUERY_KEY, optionsToMap } from './components/shared';
 
-type ResponseTab = 'error' | 'offline';
+type ResponseTab = 'error' | 'offline' | 'pow' | 'site-auth';
 
 function resolveTab(tabParam: string | null): ResponseTab {
+  if (tabParam === 'pow' || tabParam === 'site-auth') return tabParam;
   if (tabParam === 'offline') {
     return 'offline';
   }
@@ -141,6 +144,15 @@ function ResponsesPageContent() {
           >
             {t('offlinePage')}
           </TabsTrigger>
+          <TabsTrigger value='pow' className='px-0 pb-2 text-xs font-semibold'>
+            {t('powPage')}
+          </TabsTrigger>
+          <TabsTrigger
+            value='site-auth'
+            className='px-0 pb-2 text-xs font-semibold'
+          >
+            {t('siteAuthPage')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value='error' className='focus-visible:outline-none'>
@@ -149,6 +161,13 @@ function ResponsesPageContent() {
 
         <TabsContent value='offline' className='focus-visible:outline-none'>
           <OfflinePageTab optionMap={optionMap} />
+        </TabsContent>
+
+        <TabsContent value='pow' className='focus-visible:outline-none'>
+          <PoWPageTab optionMap={optionMap} />
+        </TabsContent>
+        <TabsContent value='site-auth' className='focus-visible:outline-none'>
+          <SiteAuthPageTab optionMap={optionMap} />
         </TabsContent>
       </Tabs>
     </div>

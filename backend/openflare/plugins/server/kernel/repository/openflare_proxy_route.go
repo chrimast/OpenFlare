@@ -85,6 +85,8 @@ func proxyRouteUpdateMap(route *model.ProxyRoute) map[string]any {
 		"basic_auth_enabled":     route.BasicAuthEnabled,
 		"basic_auth_username":    route.BasicAuthUsername,
 		"basic_auth_password":    route.BasicAuthPassword,
+		"site_auth_ttl_hours":    route.SiteAuthTTLHours,
+		"site_auth_key":          route.SiteAuthKey,
 		"upstream_type":          route.UpstreamType,
 		"tunnel_node_id":         route.TunnelNodeID,
 		"tunnel_target_addr":     route.TunnelTargetAddr,
@@ -146,6 +148,9 @@ func ReplaceZoneDomainRouteBindingsTx(tx *gorm.DB, routeID uint, domainIDs []uin
 func DeleteProxyRouteAndUnbind(ctx context.Context, id uint) error {
 	return WithProxyRouteTx(ctx, func(tx *gorm.DB) error {
 		if err := ClearZoneDomainProxyRouteBindingsTx(tx, id); err != nil {
+			return err
+		}
+		if err := tx.Where("route_id = ?", id).Delete(&model.OpenFlarePoWPolicy{}).Error; err != nil {
 			return err
 		}
 		return DeleteProxyRouteRecordTx(tx, id)
