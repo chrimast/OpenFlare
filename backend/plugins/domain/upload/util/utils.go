@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package util provides upload media helpers and image utilities.
-package util
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/shared"
@@ -23,19 +22,19 @@ import (
 // ValidateS3Key validates an S3 object key for safety.
 func ValidateS3Key(key string) error {
 	if key == "" {
-		return errors.New(shared.ErrS3KeyRequired)
+		return errors.New(ErrS3KeyRequired)
 	}
 
-	if len(key) > shared.MaxS3KeyLength {
-		return fmt.Errorf(shared.ErrS3KeyTooLongFormat, shared.MaxS3KeyLength)
+	if len(key) > MaxS3KeyLength {
+		return fmt.Errorf(ErrS3KeyTooLongFormat, MaxS3KeyLength)
 	}
 
 	if strings.HasPrefix(key, "/") {
-		return errors.New(shared.ErrS3KeyStartsWithSlash)
+		return errors.New(ErrS3KeyStartsWithSlash)
 	}
 
 	if strings.Contains(key, "\x00") {
-		return errors.New(shared.ErrS3KeyContainsNullBytes)
+		return errors.New(ErrS3KeyContainsNullBytes)
 	}
 
 	return nil
@@ -51,11 +50,11 @@ func CompressImageToWebP(srcReader io.Reader, quality string) ([]byte, error) {
 
 	var qualityScore float32
 	switch strings.ToLower(quality) {
-	case shared.ImageQualityLow:
+	case ImageQualityLow:
 		qualityScore = 60
-	case shared.ImageQualityMedium:
+	case ImageQualityMedium:
 		qualityScore = 75
-	case shared.ImageQualityHigh, "":
+	case ImageQualityHigh, "":
 		qualityScore = 85
 	default:
 		qualityScore = 85

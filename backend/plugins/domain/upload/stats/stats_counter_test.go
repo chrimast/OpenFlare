@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package stats
+package upload
 
 import (
 	"Wavelet/pkg/testhelper"
@@ -55,9 +55,9 @@ func TestApplyUploadStatsDeltaTxWithinTransaction(t *testing.T) {
 		t.Fatalf("ApplyUploadStatsDeltaTx returned error: %v", err)
 	}
 
-	stats, err := loadUploadStats(ctx)
+	stats, err := loadUploadStatsSnapshot(ctx)
 	if err != nil {
-		t.Fatalf("loadUploadStats returned error: %v", err)
+		t.Fatalf("loadUploadStatsSnapshot returned error: %v", err)
 	}
 	if stats.TotalCount != 1 || stats.TotalSize != 256 {
 		t.Fatalf("unexpected total stats: count=%d size=%d", stats.TotalCount, stats.TotalSize)
@@ -86,9 +86,9 @@ func TestApplyUploadStatsAddAndRemove(t *testing.T) {
 		t.Fatalf("ApplyUploadStatsAdd returned error: %v", err)
 	}
 
-	stats, err := loadUploadStats(ctx)
+	stats, err := loadUploadStatsSnapshot(ctx)
 	if err != nil {
-		t.Fatalf("loadUploadStats returned error: %v", err)
+		t.Fatalf("loadUploadStatsSnapshot returned error: %v", err)
 	}
 	if stats.TotalCount != 1 || stats.TotalSize != 128 {
 		t.Fatalf("unexpected total stats: count=%d size=%d", stats.TotalCount, stats.TotalSize)
@@ -98,9 +98,9 @@ func TestApplyUploadStatsAddAndRemove(t *testing.T) {
 		t.Fatalf("ApplyUploadStatsRemove returned error: %v", err)
 	}
 
-	stats, err = loadUploadStats(ctx)
+	stats, err = loadUploadStatsSnapshot(ctx)
 	if err != nil {
-		t.Fatalf("loadUploadStats after remove returned error: %v", err)
+		t.Fatalf("loadUploadStatsSnapshot after remove returned error: %v", err)
 	}
 	if stats.TotalCount != 0 || stats.TotalSize != 0 {
 		t.Fatalf("expected zeroed total stats, got count=%d size=%d", stats.TotalCount, stats.TotalSize)

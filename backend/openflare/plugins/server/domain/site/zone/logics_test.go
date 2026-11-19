@@ -58,7 +58,7 @@ func TestNormalizeDomainWildcard(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got, err := normalizeDomain(tt.input)
+			got, err := routeidentity.NormalizeDomain(tt.input)
 			if got != tt.want || (err != nil) != (tt.want == "") {
 				t.Errorf("normalizeDomain(%q) = (%q, %v), want %q with error=%t", tt.input, got, err, tt.want, tt.want == "")
 			}
@@ -161,7 +161,7 @@ func TestDeleteDomainCleansUpCloudflareMember(t *testing.T) {
 }
 
 func TestLegacyImportUsesEffectiveTLDPlusOne(t *testing.T) {
-	root, err := zoneRoot("api.example.co.uk")
+	root, err := routeidentity.ZoneRoot("api.example.co.uk")
 	require.NoError(t, err)
 	require.Equal(t, "example.co.uk", root)
 }

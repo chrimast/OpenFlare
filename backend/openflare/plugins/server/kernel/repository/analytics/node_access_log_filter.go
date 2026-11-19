@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"fmt"
@@ -26,17 +26,14 @@ const (
 	nodeAccessLogColumnLoggedAt   = "logged_at"
 )
 
-// NodeAccessLogFilter scopes ClickHouse node access log queries.
-type NodeAccessLogFilter = analyticsmodel.NodeAccessLogFilter
-
-func buildNodeAccessLogFilterClause(filter NodeAccessLogFilter) (string, []any) {
+func buildCHNodeAccessLogFilterClause(filter analyticsmodel.NodeAccessLogFilter) (string, []any) {
 	parts := make([]string, 0, nodeAccessLogFilterClauseCapacity)
 	args := make([]any, 0, nodeAccessLogFilterClauseCapacity)
 	if trimmed := strings.TrimSpace(filter.NodeID); trimmed != "" {
 		parts = append(parts, "node_id = ?")
 		args = append(args, trimmed)
 	}
-	if trimmed := normalizeNodeAccessLogRemoteAddr(filter.RemoteAddr); trimmed != "" {
+	if trimmed := strings.TrimSpace(filter.RemoteAddr); trimmed != "" {
 		parts = append(parts, "remote_addr LIKE ?")
 		args = append(args, util.EscapeLike(trimmed)+"%")
 	}
@@ -90,16 +87,16 @@ func buildNodeAccessLogFilterClause(filter NodeAccessLogFilter) (string, []any) 
 	return strings.Join(parts, " AND "), args
 }
 
-func combineNodeAccessLogSQLClauses(left string, right string) string {
+func combineCHNodeAccessLogSQLClauses(left, right string) string {
 	if strings.TrimSpace(left) == "" || left == "TRUE" || left == "1" {
 		return right
 	}
 	return left + " AND " + right
 }
 
-func nodeAccessLogOrderClause(sortBy string, sortOrder string) string {
+func chNodeAccessLogOrderClause(sortBy, sortOrder string) string {
 	direction := nodeAccessLogSortDesc
-	if normalizeNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
+	if normalizeCHNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
 		direction = nodeAccessLogSortAsc
 	}
 	column := nodeAccessLogColumnLoggedAt
@@ -119,55 +116,31 @@ func nodeAccessLogOrderClause(sortBy string, sortOrder string) string {
 	return column + " " + direction + ", " + nodeAccessLogColumnLoggedAt + " " + direction + ", id " + direction
 }
 
-func normalizeNodeAccessLogRemoteAddr(value string) string {
-	return strings.TrimSpace(value)
-}
-
-func normalizeNodeAccessLogHosts(hosts []string) []string {
-	if len(hosts) == 0 {
-		return nil
-	}
-	seen := make(map[string]struct{}, len(hosts))
-	result := make([]string, 0, len(hosts))
-	for _, host := range hosts {
-		trimmed := strings.ToLower(strings.TrimSpace(host))
-		if trimmed == "" {
-			continue
-		}
-		if _, ok := seen[trimmed]; ok {
-			continue
-		}
-		seen[trimmed] = struct{}{}
-		result = append(result, trimmed)
-	}
-	return result
-}
-
-func normalizeNodeAccessLogSortOrder(sortOrder string) string {
+func normalizeCHNodeAccessLogSortOrder(sortOrder string) string {
 	if strings.EqualFold(strings.TrimSpace(sortOrder), "asc") {
 		return "asc"
 	}
 	return "desc"
 }
 
-func nodeAccessLogBucketEpochExpr(bucketSeconds int64) string {
+func chNodeAccessLogBucketEpochExpr(bucketSeconds int64) string {
 	return fmt.Sprintf("toInt64(intDiv(toUnixTimestamp(logged_at), %d) * %d)", bucketSeconds, bucketSeconds)
 }
 
-func nodeAccessLogEpochExpr() string {
+func chNodeAccessLogEpochExpr() string {
 	return "toInt64(toUnixTimestamp(logged_at))"
 }
 
-func nodeAccessLogHostIsIPLiteralExpr() string {
+func chNodeAccessLogHostIsIPLiteralExpr() string {
 	return `(
 		toIPv4OrNull(trim(if(position(trim(host), ':') > 0 AND NOT startsWith(trim(host), '['), splitByChar(':', trim(host))[1], replaceRegexpAll(trim(host), '\\[|\\]', '')))) IS NOT NULL
 		OR toIPv6OrNull(trim(if(position(trim(host), ':') > 0 AND NOT startsWith(trim(host), '['), splitByChar(':', trim(host))[1], replaceRegexpAll(trim(host), '\\[|\\]', '')))) IS NOT NULL
 	)`
 }
 
-func nodeAccessLogBucketOrderClause(sortBy string, sortOrder string) string {
+func chNodeAccessLogBucketOrderClause(sortBy, sortOrder string) string {
 	direction := nodeAccessLogSortDesc
-	if normalizeNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
+	if normalizeCHNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
 		direction = nodeAccessLogSortAsc
 	}
 	switch strings.TrimSpace(sortBy) {
@@ -178,9 +151,9 @@ func nodeAccessLogBucketOrderClause(sortBy string, sortOrder string) string {
 	}
 }
 
-func nodeAccessLogIPSummaryOrderClause(sortBy string, sortOrder string) string {
+func chNodeAccessLogIPSummaryOrderClause(sortBy, sortOrder string) string {
 	direction := nodeAccessLogSortDesc
-	if normalizeNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
+	if normalizeCHNodeAccessLogSortOrder(sortOrder) == nodeAccessLogSortAscInput {
 		direction = nodeAccessLogSortAsc
 	}
 	column := "total_requests"
@@ -202,6 +175,6 @@ func nodeAccessLogIPSummaryOrderClause(sortBy string, sortOrder string) string {
 	return column + " " + direction + ", last_seen_epoch DESC, remote_addr ASC"
 }
 
-func nodeAccessLogTableName() string {
+func chNodeAccessLogTableName() string {
 	return "of_node_access_logs"
 }

@@ -636,12 +636,12 @@ func (m *Manager) UpdateExistingWAFIPGroups(changed []protocol.WAFIPGroup) error
 }
 
 func (m *Manager) publishWAFIPGroups(groups map[string]protocol.WAFIPGroup) error {
-	data, err := sharedprotocol.MarshalWAFIPGroupSnapshot(groups)
+	data, err := protocol.MarshalWAFIPGroupSnapshot(groups)
 	if err != nil {
 		return err
 	}
-	if len(data) > sharedprotocol.MaxWAFIPGroupSnapshotBytes {
-		return fmt.Errorf("WAF IP group snapshot size %d exceeds maximum %d bytes", len(data), sharedprotocol.MaxWAFIPGroupSnapshotBytes)
+	if len(data) > protocol.MaxWAFIPGroupSnapshotBytes {
+		return fmt.Errorf("WAF IP group snapshot size %d exceeds maximum %d bytes", len(data), protocol.MaxWAFIPGroupSnapshotBytes)
 	}
 	if err := os.MkdirAll(m.RuntimeConfigDir, nginxDirPerm); err != nil {
 		return err
@@ -1485,7 +1485,7 @@ func (m *Manager) managedWAFLuaFiles() []protocol.SupportFile {
 		files[index].Content = strings.ReplaceAll(files[index].Content, RuntimeConfigDirPlaceholder, runtimeConfigDir)
 		files[index].Content = strings.ReplaceAll(files[index].Content, CountryMMDBPathPlaceholder, countryMMDBPath)
 		files[index].Content = strings.ReplaceAll(files[index].Content, CityMMDBPathPlaceholder, cityMMDBPath)
-		files[index].Content = strings.ReplaceAll(files[index].Content, WAFIPGroupsMaxSnapshotBytesPlaceholder, strconv.Itoa(sharedprotocol.MaxWAFIPGroupSnapshotBytes))
+		files[index].Content = strings.ReplaceAll(files[index].Content, WAFIPGroupsMaxSnapshotBytesPlaceholder, strconv.Itoa(protocol.MaxWAFIPGroupSnapshotBytes))
 	}
 	return files
 }

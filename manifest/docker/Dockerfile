@@ -56,7 +56,7 @@ RUN test -f plugins/drivers/driver_http/dist/index.html && \
     -trimpath \
     -ldflags="-s -w -X Wavelet/pkg/buildinfo.Version=${VERSION} -X Wavelet/pkg/buildinfo.BuildTime=${BUILD_DATE}" \
     -o /out/openflare-server \
-    ./main.go
+    ./cmd/server/main.go
 
 FROM alpine:${ALPINE_VERSION}
 

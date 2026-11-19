@@ -1,8 +1,8 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package apiutil provides HTTP helpers for OpenFlare v1 custom API handlers.
-package apiutil
+// Package httpx provides shared Gin binding, route, and error helpers.
+package httpx
 
 import (
 	"strconv"

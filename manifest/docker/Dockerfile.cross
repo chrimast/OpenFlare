@@ -102,7 +102,7 @@ RUN set -e; \
             -trimpath \
             -ldflags="-s -w -X Wavelet/pkg/buildinfo.Version=${VERSION} -X Wavelet/pkg/buildinfo.BuildTime=${BUILD_DATE}" \
             -o "${OUTPUT}" \
-            ./main.go; \
+            ./cmd/server/main.go; \
       done; \
     done
 

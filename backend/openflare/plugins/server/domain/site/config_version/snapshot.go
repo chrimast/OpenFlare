@@ -713,7 +713,7 @@ func buildCertificateSupportFiles(ctx context.Context, routes []snapshotRoute) (
 		if err != nil {
 			return nil, err
 		}
-		keyPEM, err := oftls.OpenKeyPEM(certificate.KeyPEM)
+		keyPEM, err := credential.Open(certificate.KeyPEM)
 		if err != nil {
 			return nil, fmt.Errorf("certificate %d private key: %w", certificate.ID, err)
 		}

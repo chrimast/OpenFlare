@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package handler
+package upload
 
 import (
 	"Wavelet/pkg/response"
@@ -53,10 +53,10 @@ func GetFileStats(c *gin.Context) {
 	}
 
 	now := time.Now()
-	trendDates := make([]string, 0, shared.FileStatsTrendDays)
-	trendCountMap := make(map[string]int64, shared.FileStatsTrendDays)
-	trendSizeMap := make(map[string]int64, shared.FileStatsTrendDays)
-	for i := shared.FileStatsTrendDays - 1; i >= 0; i-- {
+	trendDates := make([]string, 0, FileStatsTrendDays)
+	trendCountMap := make(map[string]int64, FileStatsTrendDays)
+	trendSizeMap := make(map[string]int64, FileStatsTrendDays)
+	for i := FileStatsTrendDays - 1; i >= 0; i-- {
 		date := now.AddDate(0, 0, -i).Format("2006-01-02")
 		trendDates = append(trendDates, date)
 		trendCountMap[date] = 0
@@ -70,7 +70,7 @@ func GetFileStats(c *gin.Context) {
 		categories []distributionItem
 	)
 
-	categoriesList := uploadstats.Categories()
+	categoriesList := Categories()
 	categoryMap := make(map[string]distributionItem, len(categoriesList))
 	for _, cat := range categoriesList {
 		categoryMap[cat] = distributionItem{Name: cat}

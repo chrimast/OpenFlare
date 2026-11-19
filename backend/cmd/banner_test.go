@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd
+package cli
 
 import (
 	"Wavelet/pkg/buildinfo"

@@ -32,3 +32,23 @@ func registerAgentRoutes(apiV1Router core.RouterExtension) {
 		}
 	}
 }
+
+func registerOpenFlareRelayRoutes(apiV1Router *gin.RouterGroup) {
+	relayRoute := apiV1Router.Group("/relay")
+	relayRoute.Use(relay.Auth())
+	{
+		relayRoute.POST("/heartbeat", relay.PostHeartbeat)
+		relayRoute.GET("/ws", relay.GetWebSocket)
+	}
+}
+
+func registerOpenFlareTunnelRoutes(apiV1Router *gin.RouterGroup) {
+	tunnelRoute := apiV1Router.Group("/tunnel")
+	tunnelRoute.Use(flared.TunnelAuth())
+	{
+		tunnelRoute.POST("/heartbeat", flared.PostHeartbeat)
+		tunnelRoute.GET("/config/active", flared.GetActiveConfig)
+		tunnelRoute.POST("/apply-log", flared.PostApplyLog)
+		tunnelRoute.GET("/ws", flared.GetWebSocket)
+	}
+}

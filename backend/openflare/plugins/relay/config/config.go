@@ -22,21 +22,18 @@ const (
 	configFilePerm           = 0o600
 )
 
-// MillisecondDuration is a JSON-friendly duration type shared with edge config.
-type MillisecondDuration = edgeconfig.MillisecondDuration
-
 // Config holds relay daemon settings loaded from file and environment.
 type Config struct {
-	ServerURL         string              `json:"server_url"`
-	AgentToken        string              `json:"agent_token"`
-	DiscoveryToken    string              `json:"discovery_token"`
-	NodeName          string              `json:"node_name"`
-	NodeIP            string              `json:"node_ip"`
-	FrpsPath          string              `json:"frps_path"`
-	DataDir           string              `json:"data_dir"`
-	StatePath         string              `json:"state_path"`
-	HeartbeatInterval MillisecondDuration `json:"heartbeat_interval"`
-	RequestTimeout    MillisecondDuration `json:"request_timeout"`
+	ServerURL         string                         `json:"server_url"`
+	AgentToken        string                         `json:"agent_token"`
+	DiscoveryToken    string                         `json:"discovery_token"`
+	NodeName          string                         `json:"node_name"`
+	NodeIP            string                         `json:"node_ip"`
+	FrpsPath          string                         `json:"frps_path"`
+	DataDir           string                         `json:"data_dir"`
+	StatePath         string                         `json:"state_path"`
+	HeartbeatInterval edgeconfig.MillisecondDuration `json:"heartbeat_interval"`
+	RequestTimeout    edgeconfig.MillisecondDuration `json:"request_timeout"`
 	configPath        string
 	NodeIPConfigured  bool
 }
@@ -120,10 +117,10 @@ func applyDefaults(cfg *Config, baseDir string) {
 		cfg.StatePath = filepath.Join(cfg.DataDir, "relay-state.json")
 	}
 	if cfg.HeartbeatInterval <= 0 {
-		cfg.HeartbeatInterval = MillisecondDuration(defaultHeartbeatInterval)
+		cfg.HeartbeatInterval = edgeconfig.MillisecondDuration(defaultHeartbeatInterval)
 	}
 	if cfg.RequestTimeout <= 0 {
-		cfg.RequestTimeout = MillisecondDuration(defaultRequestTimeout)
+		cfg.RequestTimeout = edgeconfig.MillisecondDuration(defaultRequestTimeout)
 	}
 }
 

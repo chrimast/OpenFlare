@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package ingest
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/models"
@@ -13,16 +13,16 @@ import (
 )
 
 // Ingest stores or resolves an upload using the configured policy and side effects.
-func Ingest(ctx context.Context, req Request) (Result, error) {
+func Ingest(ctx context.Context, req IngestRequest) (IngestResult, error) {
 	normalizeRequest(&req)
 	if req.Hash == "" {
-		return Result{}, errors.New("ingest hash is required")
+		return IngestResult{}, errors.New("ingest hash is required")
 	}
 	if req.Reader == nil {
-		return Result{}, errors.New("ingest reader is required")
+		return IngestResult{}, errors.New("ingest reader is required")
 	}
 	if req.Size < 0 {
-		return Result{}, errors.New("ingest size must be non-negative")
+		return IngestResult{}, errors.New("ingest size must be non-negative")
 	}
 
 	switch req.Policy {
@@ -31,7 +31,7 @@ func Ingest(ctx context.Context, req Request) (Result, error) {
 	case PolicyCreate:
 		return createNewUpload(ctx, req)
 	default:
-		return Result{}, errors.New("unsupported ingest policy")
+		return IngestResult{}, errors.New("unsupported ingest policy")
 	}
 }
 
@@ -40,24 +40,24 @@ func FindByHash(ctx context.Context, hash string, size int64) (models.Upload, er
 	return repository.FindReusableUploadByHash(ctx, hash, size)
 }
 
-func ingestWithHashPolicy(ctx context.Context, req Request) (Result, error) {
+func ingestWithHashPolicy(ctx context.Context, req IngestRequest) (IngestResult, error) {
 	existing, err := repository.FindReusableUploadByHash(ctx, req.Hash, req.Size)
 	if err == nil {
 		switch req.Policy {
 		case PolicyResolveExisting:
-			return Result{
+			return IngestResult{
 				Upload:   existing,
 				Resolved: true,
 			}, nil
 		case PolicyDedupNewRecord:
 			if uploadstorageReadOnly(ctx) {
-				return Result{}, ErrStorageReadOnly
+				return IngestResult{}, ErrIngestStorageReadOnly
 			}
 			return createDedupRecord(ctx, existing, req)
 		}
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return Result{}, err
+		return IngestResult{}, err
 	}
 
 	return createNewUpload(ctx, req)

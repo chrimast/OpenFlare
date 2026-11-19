@@ -92,7 +92,7 @@ func toGinHandler(item any) gin.HandlerFunc {
 }
 
 func apiPath(subpath string) string {
-	return ofrouter.V1BasePath + subpath
+	return v1.OpenFlareV1BasePath + subpath
 }
 
 func performJSONRequest(

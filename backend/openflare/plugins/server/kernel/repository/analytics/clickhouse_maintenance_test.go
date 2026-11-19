@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"testing"
@@ -24,13 +24,13 @@ func TestTableTTLCutoff(t *testing.T) {
 }
 
 func TestCleanupModeConstants(t *testing.T) {
-	assert.Equal(t, "ttl_materialize", CleanupModeTTLMaterialize)
-	assert.Equal(t, "truncate", CleanupModeTruncate)
+	assert.Equal(t, "ttl_materialize", chCleanupModeTTLMaterialize)
+	assert.Equal(t, "truncate", chCleanupModeTruncate)
 }
 
 func TestTableTTLDaysMatchDDL(t *testing.T) {
-	assert.Equal(t, 90, TableTTLDaysNodeAccessLogs)
-	assert.Equal(t, 30, TableTTLDaysNodeMetricSnapshots)
-	assert.Equal(t, 30, TableTTLDaysNodeObs)
-	assert.Equal(t, 180, TableTTLDaysUserAccessLogs)
+	assert.Equal(t, 90, chTableTTLDaysNodeAccessLogs)
+	assert.Equal(t, 30, chTableTTLDaysNodeMetricSnapshots)
+	assert.Equal(t, 30, chTableTTLDaysNodeObs)
+	assert.Equal(t, 180, chTableTTLDaysUserAccessLogs)
 }

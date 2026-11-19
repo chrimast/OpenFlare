@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -27,13 +27,13 @@ func ListNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) ([]anal
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	filter := toNodeAccessLogFilter(query)
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
 	sql := fmt.Sprintf(`
 SELECT id, node_id, logged_at, remote_addr, region, host, path, user_agent, cache_status, status_code, bytes_sent, request_length, request_time_ms, created_at
 FROM %s
 WHERE %s
-ORDER BY %s`, tableName, clause, nodeAccessLogOrderClause(filter.SortBy, filter.SortOrder))
+ORDER BY %s`, chNodeAccessLogTableName(), clause, chNodeAccessLogOrderClause(filter.SortBy, filter.SortOrder))
 	if filter.PageSize > 0 {
 		if filter.Page < 0 {
 			filter.Page = 0
@@ -46,7 +46,11 @@ ORDER BY %s`, tableName, clause, nodeAccessLogOrderClause(filter.SortBy, filter.
 		return nil, fmt.Errorf("list node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	return scanNodeAccessLogRows(rows)
+	scanned, err := scanNodeAccessLogRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	return fromAnalyticsNodeAccessLogs(scanned), nil
 }
 
 //nolint:dupl // scan shapes differ by model fields; shared helper would obscure CH column mapping
@@ -79,22 +83,19 @@ func scanNodeAccessLogRows(rows driver.Rows) ([]analyticsmodel.NodeAccessLog, er
 	return result, nil
 }
 
-// CountNodeAccessLogs returns total records, distinct IPs, and total bytes sent matching filter.
-func CountNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) (int64, int64, int64, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) Count(ctx context.Context, query model.OpenFlareAccessLogQuery) (int64, int64, int64, error) {
+	conn, err := chConn()
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
-
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
 	countSQL := fmt.Sprintf(`
 SELECT
 	count() AS total_records,
 	uniqExactIf(remote_addr, remote_addr != '') AS total_ips,
 	sum(bytes_sent) AS total_bytes
 FROM %s
-WHERE %s`, tableName, clause)
+WHERE %s`, chNodeAccessLogTableName(), clause)
 	var totalRecords, totalIPs, totalBytes uint64
 	if err := conn.QueryRow(ctx, countSQL, args...).Scan(&totalRecords, &totalIPs, &totalBytes); err != nil {
 		return 0, 0, 0, fmt.Errorf("count node access logs: %w", err)
@@ -102,21 +103,19 @@ WHERE %s`, tableName, clause)
 	return safeInt64Count(totalRecords), safeInt64Count(totalIPs), safeInt64Count(totalBytes), nil
 }
 
-// RegionCountsNodeAccessLogs returns region counts for a node since a time.
-func RegionCountsNodeAccessLogs(ctx context.Context, nodeID string, since time.Time, limit int) ([]NodeAccessLogRegionCount, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) RegionCounts(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareAccessLogRegionCount, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	filter := NodeAccessLogFilter{NodeID: nodeID, Since: since}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	filter := analyticsmodel.NodeAccessLogFilter{NodeID: nodeID, Since: since}
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
 	sql := fmt.Sprintf(`
 SELECT trim(region) AS trimmed_region, count() AS count
 FROM %s
 WHERE %s AND trim(region) != ''
 GROUP BY trimmed_region
-ORDER BY count DESC, trimmed_region ASC`, tableName, clause)
+ORDER BY count DESC, trimmed_region ASC`, chNodeAccessLogTableName(), clause)
 	if limit > 0 {
 		sql += clickHouseLimitClause
 		args = append(args, limit)
@@ -127,7 +126,7 @@ ORDER BY count DESC, trimmed_region ASC`, tableName, clause)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogRegionCount
+	var result []*model.OpenFlareAccessLogRegionCount
 	for rows.Next() {
 		var (
 			region string
@@ -136,7 +135,7 @@ ORDER BY count DESC, trimmed_region ASC`, tableName, clause)
 		if err := rows.Scan(&region, &count); err != nil {
 			return nil, fmt.Errorf("scan region count row: %w", err)
 		}
-		result = append(result, NodeAccessLogRegionCount{
+		result = append(result, &model.OpenFlareAccessLogRegionCount{
 			Region: region,
 			Count:  safeInt64Count(count),
 		})
@@ -144,23 +143,12 @@ ORDER BY count DESC, trimmed_region ASC`, tableName, clause)
 	return result, nil
 }
 
-// NodeAccessLogTrafficSummary is a window-level access log traffic summary.
-type NodeAccessLogTrafficSummary = analyticsmodel.NodeAccessLogTrafficSummary
-
-// NodeAccessLogValueCount is a grouped value count (status_code, host, ...).
-type NodeAccessLogValueCount = analyticsmodel.NodeAccessLogValueCount
-
-// NodeAccessLogNodeAggregate is per-node traffic over a window.
-type NodeAccessLogNodeAggregate = analyticsmodel.NodeAccessLogNodeAggregate
-
-// TrafficSummaryNodeAccessLogs returns request/error/UV/bytes/node counts for the filter.
-func TrafficSummaryNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) (NodeAccessLogTrafficSummary, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) TrafficSummary(ctx context.Context, query model.OpenFlareAccessLogQuery) (model.OpenFlareAccessLogTrafficSummary, error) {
+	conn, err := chConn()
 	if err != nil {
-		return NodeAccessLogTrafficSummary{}, err
+		return model.OpenFlareAccessLogTrafficSummary{}, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
 	sql := fmt.Sprintf(`
 SELECT
 	count() AS request_count,
@@ -171,14 +159,14 @@ SELECT
 	sum(request_length) AS request_length,
 	uniqExactIf(node_id, node_id != '') AS node_count
 FROM %s
-WHERE %s`, tableName, clause)
+WHERE %s`, chNodeAccessLogTableName(), clause)
 	var requestCount, status4xxCount, errorCount, uniqueIPs, bytesSent, requestLength, nodeCount uint64
 	if err := conn.QueryRow(ctx, sql, args...).Scan(
 		&requestCount, &status4xxCount, &errorCount, &uniqueIPs, &bytesSent, &requestLength, &nodeCount,
 	); err != nil {
-		return NodeAccessLogTrafficSummary{}, fmt.Errorf("traffic summary node access logs: %w", err)
+		return model.OpenFlareAccessLogTrafficSummary{}, fmt.Errorf("traffic summary node access logs: %w", err)
 	}
-	return NodeAccessLogTrafficSummary{
+	return model.OpenFlareAccessLogTrafficSummary{
 		RequestCount:   safeInt64Count(requestCount),
 		Status4xxCount: safeInt64Count(status4xxCount),
 		ErrorCount:     safeInt64Count(errorCount),
@@ -189,20 +177,17 @@ WHERE %s`, tableName, clause)
 	}, nil
 }
 
-// ValueCountsNodeAccessLogs groups logs by a single dimension column.
-// Allowed columns: status_code, host, path, remote_addr, user_agent.
-func ValueCountsNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, column string, limit int) ([]NodeAccessLogValueCount, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) ValueCounts(ctx context.Context, query model.OpenFlareAccessLogQuery, column string, limit int) ([]model.OpenFlareAccessLogValueCount, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
 	col := strings.TrimSpace(strings.ToLower(column))
-	valueExpr, ok := nodeAccessLogValueCountExpr(col)
+	valueExpr, ok := chNodeAccessLogValueCountExpr(col)
 	if !ok {
 		return nil, fmt.Errorf("unsupported value count column: %s", column)
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
 	filterExpr := valueExpr + " != ''"
 	if col == nodeAccessLogColumnStatusCode {
 		filterExpr = "status_code >= 0"
@@ -212,7 +197,7 @@ SELECT %s AS value, count() AS count
 FROM %s
 WHERE %s AND %s
 GROUP BY value
-ORDER BY count DESC, value ASC`, valueExpr, tableName, clause, filterExpr)
+ORDER BY count DESC, value ASC`, valueExpr, chNodeAccessLogTableName(), clause, filterExpr)
 	if limit > 0 {
 		sql += clickHouseLimitClause
 		args = append(args, limit)
@@ -222,7 +207,7 @@ ORDER BY count DESC, value ASC`, valueExpr, tableName, clause, filterExpr)
 		return nil, fmt.Errorf("value counts node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var result []NodeAccessLogValueCount
+	var result []model.OpenFlareAccessLogValueCount
 	for rows.Next() {
 		var (
 			value string
@@ -231,7 +216,7 @@ ORDER BY count DESC, value ASC`, valueExpr, tableName, clause, filterExpr)
 		if err := rows.Scan(&value, &count); err != nil {
 			return nil, fmt.Errorf("scan value count row: %w", err)
 		}
-		result = append(result, NodeAccessLogValueCount{
+		result = append(result, model.OpenFlareAccessLogValueCount{
 			Value: value,
 			Count: safeInt64Count(count),
 		})
@@ -239,7 +224,7 @@ ORDER BY count DESC, value ASC`, valueExpr, tableName, clause, filterExpr)
 	return result, nil
 }
 
-func nodeAccessLogValueCountExpr(column string) (string, bool) {
+func chNodeAccessLogValueCountExpr(column string) (string, bool) {
 	switch column {
 	case nodeAccessLogColumnStatusCode:
 		return "toString(" + nodeAccessLogColumnStatusCode + ")", true
@@ -256,14 +241,12 @@ func nodeAccessLogValueCountExpr(column string) (string, bool) {
 	}
 }
 
-// NodeAggregatesNodeAccessLogs returns per-node request/error/UV aggregates.
-func NodeAggregatesNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) ([]NodeAccessLogNodeAggregate, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) NodeAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery) ([]model.OpenFlareAccessLogNodeAggregate, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
 	sql := fmt.Sprintf(`
 SELECT
 	node_id,
@@ -273,13 +256,13 @@ SELECT
 FROM %s
 WHERE %s AND node_id != ''
 GROUP BY node_id
-ORDER BY request_count DESC, node_id ASC`, tableName, clause)
+ORDER BY request_count DESC, node_id ASC`, chNodeAccessLogTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("node aggregates node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var result []NodeAccessLogNodeAggregate
+	var result []model.OpenFlareAccessLogNodeAggregate
 	for rows.Next() {
 		var (
 			nodeID                              string
@@ -288,7 +271,7 @@ ORDER BY request_count DESC, node_id ASC`, tableName, clause)
 		if err := rows.Scan(&nodeID, &requestCount, &errorCount, &uniqueIPs); err != nil {
 			return nil, fmt.Errorf("scan node aggregate row: %w", err)
 		}
-		result = append(result, NodeAccessLogNodeAggregate{
+		result = append(result, model.OpenFlareAccessLogNodeAggregate{
 			NodeID:        nodeID,
 			RequestCount:  safeInt64Count(requestCount),
 			ErrorCount:    safeInt64Count(errorCount),

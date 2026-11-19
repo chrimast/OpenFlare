@@ -54,10 +54,10 @@ func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 		trendMap[dateStr] = row.Count
 	}
 
-	result := make([]DailyTrend, 0, days)
+	result := make([]analyticsmodel.DailyTrend, 0, days)
 	for i := days - 1; i >= 0; i-- {
 		dateStr := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
-		result = append(result, DailyTrend{
+		result = append(result, analyticsmodel.DailyTrend{
 			Date:  dateStr,
 			Count: trendMap[dateStr],
 		})
@@ -96,9 +96,9 @@ func GetBrowserDistribution(ctx context.Context, startTime time.Time) ([]Browser
 		browserCounts[browser] += row.Count
 	}
 
-	result := make([]BrowserShare, 0, len(browserCounts))
+	result := make([]analyticsmodel.BrowserShare, 0, len(browserCounts))
 	for browser, count := range browserCounts {
-		result = append(result, BrowserShare{
+		result = append(result, analyticsmodel.BrowserShare{
 			Browser: browser,
 			Count:   count,
 		})
@@ -109,8 +109,7 @@ func GetBrowserDistribution(ctx context.Context, startTime time.Time) ([]Browser
 	return result, nil
 }
 
-// GetTopActiveUsers returns the most active users since startTime.
-func GetTopActiveUsers(ctx context.Context, startTime time.Time, limit int) ([]TopUser, error) {
+func (s *clickhouseUserAccessLogStore) GetTopActiveUsers(ctx context.Context, startTime time.Time, limit int) ([]analyticsmodel.TopUser, error) {
 	if limit < 1 {
 		limit = 10
 	}

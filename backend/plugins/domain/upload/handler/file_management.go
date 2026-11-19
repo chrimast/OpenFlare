@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package handler
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -57,7 +57,7 @@ func ListFiles(c *gin.Context) {
 
 	var req listFilesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidParams)
+		response.AbortBadRequest(c, ErrInvalidParams)
 		return
 	}
 	if req.Page <= 0 {
@@ -76,7 +76,7 @@ func ListFiles(c *gin.Context) {
 		PageSize:  req.PageSize,
 	})
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrQueryFileListFailed)
+		response.AbortBadRequest(c, ErrQueryFileListFailed)
 		return
 	}
 
@@ -101,14 +101,14 @@ func ListFiles(c *gin.Context) {
 // @Router /api/v1/admin/uploads/files/{id} [delete]
 func DeleteFile(c *gin.Context) {
 	ctx := c.Request.Context()
-	if uploadstorage.ReadOnly(ctx) {
-		response.AbortConflict(c, shared.ErrStorageReadOnly)
+	if ReadOnly(ctx) {
+		response.AbortConflict(c, ErrStorageReadOnly)
 		return
 	}
 
 	uploadID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidFileID)
+		response.AbortBadRequest(c, ErrInvalidFileID)
 		return
 	}
 
@@ -117,7 +117,7 @@ func DeleteFile(c *gin.Context) {
 			response.AbortNotFound(c, shared.ErrFileRecordNotFound)
 			return
 		}
-		response.AbortBadRequest(c, shared.ErrDeleteFileFailed)
+		response.AbortBadRequest(c, ErrDeleteFileFailed)
 		return
 	}
 	c.JSON(http.StatusOK, response.OKNil())
@@ -176,7 +176,7 @@ func ListMyFiles(c *gin.Context) {
 
 	var req listMyFilesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidParams)
+		response.AbortBadRequest(c, ErrInvalidParams)
 		return
 	}
 	if req.Page <= 0 {
@@ -194,7 +194,7 @@ func ListMyFiles(c *gin.Context) {
 		PageSize:  req.PageSize,
 	})
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrQueryFileListFailed)
+		response.AbortBadRequest(c, ErrQueryFileListFailed)
 		return
 	}
 
@@ -220,14 +220,14 @@ func ListMyFiles(c *gin.Context) {
 func DeleteMyFile(c *gin.Context) {
 	currUser, _ := ginutil.GetFromContext[*contracts.UserDTO](c, contracts.AuthUserObjKey)
 	ctx := c.Request.Context()
-	if uploadstorage.ReadOnly(ctx) {
-		response.AbortConflict(c, shared.ErrStorageReadOnly)
+	if ReadOnly(ctx) {
+		response.AbortConflict(c, ErrStorageReadOnly)
 		return
 	}
 
 	uploadID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidFileID)
+		response.AbortBadRequest(c, ErrInvalidFileID)
 		return
 	}
 
@@ -240,7 +240,7 @@ func DeleteMyFile(c *gin.Context) {
 			response.AbortForbidden(c, shared.ErrOperationForbidden)
 			return
 		}
-		response.AbortBadRequest(c, shared.ErrDeleteFileFailed)
+		response.AbortBadRequest(c, ErrDeleteFileFailed)
 		return
 	}
 	c.JSON(http.StatusOK, response.OKNil())
@@ -267,20 +267,20 @@ type updateMyFileRequest struct {
 func UpdateMyFile(c *gin.Context) {
 	currUser, _ := ginutil.GetFromContext[*contracts.UserDTO](c, contracts.AuthUserObjKey)
 	ctx := c.Request.Context()
-	if uploadstorage.ReadOnly(ctx) {
-		response.AbortConflict(c, shared.ErrStorageReadOnly)
+	if ReadOnly(ctx) {
+		response.AbortConflict(c, ErrStorageReadOnly)
 		return
 	}
 
 	uploadID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidFileID)
+		response.AbortBadRequest(c, ErrInvalidFileID)
 		return
 	}
 
 	var req updateMyFileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidParams)
+		response.AbortBadRequest(c, ErrInvalidParams)
 		return
 	}
 

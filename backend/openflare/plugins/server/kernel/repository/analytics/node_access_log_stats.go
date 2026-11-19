@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -12,33 +12,14 @@ import (
 	analyticsmodel "Wavelet/openflare/plugins/server/kernel/model/analytics"
 )
 
-// NodeAccessLogBucketAggregate is a folded bucket aggregate row.
-type NodeAccessLogBucketAggregate = analyticsmodel.NodeAccessLogBucketAggregate
-
-// NodeAccessLogWAFIPAggregate is a per-IP aggregate row for WAF automatic rules.
-type NodeAccessLogWAFIPAggregate = analyticsmodel.NodeAccessLogWAFIPAggregate
-
-// NodeAccessLogBucketDimension is a bucket dimension value.
-type NodeAccessLogBucketDimension = analyticsmodel.NodeAccessLogBucketDimension
-
-// NodeAccessLogIPAggregate is an IP aggregate row.
-type NodeAccessLogIPAggregate = analyticsmodel.NodeAccessLogIPAggregate
-
-// NodeAccessLogIPSummary is an IP summary row.
-type NodeAccessLogIPSummary = analyticsmodel.NodeAccessLogIPSummary
-
-// NodeAccessLogIPTrend is an IP trend bucket row.
-type NodeAccessLogIPTrend = analyticsmodel.NodeAccessLogIPTrend
-
-// BucketAggregatesNodeAccessLogs returns folded bucket aggregates with unique IP/host counts.
-func BucketAggregatesNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, bucketSeconds int64) ([]NodeAccessLogBucketAggregate, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) BucketAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogBucketAggregate, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	bucketExpr := nodeAccessLogBucketEpochExpr(bucketSeconds)
-	tableName := nodeAccessLogTableName()
+	filter := toNodeAccessLogFilter(query)
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
+	bucketExpr := chNodeAccessLogBucketEpochExpr(bucketSeconds)
 	sql := fmt.Sprintf(`
 SELECT
 	%s AS bucket_epoch,
@@ -56,7 +37,7 @@ SELECT
 FROM %s
 WHERE %s
 GROUP BY bucket_epoch
-ORDER BY %s`, bucketExpr, tableName, clause, nodeAccessLogBucketOrderClause(filter.SortBy, filter.SortOrder))
+ORDER BY %s`, bucketExpr, chNodeAccessLogTableName(), clause, chNodeAccessLogBucketOrderClause(filter.SortBy, filter.SortOrder))
 	if filter.PageSize > 0 {
 		if filter.Page < 0 {
 			filter.Page = 0
@@ -70,7 +51,7 @@ ORDER BY %s`, bucketExpr, tableName, clause, nodeAccessLogBucketOrderClause(filt
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogBucketAggregate
+	var result []analyticsmodel.NodeAccessLogBucketAggregate
 	for rows.Next() {
 		var (
 			bucketEpoch                                                                                                                                                              int64
@@ -79,7 +60,7 @@ ORDER BY %s`, bucketExpr, tableName, clause, nodeAccessLogBucketOrderClause(filt
 		if err := rows.Scan(&bucketEpoch, &requestCount, &successCount, &clientErrorCount, &serverErrorCount, &status2xxCount, &status4xxCount, &status5xxCount, &uniqueIPCount, &uniqueHostCount, &bytesSent, &requestLength); err != nil {
 			return nil, fmt.Errorf("scan bucket aggregate row: %w", err)
 		}
-		result = append(result, NodeAccessLogBucketAggregate{
+		result = append(result, analyticsmodel.NodeAccessLogBucketAggregate{
 			BucketEpoch:      bucketEpoch,
 			RequestCount:     safeInt64Count(requestCount),
 			SuccessCount:     safeInt64Count(successCount),
@@ -97,22 +78,20 @@ ORDER BY %s`, bucketExpr, tableName, clause, nodeAccessLogBucketOrderClause(filt
 	return result, nil
 }
 
-// CountBucketAggregatesNodeAccessLogs returns the number of folded buckets matching filter.
-func CountBucketAggregatesNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, bucketSeconds int64) (int64, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) CountBuckets(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) (int64, error) {
+	conn, err := chConn()
 	if err != nil {
 		return 0, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	bucketExpr := nodeAccessLogBucketEpochExpr(bucketSeconds)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
+	bucketExpr := chNodeAccessLogBucketEpochExpr(bucketSeconds)
 	sql := fmt.Sprintf(`
 SELECT count() FROM (
 	SELECT 1
 	FROM %s
 	WHERE %s
 	GROUP BY %s
-)`, tableName, clause, bucketExpr)
+)`, chNodeAccessLogTableName(), clause, bucketExpr)
 	var totalBuckets uint64
 	if err := conn.QueryRow(ctx, sql, args...).Scan(&totalBuckets); err != nil {
 		return 0, fmt.Errorf("count bucket aggregates node access logs: %w", err)
@@ -120,31 +99,29 @@ SELECT count() FROM (
 	return safeInt64Count(totalBuckets), nil
 }
 
-// BucketDimensionsNodeAccessLogs returns bucket dimension values.
-func BucketDimensionsNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, column string, bucketSeconds int64) ([]NodeAccessLogBucketDimension, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) BucketDimensions(ctx context.Context, query model.OpenFlareAccessLogQuery, column string, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogBucketDimension, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	bucketExpr := nodeAccessLogBucketEpochExpr(bucketSeconds)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
+	bucketExpr := chNodeAccessLogBucketEpochExpr(bucketSeconds)
 	sql := fmt.Sprintf(`
 SELECT
 	%s AS bucket_epoch,
 	trim(%s) AS value
 FROM %s
 WHERE %s AND trim(%s) != ''
-GROUP BY bucket_epoch, trim(%s)`, bucketExpr, column, tableName, clause, column, column)
+GROUP BY bucket_epoch, trim(%s)`, bucketExpr, column, chNodeAccessLogTableName(), clause, column, column)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("bucket dimensions node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogBucketDimension
+	var result []analyticsmodel.NodeAccessLogBucketDimension
 	for rows.Next() {
-		var item NodeAccessLogBucketDimension
+		var item analyticsmodel.NodeAccessLogBucketDimension
 		if err := rows.Scan(&item.BucketEpoch, &item.Value); err != nil {
 			return nil, fmt.Errorf("scan bucket dimension row: %w", err)
 		}
@@ -153,25 +130,24 @@ GROUP BY bucket_epoch, trim(%s)`, bucketExpr, column, tableName, clause, column,
 	return result, nil
 }
 
-// IPAggregatesNodeAccessLogs returns IP aggregate rows.
-func IPAggregatesNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, exactRemoteAddr bool) ([]NodeAccessLogIPAggregate, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) IPAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery, exactRemoteAddr bool) ([]analyticsmodel.NodeAccessLogIPAggregate, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
+	filter := toNodeAccessLogFilter(query)
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
 	queryClause := clause
 	queryArgs := append([]any{}, args...)
 	if exactRemoteAddr {
-		trimmed := normalizeNodeAccessLogRemoteAddr(filter.RemoteAddr)
+		trimmed := strings.TrimSpace(filter.RemoteAddr)
 		if trimmed == "" {
-			return []NodeAccessLogIPAggregate{}, nil
+			return []analyticsmodel.NodeAccessLogIPAggregate{}, nil
 		}
-		queryClause = combineNodeAccessLogSQLClauses(queryClause, "remote_addr = ?")
+		queryClause = combineCHNodeAccessLogSQLClauses(queryClause, "remote_addr = ?")
 		queryArgs = append(queryArgs, trimmed)
 	}
-	lastSeenExpr := nodeAccessLogEpochExpr()
-	tableName := nodeAccessLogTableName()
+	lastSeenExpr := chNodeAccessLogEpochExpr()
 	sql := fmt.Sprintf(`
 SELECT
 	remote_addr,
@@ -182,14 +158,14 @@ SELECT
 	max(%s) AS last_seen_epoch
 FROM %s
 WHERE %s AND remote_addr != ''
-GROUP BY remote_addr`, lastSeenExpr, tableName, queryClause)
+GROUP BY remote_addr`, lastSeenExpr, chNodeAccessLogTableName(), queryClause)
 	rows, err := conn.Query(ctx, sql, queryArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("ip aggregates node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogIPAggregate
+	var result []analyticsmodel.NodeAccessLogIPAggregate
 	for rows.Next() {
 		var (
 			remoteAddr                                                     string
@@ -199,7 +175,7 @@ GROUP BY remote_addr`, lastSeenExpr, tableName, queryClause)
 		if err := rows.Scan(&remoteAddr, &requestCount, &successCount, &clientErrorCount, &serverErrorCount, &lastSeenEpoch); err != nil {
 			return nil, fmt.Errorf("scan ip aggregate row: %w", err)
 		}
-		result = append(result, NodeAccessLogIPAggregate{
+		result = append(result, analyticsmodel.NodeAccessLogIPAggregate{
 			RemoteAddr:       remoteAddr,
 			RequestCount:     safeInt64Count(requestCount),
 			SuccessCount:     safeInt64Count(successCount),
@@ -211,17 +187,16 @@ GROUP BY remote_addr`, lastSeenExpr, tableName, queryClause)
 	return result, nil
 }
 
-// IPSummariesNodeAccessLogs returns paginated IP summary rows for the filter window.
-// recentSince is ignored (kept for call-site compatibility); recent_requests is always 0.
-func IPSummariesNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, _ time.Time) ([]NodeAccessLogIPSummary, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) IPSummaries(ctx context.Context, query model.OpenFlareAccessLogQuery, _ time.Time) ([]analyticsmodel.NodeAccessLogIPSummary, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	lastSeenExpr := nodeAccessLogEpochExpr()
+	filter := toNodeAccessLogFilter(query)
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
+	lastSeenExpr := chNodeAccessLogEpochExpr()
 	queryArgs := append([]any{}, args...)
-	tableName := nodeAccessLogTableName()
+	tableName := chNodeAccessLogTableName()
 	// Outer query allows ORDER BY success_ratio without repeating countIf.
 	innerSQL := fmt.Sprintf(`
 SELECT
@@ -246,7 +221,7 @@ SELECT
 	bytes_sent,
 	last_seen_epoch
 FROM (%s)
-ORDER BY %s`, innerSQL, nodeAccessLogIPSummaryOrderClause(filter.SortBy, filter.SortOrder))
+ORDER BY %s`, innerSQL, chNodeAccessLogIPSummaryOrderClause(filter.SortBy, filter.SortOrder))
 	if filter.PageSize > 0 {
 		if filter.Page < 0 {
 			filter.Page = 0
@@ -260,7 +235,7 @@ ORDER BY %s`, innerSQL, nodeAccessLogIPSummaryOrderClause(filter.SortBy, filter.
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogIPSummary
+	var result []analyticsmodel.NodeAccessLogIPSummary
 	for rows.Next() {
 		var (
 			remoteAddr, region                              string
@@ -280,7 +255,7 @@ ORDER BY %s`, innerSQL, nodeAccessLogIPSummaryOrderClause(filter.SortBy, filter.
 		); err != nil {
 			return nil, fmt.Errorf("scan ip summary row: %w", err)
 		}
-		result = append(result, NodeAccessLogIPSummary{
+		result = append(result, analyticsmodel.NodeAccessLogIPSummary{
 			RemoteAddr:      remoteAddr,
 			Region:          region,
 			TotalRequests:   safeInt64Count(totalRequests),
@@ -295,21 +270,19 @@ ORDER BY %s`, innerSQL, nodeAccessLogIPSummaryOrderClause(filter.SortBy, filter.
 	return result, nil
 }
 
-// CountIPSummaryNodeAccessLogs returns the number of distinct IPs matching filter.
-func CountIPSummaryNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) (int64, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) CountIPSummaries(ctx context.Context, query model.OpenFlareAccessLogQuery) (int64, error) {
+	conn, err := chConn()
 	if err != nil {
 		return 0, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
 	sql := fmt.Sprintf(`
 SELECT count() FROM (
 	SELECT 1
 	FROM %s
 	WHERE %s AND remote_addr != ''
 	GROUP BY remote_addr
-)`, tableName, clause)
+)`, chNodeAccessLogTableName(), clause)
 	var totalIPs uint64
 	if err := conn.QueryRow(ctx, sql, args...).Scan(&totalIPs); err != nil {
 		return 0, fmt.Errorf("count ip summary node access logs: %w", err)
@@ -317,16 +290,15 @@ SELECT count() FROM (
 	return safeInt64Count(totalIPs), nil
 }
 
-// IPAggregatesForWAFNodeAccessLogs returns per-IP aggregates for WAF automatic rules.
-func IPAggregatesForWAFNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter) ([]NodeAccessLogWAFIPAggregate, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) WAFIPAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery) ([]analyticsmodel.NodeAccessLogWAFIPAggregate, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	lastSeenExpr := nodeAccessLogEpochExpr()
-	hostIsIPExpr := nodeAccessLogHostIsIPLiteralExpr()
-	tableName := nodeAccessLogTableName()
+	filter := toNodeAccessLogFilter(query)
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
+	lastSeenExpr := chNodeAccessLogEpochExpr()
+	hostIsIPExpr := chNodeAccessLogHostIsIPLiteralExpr()
 	sql := fmt.Sprintf(`
 SELECT
 	remote_addr,
@@ -338,14 +310,14 @@ SELECT
 	max(%s) AS last_seen_epoch
 FROM %s
 WHERE %s AND remote_addr != ''
-GROUP BY remote_addr`, hostIsIPExpr, lastSeenExpr, tableName, clause)
+GROUP BY remote_addr`, hostIsIPExpr, lastSeenExpr, chNodeAccessLogTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ip aggregates for waf node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	aggregates := make(map[string]*NodeAccessLogWAFIPAggregate)
+	aggregates := make(map[string]*analyticsmodel.NodeAccessLogWAFIPAggregate)
 	order := make([]string, 0)
 	for rows.Next() {
 		var (
@@ -360,7 +332,7 @@ GROUP BY remote_addr`, hostIsIPExpr, lastSeenExpr, tableName, clause)
 		if remoteAddr == "" {
 			continue
 		}
-		aggregates[remoteAddr] = &NodeAccessLogWAFIPAggregate{
+		aggregates[remoteAddr] = &analyticsmodel.NodeAccessLogWAFIPAggregate{
 			RemoteAddr:       remoteAddr,
 			RequestCount:     safeInt64Count(requestCount),
 			Status404Count:   safeInt64Count(status404Count),
@@ -372,10 +344,10 @@ GROUP BY remote_addr`, hostIsIPExpr, lastSeenExpr, tableName, clause)
 		}
 		order = append(order, remoteAddr)
 	}
-	if err := mergeWAFIPStatusCodeCounts(ctx, filter, aggregates); err != nil {
+	if err := mergeCHWAFIPStatusCodeCounts(ctx, filter, aggregates); err != nil {
 		return nil, err
 	}
-	result := make([]NodeAccessLogWAFIPAggregate, 0, len(order))
+	result := make([]analyticsmodel.NodeAccessLogWAFIPAggregate, 0, len(order))
 	for _, remoteAddr := range order {
 		if aggregate := aggregates[remoteAddr]; aggregate != nil {
 			result = append(result, *aggregate)
@@ -384,16 +356,15 @@ GROUP BY remote_addr`, hostIsIPExpr, lastSeenExpr, tableName, clause)
 	return result, nil
 }
 
-func mergeWAFIPStatusCodeCounts(ctx context.Context, filter NodeAccessLogFilter, aggregates map[string]*NodeAccessLogWAFIPAggregate) error {
+func mergeCHWAFIPStatusCodeCounts(ctx context.Context, filter analyticsmodel.NodeAccessLogFilter, aggregates map[string]*analyticsmodel.NodeAccessLogWAFIPAggregate) error {
 	if len(aggregates) == 0 {
 		return nil
 	}
-	conn, err := nodeAccessLogConn()
+	conn, err := chConn()
 	if err != nil {
 		return err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(filter)
 	sql := fmt.Sprintf(`
 SELECT
 	remote_addr,
@@ -401,7 +372,7 @@ SELECT
 	count() AS status_count
 FROM %s
 WHERE %s AND remote_addr != ''
-GROUP BY remote_addr, status_code`, tableName, clause)
+GROUP BY remote_addr, status_code`, chNodeAccessLogTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("waf ip status code counts: %w", err)
@@ -429,15 +400,13 @@ GROUP BY remote_addr, status_code`, tableName, clause)
 	return nil
 }
 
-// IPTrendNodeAccessLogs returns IP trend bucket rows.
-func IPTrendNodeAccessLogs(ctx context.Context, filter NodeAccessLogFilter, bucketSeconds int64) ([]NodeAccessLogIPTrend, error) {
-	conn, err := nodeAccessLogConn()
+func (s *clickhouseLogStore) IPTrend(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogIPTrend, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeAccessLogFilterClause(filter)
-	bucketExpr := nodeAccessLogBucketEpochExpr(bucketSeconds)
-	tableName := nodeAccessLogTableName()
+	clause, args := buildCHNodeAccessLogFilterClause(toNodeAccessLogFilter(query))
+	bucketExpr := chNodeAccessLogBucketEpochExpr(bucketSeconds)
 	sql := fmt.Sprintf(`
 SELECT
 	%s AS bucket_epoch,
@@ -445,14 +414,14 @@ SELECT
 FROM %s
 WHERE %s
 GROUP BY bucket_epoch
-ORDER BY bucket_epoch ASC`, bucketExpr, tableName, clause)
+ORDER BY bucket_epoch ASC`, bucketExpr, chNodeAccessLogTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ip trend node access logs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var result []NodeAccessLogIPTrend
+	var result []analyticsmodel.NodeAccessLogIPTrend
 	for rows.Next() {
 		var (
 			bucketEpoch  int64
@@ -461,7 +430,7 @@ ORDER BY bucket_epoch ASC`, bucketExpr, tableName, clause)
 		if err := rows.Scan(&bucketEpoch, &requestCount); err != nil {
 			return nil, fmt.Errorf("scan ip trend row: %w", err)
 		}
-		result = append(result, NodeAccessLogIPTrend{
+		result = append(result, analyticsmodel.NodeAccessLogIPTrend{
 			BucketEpoch:  bucketEpoch,
 			RequestCount: safeInt64Count(requestCount),
 		})

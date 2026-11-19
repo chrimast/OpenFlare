@@ -66,7 +66,7 @@ func ListRulesHandler(c *gin.Context) {
 // @Failure 500 {object} response.Any "内部错误"
 // @Router /api/v1/d/waf/rule-groups/{id} [get]
 func GetRuleHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
@@ -92,7 +92,7 @@ func GetRuleHandler(c *gin.Context) {
 // @Router /api/v1/d/waf/rule-groups [post]
 func CreateRuleHandler(c *gin.Context) {
 	var input CreateRuleInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	rule, err := CreateRule(c.Request.Context(), input)
@@ -117,12 +117,12 @@ func CreateRuleHandler(c *gin.Context) {
 // @Failure 500 {object} response.Any "内部错误"
 // @Router /api/v1/d/waf/rule-groups/{id}/meta [post]
 func UpdateRuleMetaHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
 	var input UpdateRuleMetaInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	rule, err := UpdateRuleMeta(c.Request.Context(), id, input)
@@ -148,12 +148,12 @@ func UpdateRuleMetaHandler(c *gin.Context) {
 // @Failure 500 {object} response.Any "内部错误"
 // @Router /api/v1/d/waf/rule-groups/{id}/graph [post]
 func SaveRuleGraphHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
 	var input SaveRuleGraphInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	rule, err := SaveRuleGraph(c.Request.Context(), id, input)
@@ -176,7 +176,7 @@ func SaveRuleGraphHandler(c *gin.Context) {
 // @Failure 500 {object} response.Any "内部错误"
 // @Router /api/v1/d/waf/rule-groups/{id}/delete [post]
 func DeleteRuleHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}

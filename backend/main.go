@@ -18,5 +18,5 @@ import "Wavelet/cmd"
 // @in cookie
 // @name session
 func main() {
-	cmd.Execute()
+	cli.Execute()
 }

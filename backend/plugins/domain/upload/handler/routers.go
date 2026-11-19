@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package handler provides upload HTTP API handlers.
-package handler
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -59,26 +58,26 @@ func UploadFile(c *gin.Context) {
 	c.Header("X-Content-Type-Options", "nosniff")
 	c.Header("Content-Security-Policy", "sandbox")
 
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, shared.MaxUploadSize)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxUploadSize)
 
 	currUser, _ := ginutil.GetFromContext[*contracts.UserDTO](c, contracts.AuthUserObjKey)
 	ctx := c.Request.Context()
 
 	header, err := c.FormFile("file")
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrNoFileSelected)
+		response.AbortBadRequest(c, ErrNoFileSelected)
 		return
 	}
 
 	file, err := header.Open()
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrOpenFileFailed)
+		response.AbortBadRequest(c, ErrOpenFileFailed)
 		return
 	}
 	defer func() { _ = file.Close() }()
 
-	if header.Size > shared.MaxUploadSize {
-		response.AbortBadRequest(c, shared.ErrGenericFileTooLarge)
+	if header.Size > MaxUploadSize {
+		response.AbortBadRequest(c, ErrGenericFileTooLarge)
 		return
 	}
 
@@ -92,15 +91,15 @@ func UploadFile(c *gin.Context) {
 	var buf bytes.Buffer
 	size, err := io.Copy(&buf, io.TeeReader(file, hashWriter))
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrProcessFileFailed)
+		response.AbortBadRequest(c, ErrProcessFileFailed)
 		return
 	}
 
 	fileHash := hex.EncodeToString(hashWriter.Sum(nil))
 	mimeType := detectMimeType(&buf, header, size)
 
-	if util.IsImageExtension(ext) && !strings.HasPrefix(mimeType, "image/") {
-		response.AbortBadRequest(c, shared.ErrFileContentExtensionMismatch)
+	if IsImageExtension(ext) && !strings.HasPrefix(mimeType, "image/") {
+		response.AbortBadRequest(c, ErrFileContentExtensionMismatch)
 		return
 	}
 
@@ -118,7 +117,7 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	result, err := ingest.Ingest(ctx, ingest.Request{
+	result, err := Ingest(ctx, IngestRequest{
 		UserID:     currUser.ID,
 		Reader:     bytes.NewReader(buf.Bytes()),
 		Size:       size,
@@ -129,22 +128,22 @@ func UploadFile(c *gin.Context) {
 		Type:       uploadType,
 		AccessMode: &accessMode,
 		Metadata:   meta,
-		Policy:     ingest.PolicyDedupNewRecord,
+		Policy:     PolicyDedupNewRecord,
 	})
 	if err != nil {
-		if errors.Is(err, ingest.ErrStorageReadOnly) {
-			response.AbortConflict(c, shared.ErrStorageReadOnly)
+		if errors.Is(err, ErrIngestStorageReadOnly) {
+			response.AbortConflict(c, ErrStorageReadOnly)
 			return
 		}
-		if err.Error() == shared.ErrUnsupportedFormat {
-			response.AbortBadRequest(c, shared.ErrUnsupportedFormat)
+		if err.Error() == ErrUnsupportedFormat {
+			response.AbortBadRequest(c, ErrUnsupportedFormat)
 			return
 		}
-		if err.Error() == shared.ErrSaveFileFailed {
-			response.AbortBadRequest(c, shared.ErrSaveFileFailed)
+		if err.Error() == ErrSaveFileFailed {
+			response.AbortBadRequest(c, ErrSaveFileFailed)
 			return
 		}
-		response.AbortBadRequest(c, shared.ErrSaveUploadRecordFailed)
+		response.AbortBadRequest(c, ErrSaveUploadRecordFailed)
 		return
 	}
 
@@ -165,12 +164,12 @@ func UploadFile(c *gin.Context) {
 // @Failure 500 {object} response.Any "服务内部错误"
 // @Router /api/v1/admin/uploads/download/{id} [get]
 func DownloadFile(c *gin.Context) {
-	upload, err := filesrv.GetUploadRecordByID(c)
+	upload, err := GetUploadRecordByID(c)
 	if err != nil {
 		if filesrv.AbortUploadRecordError(c, err) {
 			return
 		}
-		response.AbortBadRequest(c, shared.ErrQueryUploadRecordFailed)
+		response.AbortBadRequest(c, ErrQueryUploadRecordFailed)
 		return
 	}
 
@@ -180,10 +179,10 @@ func DownloadFile(c *gin.Context) {
 	}
 
 	fileName := upload.FileName
-	quality := util.NormalizeImageQuality(c.Query("quality"))
-	isImage := strings.HasPrefix(strings.ToLower(upload.MimeType), "image/") || util.IsImageExtension(strings.ToLower(upload.Extension))
+	quality := NormalizeImageQuality(c.Query("quality"))
+	isImage := strings.HasPrefix(strings.ToLower(upload.MimeType), "image/") || IsImageExtension(strings.ToLower(upload.Extension))
 
-	if quality != shared.ImageQualityOrigin && isImage {
+	if quality != ImageQualityOrigin && isImage {
 		ext := filepath.Ext(fileName)
 		if ext != "" {
 			fileName = strings.TrimSuffix(fileName, ext) + ".webp"
@@ -202,7 +201,7 @@ func DownloadFile(c *gin.Context) {
 // @Tags admin
 // @Accept json
 // @Produce octet-stream
-// @Param request body handler.batchDownloadRequest true "包含文件 ID 数组 of string 的请求体"
+// @Param request body upload.batchDownloadRequest true "包含文件 ID 数组 of string 的请求体"
 // @Security SessionCookie
 // @Success 200 {file} file "成功下载打包后的 ZIP"
 // @Failure 400 {object} response.Any "参数错误"
@@ -213,7 +212,7 @@ func BatchDownloadFiles(c *gin.Context) {
 
 	var req batchDownloadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.AbortBadRequest(c, shared.ErrInvalidBatchDownloadRequest)
+		response.AbortBadRequest(c, ErrInvalidBatchDownloadRequest)
 		return
 	}
 
@@ -221,7 +220,7 @@ func BatchDownloadFiles(c *gin.Context) {
 	for _, idStr := range req.IDs {
 		id, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			response.AbortBadRequest(c, fmt.Sprintf(shared.ErrInvalidIDValueFormat, idStr))
+			response.AbortBadRequest(c, fmt.Sprintf(ErrInvalidIDValueFormat, idStr))
 			return
 		}
 		ids = append(ids, id)
@@ -229,12 +228,12 @@ func BatchDownloadFiles(c *gin.Context) {
 
 	uploads, err := listUploadsForBatchDownload(ctx, ids)
 	if err != nil {
-		response.AbortBadRequest(c, shared.ErrRetrieveUploadRecordsFailed)
+		response.AbortBadRequest(c, ErrRetrieveUploadRecordsFailed)
 		return
 	}
 
 	if len(uploads) == 0 {
-		response.AbortBadRequest(c, shared.ErrNoValidFilesForArchive)
+		response.AbortBadRequest(c, ErrNoValidFilesForArchive)
 		return
 	}
 
@@ -251,7 +250,7 @@ func BatchDownloadFiles(c *gin.Context) {
 	usedNames := make(map[string]int)
 
 	for _, upload := range uploads {
-		if err := filesrv.CheckFileAccessPermission(c, &upload); err != nil {
+		if err := CheckFileAccessPermission(c, &upload); err != nil {
 			logger.WarnF(ctx, "Batch download: skip file %d due to permission denied: %v", upload.ID, err)
 			continue
 		}
@@ -272,7 +271,7 @@ func BatchDownloadFiles(c *gin.Context) {
 			continue
 		}
 
-		obj, err := uploadstorage.OpenStoredObject(ctx, &upload)
+		obj, err := OpenStoredObject(ctx, &upload)
 		if err != nil {
 			logger.ErrorF(ctx, "Failed to read file while creating archive: %v", err)
 			continue
@@ -290,7 +289,7 @@ func BatchDownloadFiles(c *gin.Context) {
 func resolveUploadAccessMode(c *gin.Context, uploadType string) (int, string) {
 	accessModeStr := c.PostForm("access_mode")
 	if accessModeStr == "" {
-		if uploadType == shared.DefaultPublicUploadType {
+		if uploadType == DefaultPublicUploadType {
 			return 1, ""
 		}
 		return 0, ""
@@ -308,7 +307,7 @@ func parseUploadMetadata(c *gin.Context, mimeType string) (models.UploadMetadata
 	metadataStr := c.DefaultPostForm("metadata", "")
 	if metadataStr != "" {
 		if err := json.Unmarshal([]byte(metadataStr), &meta); err != nil {
-			return meta, shared.ErrInvalidMetadataJSON
+			return meta, ErrInvalidMetadataJSON
 		}
 	}
 	meta.OriginalMime = mimeType
@@ -318,7 +317,7 @@ func parseUploadMetadata(c *gin.Context, mimeType string) (models.UploadMetadata
 }
 
 func detectMimeType(buf *bytes.Buffer, header *multipart.FileHeader, size int64) string {
-	mimeType := http.DetectContentType(buf.Bytes()[:min(shared.DetectContentBytes, int(size))])
+	mimeType := http.DetectContentType(buf.Bytes()[:min(DetectContentBytes, int(size))])
 	if mimeType == "application/octet-stream" && header.Header.Get("Content-Type") != "" {
 		mimeType = header.Header.Get("Content-Type")
 	}

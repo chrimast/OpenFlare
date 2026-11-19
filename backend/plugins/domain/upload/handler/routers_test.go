@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package handler
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -240,7 +240,7 @@ func TestUploadFile(t *testing.T) {
 
 		var resp testResponse
 		_ = json.Unmarshal(w.Body.Bytes(), &resp)
-		if resp.ErrorMsg == "" || !strings.Contains(resp.ErrorMsg, shared.ErrUnsupportedFormat) {
+		if resp.ErrorMsg == "" || !strings.Contains(resp.ErrorMsg, ErrUnsupportedFormat) {
 			t.Errorf("expected unsupported format error, got: %v", resp)
 		}
 	})
@@ -796,7 +796,7 @@ func TestGetFileStats(t *testing.T) {
 			t.Fatalf("failed to create upload: %v", err)
 		}
 	}
-	if err := uploadstats.RebuildUploadStats(context.Background()); err != nil {
+	if err := RebuildUploadStats(context.Background()); err != nil {
 		t.Fatalf("failed to rebuild upload stats: %v", err)
 	}
 

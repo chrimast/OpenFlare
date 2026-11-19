@@ -54,12 +54,12 @@ func obtainCertificate(ctx context.Context, cert *model.TLSCertificate) error {
 	}
 
 	task.AppendLog(ctx, "[Renewal] Decrypting DNS account credentials and ACME account private key...")
-	dnsAuth, err := openSensitive(dnsAccount.Authorization)
+	dnsAuth, err := credential.Open(dnsAccount.Authorization)
 	if err != nil {
 		return updateCertError(ctx, cert, fmt.Sprintf("Failed to decrypt DNS credentials: %v", err))
 	}
 
-	acmePrivateKey, err := openSensitive(acmeAccount.PrivateKey)
+	acmePrivateKey, err := credential.Open(acmeAccount.PrivateKey)
 	if err != nil {
 		return updateCertError(ctx, cert, fmt.Sprintf("Failed to decrypt ACME account key: %v", err))
 	}

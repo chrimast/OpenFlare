@@ -26,7 +26,7 @@ type Runner struct {
 	StateStore       *state.Store
 	HeartbeatService *heartbeat.Service
 	FrpsManager      *frps.Manager
-	WebSocketService *wsclient.Client
+	WebSocketService *edgews.Client
 	HTTPClient       *httpclient.Client
 }
 
@@ -52,7 +52,7 @@ func (h *relayWSHandler) OnConnect(_ context.Context) error {
 	return nil
 }
 
-func (h *relayWSHandler) HandleMessage(ctx context.Context, msg wsclient.WSMessage) error {
+func (h *relayWSHandler) HandleMessage(ctx context.Context, msg edgews.WSMessage) error {
 	switch msg.Type {
 	case "relay_config":
 		var cfg service.RelayConfig
@@ -72,7 +72,7 @@ func (h *relayWSHandler) OnClose(err error) {
 }
 
 func (r *Runner) handleConnection(ctx context.Context, conn edgerunner.WSConnection) {
-	wsConn, ok := conn.(*wsclient.Connection)
+	wsConn, ok := conn.(*edgews.Connection)
 	if !ok {
 		slog.Error("relay ws connection has unexpected type")
 		return

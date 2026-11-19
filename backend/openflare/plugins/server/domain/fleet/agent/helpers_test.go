@@ -92,7 +92,7 @@ func TestApplyNodeRuntimeRespectsGeoManualOverride(t *testing.T) {
 		GeoLatitude:       geoipFloat(10),
 		GeoLongitude:      geoipFloat(20),
 	}
-	applyNodeRuntime(context.Background(), node, NodePayload{
+	applyNodeRuntime(context.Background(), node, protocol.NodePayload{
 		IP:      "203.0.113.10",
 		Version: "1.0.0",
 	}, true)

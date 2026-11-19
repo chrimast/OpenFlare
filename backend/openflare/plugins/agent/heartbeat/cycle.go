@@ -41,7 +41,7 @@ type Cycle struct {
 	ObservabilityBuffer *state.ObservabilityBufferStore
 	Heartbeat           API
 	Sync                SyncService
-	Updater             *updater.Service
+	Updater             *edgeupdater.Service
 	RecordSyncError     func(err error)
 	ConfigSyncResult    func(target *protocol.ActiveConfigMeta, err error)
 }

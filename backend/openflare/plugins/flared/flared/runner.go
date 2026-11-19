@@ -25,7 +25,7 @@ type Runner struct {
 	HeartbeatService *heartbeat.Service
 	FrpcManager      *frpc.Manager
 	SyncService      *sync.Service
-	WebSocketService *wsclient.Client
+	WebSocketService *edgews.Client
 	HTTPClient       *httpclient.Client
 }
 
@@ -53,7 +53,7 @@ func (h *flaredWSHandler) OnConnect(_ context.Context) error {
 	return nil
 }
 
-func (h *flaredWSHandler) HandleMessage(_ context.Context, msg wsclient.WSMessage) error {
+func (h *flaredWSHandler) HandleMessage(_ context.Context, msg edgews.WSMessage) error {
 	switch msg.Type {
 	case "active_config":
 		slog.Info("received config update notification from server")
@@ -69,7 +69,7 @@ func (h *flaredWSHandler) OnClose(err error) {
 }
 
 func (r *Runner) handleConnection(ctx context.Context, conn edgerunner.WSConnection) {
-	wsConn, ok := conn.(*wsclient.Connection)
+	wsConn, ok := conn.(*edgews.Connection)
 	if !ok {
 		slog.Error("flared ws connection has unexpected type")
 		return

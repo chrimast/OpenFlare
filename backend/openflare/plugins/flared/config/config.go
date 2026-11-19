@@ -22,19 +22,16 @@ const (
 	configFilePerm           = 0o644
 )
 
-// MillisecondDuration is a JSON-friendly duration type shared with edge config.
-type MillisecondDuration = edgeconfig.MillisecondDuration
-
 // Config holds flared daemon settings loaded from file and environment.
 type Config struct {
-	ServerURL         string              `json:"server_url"`
-	TunnelToken       string              `json:"tunnel_token"`
-	FrpcPath          string              `json:"frpc_path"`
-	DataDir           string              `json:"data_dir"`
-	StatePath         string              `json:"state_path"`
-	HeartbeatInterval MillisecondDuration `json:"heartbeat_interval"`
-	SyncInterval      MillisecondDuration `json:"sync_interval"`
-	RequestTimeout    MillisecondDuration `json:"request_timeout"`
+	ServerURL         string                         `json:"server_url"`
+	TunnelToken       string                         `json:"tunnel_token"`
+	FrpcPath          string                         `json:"frpc_path"`
+	DataDir           string                         `json:"data_dir"`
+	StatePath         string                         `json:"state_path"`
+	HeartbeatInterval edgeconfig.MillisecondDuration `json:"heartbeat_interval"`
+	SyncInterval      edgeconfig.MillisecondDuration `json:"sync_interval"`
+	RequestTimeout    edgeconfig.MillisecondDuration `json:"request_timeout"`
 	configPath        string
 }
 
@@ -103,13 +100,13 @@ func applyDefaults(cfg *Config, baseDir string) {
 		cfg.StatePath = filepath.Join(cfg.DataDir, "flared-state.json")
 	}
 	if cfg.HeartbeatInterval <= 0 {
-		cfg.HeartbeatInterval = MillisecondDuration(defaultHeartbeatInterval)
+		cfg.HeartbeatInterval = edgeconfig.MillisecondDuration(defaultHeartbeatInterval)
 	}
 	if cfg.SyncInterval <= 0 {
-		cfg.SyncInterval = MillisecondDuration(defaultSyncInterval)
+		cfg.SyncInterval = edgeconfig.MillisecondDuration(defaultSyncInterval)
 	}
 	if cfg.RequestTimeout <= 0 {
-		cfg.RequestTimeout = MillisecondDuration(defaultRequestTimeout)
+		cfg.RequestTimeout = edgeconfig.MillisecondDuration(defaultRequestTimeout)
 	}
 }
 

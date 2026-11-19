@@ -22,7 +22,7 @@ type Service struct {
 	client      *httpclient.Client
 	frpcManager *frpc.Manager
 	config      *config.Config
-	updater     *updater.Service
+	updater     *edgeupdater.Service
 }
 
 // New creates a heartbeat service with the given client, frpc manager, and config.
@@ -31,7 +31,11 @@ func New(client *httpclient.Client, manager *frpc.Manager, cfg *config.Config) *
 		client:      client,
 		frpcManager: manager,
 		config:      cfg,
-		updater:     updater.New(),
+		updater: edgeupdater.New(edgeupdater.Config{
+			LocalVersion: config.Version,
+			AssetPrefix:  "openflared",
+			LogLabel:     "flared",
+		}),
 	}
 }
 

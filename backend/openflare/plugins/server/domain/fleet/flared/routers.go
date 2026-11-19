@@ -21,15 +21,15 @@ import (
 // @Accept json
 // @Produce json
 // @Security TunnelTokenAuth
-// @Param body body flared.HeartbeatPayload true "心跳载荷"
-// @Success 200 {object} response.Any{data=flared.HeartbeatResponse} "心跳响应"
+// @Param body body protocol.FlaredHeartbeatPayload true "心跳载荷"
+// @Success 200 {object} response.Any{data=protocol.FlaredHeartbeatResponse} "心跳响应"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Tunnel Token 无效"
 // @Failure 403 {object} response.Any "节点类型不匹配"
 // @Router /api/v1/tunnel/heartbeat [post]
 func PostHeartbeat(c *gin.Context) {
-	var payload HeartbeatPayload
-	if !apiutil.BindJSON(c, &payload) {
+	var payload protocol.FlaredHeartbeatPayload
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 
@@ -57,7 +57,7 @@ func PostHeartbeat(c *gin.Context) {
 // @Tags openflare-tunnel
 // @Produce json
 // @Security TunnelTokenAuth
-// @Success 200 {object} response.Any{data=flared.TunnelConfigResponse} "隧道配置"
+// @Success 200 {object} response.Any{data=protocol.FlaredTunnelConfigResponse} "隧道配置"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Tunnel Token 无效"
 // @Failure 403 {object} response.Any "节点类型不匹配"
@@ -88,15 +88,15 @@ func GetActiveConfig(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security TunnelTokenAuth
-// @Param body body flared.ApplyLogPayload true "下发结果载荷"
+// @Param body body protocol.ApplyLogPayload true "下发结果载荷"
 // @Success 200 {object} response.Any{data=model.OpenFlareApplyLog} "下发日志记录"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Tunnel Token 无效"
 // @Failure 403 {object} response.Any "节点类型不匹配"
 // @Router /api/v1/tunnel/apply-log [post]
 func PostApplyLog(c *gin.Context) {
-	var payload ApplyLogPayload
-	if !apiutil.BindJSON(c, &payload) {
+	var payload protocol.ApplyLogPayload
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 	if authNode, ok := c.Get(ctxFlaredNodeKey); ok {

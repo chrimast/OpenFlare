@@ -43,69 +43,69 @@ const (
 
 // Config holds the full runtime configuration for the OpenFlare agent.
 type Config struct {
-	ServerURL                  string              `json:"server_url"`
-	AccessToken                string              `json:"agent_token"`
-	DiscoveryToken             string              `json:"discovery_token"`
-	NodeName                   string              `json:"node_name"`
-	NodeIP                     string              `json:"node_ip"`
-	Version                    string              `json:"-"`
-	ExtVersion                 string              `json:"-"`
-	OpenrestyPath              string              `json:"openresty_path"`
-	OpenrestyResolvers         []string            `json:"openresty_resolvers,omitempty"`
-	DataDir                    string              `json:"data_dir"`
-	MainConfigPath             string              `json:"main_config_path"`
-	RouteConfigPath            string              `json:"route_config_path"`
-	AccessLogPath              string              `json:"access_log_path"`
-	CertDir                    string              `json:"cert_dir"`
-	OpenrestyCertDir           string              `json:"openresty_cert_dir"`
-	LuaDir                     string              `json:"lua_dir"`
-	OpenrestyLuaDir            string              `json:"openresty_lua_dir"`
-	RuntimeConfigDir           string              `json:"runtime_config_dir"`
-	PagesDir                   string              `json:"pages_dir"`
-	MMDBPath                   string              `json:"mmdb_path"`
-	CityMMDBPath               string              `json:"city_mmdb_path"`
-	MMDBUpdateInterval         MillisecondDuration `json:"mmdb_update_interval"`
-	MMDBDownloadURL            string              `json:"mmdb_download_url"`
-	CityMMDBDownloadURL        string              `json:"city_mmdb_download_url"`
-	OpenrestyObservabilityPort int                 `json:"openresty_observability_port"`
-	ObservabilityBufferPath    string              `json:"observability_buffer_path"`
-	ObservabilityReplayMinutes int                 `json:"observability_replay_minutes"`
-	StatePath                  string              `json:"state_path"`
-	HeartbeatInterval          MillisecondDuration `json:"heartbeat_interval"`
-	RequestTimeout             MillisecondDuration `json:"request_timeout"`
-	configPath                 string              `json:"-"`
-	NodeIPConfigured           bool                `json:"-"`
+	ServerURL                  string                         `json:"server_url"`
+	AccessToken                string                         `json:"agent_token"`
+	DiscoveryToken             string                         `json:"discovery_token"`
+	NodeName                   string                         `json:"node_name"`
+	NodeIP                     string                         `json:"node_ip"`
+	Version                    string                         `json:"-"`
+	ExtVersion                 string                         `json:"-"`
+	OpenrestyPath              string                         `json:"openresty_path"`
+	OpenrestyResolvers         []string                       `json:"openresty_resolvers,omitempty"`
+	DataDir                    string                         `json:"data_dir"`
+	MainConfigPath             string                         `json:"main_config_path"`
+	RouteConfigPath            string                         `json:"route_config_path"`
+	AccessLogPath              string                         `json:"access_log_path"`
+	CertDir                    string                         `json:"cert_dir"`
+	OpenrestyCertDir           string                         `json:"openresty_cert_dir"`
+	LuaDir                     string                         `json:"lua_dir"`
+	OpenrestyLuaDir            string                         `json:"openresty_lua_dir"`
+	RuntimeConfigDir           string                         `json:"runtime_config_dir"`
+	PagesDir                   string                         `json:"pages_dir"`
+	MMDBPath                   string                         `json:"mmdb_path"`
+	CityMMDBPath               string                         `json:"city_mmdb_path"`
+	MMDBUpdateInterval         edgeconfig.MillisecondDuration `json:"mmdb_update_interval"`
+	MMDBDownloadURL            string                         `json:"mmdb_download_url"`
+	CityMMDBDownloadURL        string                         `json:"city_mmdb_download_url"`
+	OpenrestyObservabilityPort int                            `json:"openresty_observability_port"`
+	ObservabilityBufferPath    string                         `json:"observability_buffer_path"`
+	ObservabilityReplayMinutes int                            `json:"observability_replay_minutes"`
+	StatePath                  string                         `json:"state_path"`
+	HeartbeatInterval          edgeconfig.MillisecondDuration `json:"heartbeat_interval"`
+	RequestTimeout             edgeconfig.MillisecondDuration `json:"request_timeout"`
+	configPath                 string                         `json:"-"`
+	NodeIPConfigured           bool                           `json:"-"`
 }
 
 type configFile struct {
-	ServerURL                  string              `json:"server_url"`
-	AccessToken                string              `json:"agent_token"`
-	DiscoveryToken             string              `json:"discovery_token"`
-	NodeName                   string              `json:"node_name"`
-	NodeIP                     string              `json:"node_ip"`
-	OpenrestyPath              string              `json:"openresty_path"`
-	OpenrestyResolvers         []string            `json:"openresty_resolvers"`
-	DataDir                    string              `json:"data_dir"`
-	MainConfigPath             string              `json:"main_config_path"`
-	RouteConfigPath            string              `json:"route_config_path"`
-	AccessLogPath              string              `json:"access_log_path"`
-	CertDir                    string              `json:"cert_dir"`
-	OpenrestyCertDir           string              `json:"openresty_cert_dir"`
-	LuaDir                     string              `json:"lua_dir"`
-	OpenrestyLuaDir            string              `json:"openresty_lua_dir"`
-	RuntimeConfigDir           string              `json:"runtime_config_dir"`
-	PagesDir                   string              `json:"pages_dir"`
-	MMDBPath                   string              `json:"mmdb_path"`
-	CityMMDBPath               string              `json:"city_mmdb_path"`
-	MMDBUpdateInterval         MillisecondDuration `json:"mmdb_update_interval"`
-	MMDBDownloadURL            string              `json:"mmdb_download_url"`
-	CityMMDBDownloadURL        string              `json:"city_mmdb_download_url"`
-	OpenrestyObservabilityPort int                 `json:"openresty_observability_port"`
-	ObservabilityBufferPath    string              `json:"observability_buffer_path"`
-	ObservabilityReplayMinutes int                 `json:"observability_replay_minutes"`
-	StatePath                  string              `json:"state_path"`
-	HeartbeatInterval          MillisecondDuration `json:"heartbeat_interval"`
-	RequestTimeout             MillisecondDuration `json:"request_timeout"`
+	ServerURL                  string                         `json:"server_url"`
+	AccessToken                string                         `json:"agent_token"`
+	DiscoveryToken             string                         `json:"discovery_token"`
+	NodeName                   string                         `json:"node_name"`
+	NodeIP                     string                         `json:"node_ip"`
+	OpenrestyPath              string                         `json:"openresty_path"`
+	OpenrestyResolvers         []string                       `json:"openresty_resolvers"`
+	DataDir                    string                         `json:"data_dir"`
+	MainConfigPath             string                         `json:"main_config_path"`
+	RouteConfigPath            string                         `json:"route_config_path"`
+	AccessLogPath              string                         `json:"access_log_path"`
+	CertDir                    string                         `json:"cert_dir"`
+	OpenrestyCertDir           string                         `json:"openresty_cert_dir"`
+	LuaDir                     string                         `json:"lua_dir"`
+	OpenrestyLuaDir            string                         `json:"openresty_lua_dir"`
+	RuntimeConfigDir           string                         `json:"runtime_config_dir"`
+	PagesDir                   string                         `json:"pages_dir"`
+	MMDBPath                   string                         `json:"mmdb_path"`
+	CityMMDBPath               string                         `json:"city_mmdb_path"`
+	MMDBUpdateInterval         edgeconfig.MillisecondDuration `json:"mmdb_update_interval"`
+	MMDBDownloadURL            string                         `json:"mmdb_download_url"`
+	CityMMDBDownloadURL        string                         `json:"city_mmdb_download_url"`
+	OpenrestyObservabilityPort int                            `json:"openresty_observability_port"`
+	ObservabilityBufferPath    string                         `json:"observability_buffer_path"`
+	ObservabilityReplayMinutes int                            `json:"observability_replay_minutes"`
+	StatePath                  string                         `json:"state_path"`
+	HeartbeatInterval          edgeconfig.MillisecondDuration `json:"heartbeat_interval"`
+	RequestTimeout             edgeconfig.MillisecondDuration `json:"request_timeout"`
 }
 
 func transferPersistedConfig(dst, src any) error {
@@ -205,7 +205,7 @@ func applyAgentPathDefaults(cfg *Config, baseDir string) {
 
 func applyAgentTimingDefaults(cfg *Config) {
 	if cfg.MMDBUpdateInterval <= 0 {
-		cfg.MMDBUpdateInterval = MillisecondDuration(defaultMMDBUpdateInterval)
+		cfg.MMDBUpdateInterval = edgeconfig.MillisecondDuration(defaultMMDBUpdateInterval)
 	}
 	if cfg.MMDBDownloadURL == "" {
 		cfg.MMDBDownloadURL = defaultMMDBDownloadURL
@@ -220,10 +220,10 @@ func applyAgentTimingDefaults(cfg *Config) {
 		cfg.ObservabilityReplayMinutes = defaultObservabilityReplayMinutes
 	}
 	if cfg.HeartbeatInterval <= 0 {
-		cfg.HeartbeatInterval = MillisecondDuration(defaultHeartbeatInterval)
+		cfg.HeartbeatInterval = edgeconfig.MillisecondDuration(defaultHeartbeatInterval)
 	}
 	if cfg.RequestTimeout <= 0 {
-		cfg.RequestTimeout = MillisecondDuration(defaultRequestTimeout)
+		cfg.RequestTimeout = edgeconfig.MillisecondDuration(defaultRequestTimeout)
 	}
 }
 
@@ -324,19 +324,19 @@ func applyEnvOverrides(cfg *Config) {
 	}
 }
 
-func parseDurationValue(value string) (MillisecondDuration, error) {
+func parseDurationValue(value string) (edgeconfig.MillisecondDuration, error) {
 	trimmed := strings.TrimSpace(value)
 	if trimmed == "" {
 		return 0, nil
 	}
 	if parsed, err := time.ParseDuration(trimmed); err == nil {
-		return MillisecondDuration(parsed), nil
+		return edgeconfig.MillisecondDuration(parsed), nil
 	}
 	ms, err := strconv.ParseInt(trimmed, 10, 64)
 	if err != nil {
 		return 0, err
 	}
-	return MillisecondDuration(time.Duration(ms) * time.Millisecond), nil
+	return edgeconfig.MillisecondDuration(time.Duration(ms) * time.Millisecond), nil
 }
 
 func usesSlashPath(path string) bool {

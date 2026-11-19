@@ -3,7 +3,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package chwriter_test
+package logwriter_test
 
 import (
 	"context"
@@ -18,13 +18,13 @@ import (
 
 // Run with Docker ClickHouse + config.yaml:
 //
-//	go test -tags live_ch ./internal/apps/openflare/chwriter -run TestLiveAppWritePath -count=1 -timeout 2m
+//	go test -tags live_ch ./internal/apps/openflare/logwriter -run TestLiveAppWritePath -count=1 -timeout 2m
 func TestLiveAppWritePath(t *testing.T) {
 	if db.ChConn == nil {
 		t.Skip("ClickHouse connection not ready")
 	}
 	ctx := context.Background()
-	chwriter.Init(ctx)
+	logwriter.Init(ctx)
 
 	now := time.Now().UTC()
 	nodeID := "e2e-app-write-" + now.Format("150405")
@@ -77,7 +77,7 @@ func TestLiveAppWritePath(t *testing.T) {
 		t.Fatalf("latest-per-node query missing node %s (rows=%d)", nodeID, len(latest))
 	}
 
-	stats := chwriter.WriterStats()
+	stats := logwriter.WriterStats()
 	if len(stats) == 0 {
 		t.Fatal("WriterStats empty after Init")
 	}

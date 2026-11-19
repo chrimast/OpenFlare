@@ -27,7 +27,11 @@ func withHeartbeatCycle(runner *Runner, observabilityBuffer *state.Observability
 		ObservabilityBuffer: observabilityBuffer,
 		Heartbeat:           runner.HeartbeatService,
 		Sync:                runner.SyncService,
-		Updater:             updater.New(),
+		Updater: edgeupdater.New(edgeupdater.Config{
+			LocalVersion: config.Version,
+			AssetPrefix:  "openflare-agent",
+			LogLabel:     "agent",
+		}),
 	}
 	return runner
 }
@@ -221,7 +225,7 @@ func TestRunnerKeepsHeartbeatWhenStartupSyncFails(t *testing.T) {
 			NodeIPConfigured:  true,
 			Version:           config.Version,
 			ExtVersion:        "1.27.1.2",
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Millisecond),
 		},
 		StateStore:       stateStore,
 		HeartbeatService: heartbeatService,
@@ -275,7 +279,7 @@ func TestRunnerDoesNotExitOnHeartbeatOrSyncError(t *testing.T) {
 			NodeIPConfigured:  true,
 			Version:           config.Version,
 			ExtVersion:        "1.27.1.2",
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Millisecond),
 		},
 		StateStore:       stateStore,
 		HeartbeatService: heartbeatService,
@@ -334,7 +338,7 @@ func TestRunnerReportsOpenrestyHealthAndExecutesRestart(t *testing.T) {
 			NodeIPConfigured:  true,
 			Version:           config.Version,
 			ExtVersion:        "1.27.1.2",
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Millisecond),
 		},
 		StateStore:       stateStore,
 		HeartbeatService: heartbeatService,
@@ -391,7 +395,7 @@ func TestRunnerHeartbeatPayloadIncludesObservabilityExtensions(t *testing.T) {
 			DataDir:           tempDir,
 			RouteConfigPath:   filepath.Join(tempDir, "conf.d", "openflare_routes.conf"),
 			AccessLogPath:     filepath.Join(tempDir, "var", "log", "openflare", "access.log"),
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Millisecond),
 		},
 		StateStore: stateStore,
 	}, nil)
@@ -471,7 +475,7 @@ func TestRunnerReplaysBufferedObservabilityAfterHeartbeatRecovery(t *testing.T) 
 			ExtVersion:                 "1.27.1.2",
 			DataDir:                    tempDir,
 			RouteConfigPath:            filepath.Join(tempDir, "conf.d", "openflare_routes.conf"),
-			HeartbeatInterval:          config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval:          edgeconfig.MillisecondDuration(10 * time.Millisecond),
 			ObservabilityReplayMinutes: 15,
 		},
 		StateStore:       stateStore,
@@ -552,7 +556,7 @@ func TestRunnerDiscoveryRegisterUpdatesTokenAndNodeID(t *testing.T) {
 			NodeIPConfigured:  cfg.NodeIPConfigured,
 			Version:           config.Version,
 			ExtVersion:        "1.27.1.2",
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Millisecond),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Millisecond),
 		},
 		StateStore:       stateStore,
 		HeartbeatService: heartbeatService,
@@ -561,7 +565,7 @@ func TestRunnerDiscoveryRegisterUpdatesTokenAndNodeID(t *testing.T) {
 	runner.Config = cfg
 	runner.Config.Version = config.Version
 	runner.Config.ExtVersion = "1.27.1.2"
-	runner.Config.HeartbeatInterval = config.MillisecondDuration(10 * time.Millisecond)
+	runner.Config.HeartbeatInterval = edgeconfig.MillisecondDuration(10 * time.Millisecond)
 
 	err = runner.Run(ctx)
 	if !errors.Is(err, context.Canceled) {
@@ -617,7 +621,7 @@ func TestRunnerHandlesWebSocketActiveConfigMessage(t *testing.T) {
 func TestRunnerHandlesWebSocketSettingsDisabled(t *testing.T) {
 	runner := withHeartbeatCycle(&Runner{
 		Config: &config.Config{
-			HeartbeatInterval: config.MillisecondDuration(10 * time.Second),
+			HeartbeatInterval: edgeconfig.MillisecondDuration(10 * time.Second),
 		},
 		websocketUpgradeEnabled: true,
 	}, nil)

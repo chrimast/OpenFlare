@@ -661,7 +661,7 @@ func TestManagerEnsureLuaAssetsWritesReadableFiles(t *testing.T) {
 		t.Fatalf("expected IP group module to use the managed runtime checksum path, got %s", string(ipGroupsData))
 	}
 	if !strings.Contains(string(ipGroupsData), "openflare_waf_ip_groups") ||
-		!strings.Contains(string(ipGroupsData), fmt.Sprintf("max_snapshot_bytes = options.max_snapshot_bytes or tonumber(\"%d\")", sharedprotocol.MaxWAFIPGroupSnapshotBytes)) {
+		!strings.Contains(string(ipGroupsData), fmt.Sprintf("max_snapshot_bytes = options.max_snapshot_bytes or tonumber(\"%d\")", protocol.MaxWAFIPGroupSnapshotBytes)) {
 		t.Fatalf("expected dedicated dictionary and shared protocol size limit in deployed IP group module, got %s", string(ipGroupsData))
 	}
 	powData, err := os.ReadFile(filepath.Join(manager.LuaDir, "pow", "runtime.lua"))
@@ -1117,10 +1117,10 @@ func TestManagerReconcileWAFIPGroupsRetainsUnchangedDeltaRuntimeFile(t *testing.
 func TestManagerReconcileWAFIPGroupsConvergesToAuthoritativeTarget(t *testing.T) {
 	runtimeDir := t.TempDir()
 	manager := &Manager{RuntimeConfigDir: runtimeDir}
-	initial, err := sharedprotocol.MarshalWAFIPGroupSnapshot(map[string]protocol.WAFIPGroup{
+	initial, err := protocol.MarshalWAFIPGroupSnapshot(map[string]protocol.WAFIPGroup{
 		"1":  {ID: 1, Name: "unchanged", Enabled: true, Checksum: "sum-1"},
 		"2":  {ID: 2, Name: "old", Enabled: true, Checksum: "old-2"},
-		"99": {ID: 99, Name: strings.Repeat("x", sharedprotocol.MaxWAFIPGroupSnapshotBytes-1024), Enabled: true, Checksum: "stale"},
+		"99": {ID: 99, Name: strings.Repeat("x", protocol.MaxWAFIPGroupSnapshotBytes-1024), Enabled: true, Checksum: "stale"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1347,7 +1347,7 @@ func TestWAFIPGroupSnapshotRejectsOversizeBeforePublication(t *testing.T) {
 	manager := &Manager{RuntimeConfigDir: runtimeDir}
 
 	err := manager.ReconcileWAFIPGroups([]uint{1, 2}, []protocol.WAFIPGroup{{
-		ID: 2, Name: strings.Repeat("x", sharedprotocol.MaxWAFIPGroupSnapshotBytes), Enabled: true, Checksum: "new",
+		ID: 2, Name: strings.Repeat("x", protocol.MaxWAFIPGroupSnapshotBytes), Enabled: true, Checksum: "new",
 	}})
 	if err == nil || !strings.Contains(err.Error(), "exceeds maximum") {
 		t.Fatalf("expected clear oversized snapshot error, got %v", err)

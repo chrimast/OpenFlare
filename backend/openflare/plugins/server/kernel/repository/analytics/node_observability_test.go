@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -14,29 +14,49 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInsertNodeEdgeHealth_EmptyNodeID(t *testing.T) {
-	err := InsertNodeEdgeHealth(context.Background(), analyticsmodel.NodeEdgeHealth{})
-	require.NoError(t, err)
-}
+func TestCHBatchInsertNodeEdgeHealth_EmptyNodeID(t *testing.T) {
+	ResetForTest()
+	SetConfigReader(func(_ context.Context, _ string) (string, error) { return "", nil })
+	defer ResetForTest()
 
-func TestInsertNodeEdgeHealth_UsesEdgeHealthBatchSQL(t *testing.T) {
-	ctx := context.Background()
-	mockBatch := &mockBatch{}
-	mockConn := &mockConn{
+	mockBatch := &chMockBatch{}
+	mockConn := &chMockConn{
 		batch:      mockBatch,
 		batchQuery: analyticsmodel.NodeEdgeHealth{}.BatchInsertSQL(),
 	}
 	SetChConnForTest(mockConn)
 	t.Cleanup(func() { SetChConnForTest(nil) })
 
+	s := newClickHouseStore()
+	err := s.BatchInsertNodeEdgeHealth(context.Background(), []analyticsmodel.NodeEdgeHealth{{}})
+	require.NoError(t, err)
+	assert.False(t, mockBatch.sendCalled)
+	assert.Empty(t, mockBatch.rows)
+}
+
+func TestCHBatchInsertNodeEdgeHealth_UsesEdgeHealthBatchSQL(t *testing.T) {
+	ResetForTest()
+	SetConfigReader(func(_ context.Context, _ string) (string, error) { return "", nil })
+	defer ResetForTest()
+
+	ctx := context.Background()
+	mockBatch := &chMockBatch{}
+	mockConn := &chMockConn{
+		batch:      mockBatch,
+		batchQuery: analyticsmodel.NodeEdgeHealth{}.BatchInsertSQL(),
+	}
+	db.SetChConnForTest(mockConn)
+	t.Cleanup(func() { db.SetChConnForTest(nil) })
+
+	s := newClickHouseStore()
 	capturedAt := time.Now().UTC()
-	err := InsertNodeEdgeHealth(ctx, analyticsmodel.NodeEdgeHealth{
+	err := s.BatchInsertNodeEdgeHealth(ctx, []analyticsmodel.NodeEdgeHealth{{
 		NodeID:      "node-a",
 		CapturedAt:  capturedAt,
 		Status:      "",
 		Connections: 3,
 		CreatedAt:   capturedAt,
-	})
+	}})
 	require.NoError(t, err)
 	assert.True(t, mockConn.prepareCalled)
 	assert.Equal(t, analyticsmodel.NodeEdgeHealth{}.BatchInsertSQL(), mockConn.preparedQuery)

@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -16,23 +16,25 @@ import (
 )
 
 func TestBatchInsertNodeAccessLogs_Empty(t *testing.T) {
-	err := BatchInsertNodeAccessLogs(context.Background(), nil)
+	s := newClickHouseStore()
+	err := s.BatchInsertNodeAccessLogs(context.Background(), nil)
 	require.NoError(t, err)
 }
 
 func TestBatchInsertNodeAccessLogs_UsesModelBatchSQL(t *testing.T) {
 	require.NoError(t, idgen.Init(1))
 	ctx := context.Background()
-	mockBatch := &mockBatch{}
-	mockConn := &mockConn{
+	mockBatch := &chMockBatch{}
+	mockConn := &chMockConn{
 		batch:      mockBatch,
 		batchQuery: analyticsmodel.NodeAccessLog{}.BatchInsertSQL(),
 	}
 	SetChConnForTest(mockConn)
 	t.Cleanup(func() { SetChConnForTest(nil) })
 
+	s := newClickHouseStore()
 	loggedAt := time.Now().UTC()
-	err := BatchInsertNodeAccessLogs(ctx, []analyticsmodel.NodeAccessLog{
+	err := s.BatchInsertNodeAccessLogs(ctx, []analyticsmodel.NodeAccessLog{
 		{
 			NodeID:     "node-a",
 			LoggedAt:   loggedAt,

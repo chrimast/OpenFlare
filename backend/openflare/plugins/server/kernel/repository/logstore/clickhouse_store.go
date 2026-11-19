@@ -16,8 +16,7 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )
 
-// clickhouseLogStore 实现 AccessLogStore / ObservabilityStore / StatusStore，
-// 逐方法委托 analyticsrepo（CH 原生 batch 写入，零性能损耗）。
+// clickhouseLogStore 实现 AccessLogStore / ObservabilityStore / StatusStore。
 // UserAccessLogStore 由 clickhouseUserAccessLogStore 实现（List/Count 方法名已被
 // AccessLogStore 占用，Go 不允许同名不同签名方法）。
 type clickhouseLogStore struct {
@@ -39,157 +38,19 @@ func chConn(ctx context.Context) (driver.Conn, error) {
 	return analyticsrepo.ChConn(ctx)
 }
 
+func chConn() (driver.Conn, error) {
+	if err := chConnErr(); err != nil {
+		return nil, err
+	}
+	return db.ChConn, nil
+}
+
 // ensureWritable 迁移冻结期拒绝写入。
 func (s *clickhouseLogStore) ensureWritable(ctx context.Context) error {
 	if !s.skipFreeze && Migrating(ctx) {
 		return ErrMigrating
 	}
 	return nil
-}
-
-// ---- AccessLogStore ----
-
-// InsertBatch 节点访问日志写入入口：冻结检查后经 hook 入队（异步），不直接落库。
-func (s *clickhouseLogStore) InsertBatch(ctx context.Context, records []*model.OpenFlareAccessLog) error {
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	rows := make([]analyticsmodel.NodeAccessLog, 0, len(records))
-	for _, r := range records {
-		if r == nil {
-			continue
-		}
-		rows = append(rows, toAnalyticsNodeAccessLog(r))
-	}
-	if h := currentAccessLogHooks().QueueNodeAccessLogs; h != nil {
-		h(rows)
-	}
-	return nil
-}
-
-// BatchInsertNodeAccessLogs 是 batchwriter flush 目标：CH 原生批量写入。
-func (s *clickhouseLogStore) BatchInsertNodeAccessLogs(ctx context.Context, rows []analyticsmodel.NodeAccessLog) error {
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	return analyticsrepo.BatchInsertNodeAccessLogs(ctx, rows)
-}
-
-func (s *clickhouseLogStore) List(ctx context.Context, query model.OpenFlareAccessLogQuery) ([]*model.OpenFlareAccessLog, error) {
-	rows, err := analyticsrepo.ListNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-	if err != nil {
-		return nil, err
-	}
-	return fromAnalyticsNodeAccessLogs(rows), nil
-}
-
-func (s *clickhouseLogStore) Count(ctx context.Context, query model.OpenFlareAccessLogQuery) (int64, int64, int64, error) {
-	return analyticsrepo.CountNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-}
-
-func (s *clickhouseLogStore) RegionCounts(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareAccessLogRegionCount, error) {
-	rows, err := analyticsrepo.RegionCountsNodeAccessLogs(ctx, nodeID, since, limit)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]*model.OpenFlareAccessLogRegionCount, len(rows))
-	for i, r := range rows {
-		out[i] = &model.OpenFlareAccessLogRegionCount{Region: r.Region, Count: r.Count}
-	}
-	return out, nil
-}
-
-func (s *clickhouseLogStore) BucketAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogBucketAggregate, error) {
-	return analyticsrepo.BucketAggregatesNodeAccessLogs(ctx, toNodeAccessLogFilter(query), bucketSeconds)
-}
-
-func (s *clickhouseLogStore) CountBuckets(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) (int64, error) {
-	return analyticsrepo.CountBucketAggregatesNodeAccessLogs(ctx, toNodeAccessLogFilter(query), bucketSeconds)
-}
-
-func (s *clickhouseLogStore) BucketDimensions(ctx context.Context, query model.OpenFlareAccessLogQuery, column string, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogBucketDimension, error) {
-	return analyticsrepo.BucketDimensionsNodeAccessLogs(ctx, toNodeAccessLogFilter(query), column, bucketSeconds)
-}
-
-func (s *clickhouseLogStore) IPAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery, exactRemoteAddr bool) ([]analyticsmodel.NodeAccessLogIPAggregate, error) {
-	return analyticsrepo.IPAggregatesNodeAccessLogs(ctx, toNodeAccessLogFilter(query), exactRemoteAddr)
-}
-
-func (s *clickhouseLogStore) IPSummaries(ctx context.Context, query model.OpenFlareAccessLogQuery, recentSince time.Time) ([]analyticsmodel.NodeAccessLogIPSummary, error) {
-	return analyticsrepo.IPSummariesNodeAccessLogs(ctx, toNodeAccessLogFilter(query), recentSince)
-}
-
-func (s *clickhouseLogStore) CountIPSummaries(ctx context.Context, query model.OpenFlareAccessLogQuery) (int64, error) {
-	return analyticsrepo.CountIPSummaryNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-}
-
-func (s *clickhouseLogStore) WAFIPAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery) ([]analyticsmodel.NodeAccessLogWAFIPAggregate, error) {
-	return analyticsrepo.IPAggregatesForWAFNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-}
-
-func (s *clickhouseLogStore) IPTrend(ctx context.Context, query model.OpenFlareAccessLogQuery, bucketSeconds int64) ([]analyticsmodel.NodeAccessLogIPTrend, error) {
-	return analyticsrepo.IPTrendNodeAccessLogs(ctx, toNodeAccessLogFilter(query), bucketSeconds)
-}
-
-func (s *clickhouseLogStore) TrafficSummary(ctx context.Context, query model.OpenFlareAccessLogQuery) (model.OpenFlareAccessLogTrafficSummary, error) {
-	row, err := analyticsrepo.TrafficSummaryNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-	if err != nil {
-		return model.OpenFlareAccessLogTrafficSummary{}, err
-	}
-	return model.OpenFlareAccessLogTrafficSummary{
-		RequestCount:   row.RequestCount,
-		Status4xxCount: row.Status4xxCount,
-		ErrorCount:     row.ErrorCount,
-		UniqueIPCount:  row.UniqueIPCount,
-		BytesSent:      row.BytesSent,
-		RequestLength:  row.RequestLength,
-		NodeCount:      row.NodeCount,
-	}, nil
-}
-
-func (s *clickhouseLogStore) ValueCounts(ctx context.Context, query model.OpenFlareAccessLogQuery, column string, limit int) ([]model.OpenFlareAccessLogValueCount, error) {
-	rows, err := analyticsrepo.ValueCountsNodeAccessLogs(ctx, toNodeAccessLogFilter(query), column, limit)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]model.OpenFlareAccessLogValueCount, len(rows))
-	for i, r := range rows {
-		out[i] = model.OpenFlareAccessLogValueCount{Value: r.Value, Count: r.Count}
-	}
-	return out, nil
-}
-
-func (s *clickhouseLogStore) NodeAggregates(ctx context.Context, query model.OpenFlareAccessLogQuery) ([]model.OpenFlareAccessLogNodeAggregate, error) {
-	rows, err := analyticsrepo.NodeAggregatesNodeAccessLogs(ctx, toNodeAccessLogFilter(query))
-	if err != nil {
-		return nil, err
-	}
-	out := make([]model.OpenFlareAccessLogNodeAggregate, len(rows))
-	for i, r := range rows {
-		out[i] = model.OpenFlareAccessLogNodeAggregate{NodeID: r.NodeID, RequestCount: r.RequestCount, ErrorCount: r.ErrorCount, UniqueIPCount: r.UniqueIPCount}
-	}
-	return out, nil
-}
-
-func (s *clickhouseLogStore) DeleteAll(ctx context.Context) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	return analyticsrepo.DeleteAllNodeAccessLogs(ctx)
-}
-
-func (s *clickhouseLogStore) DeleteBefore(ctx context.Context, cutoff time.Time) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	return analyticsrepo.DeleteNodeAccessLogsBefore(ctx, cutoff)
-}
-
-func (s *clickhouseLogStore) DeleteByNodeBefore(ctx context.Context, nodeID string, before time.Time) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	return analyticsrepo.DeleteNodeAccessLogsByNodeBefore(ctx, nodeID, before)
 }
 
 // ListForMigration 按 id 升序分页读取（迁移复制用）：直接查询 CH 原生表。
@@ -460,46 +321,12 @@ func chMigrationRange(ctx context.Context, table, column string) (time.Time, tim
 	return minTime.UTC(), maxTime.UTC(), nil
 }
 
-// BatchInsertNodeObsFrpc 是 batchwriter flush 目标：CH 原生批量写入。
-func (s *clickhouseLogStore) BatchInsertNodeObsFrpc(ctx context.Context, rows []analyticsmodel.NodeObsFrpc) error {
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	return analyticsrepo.BatchInsertNodeObsFrpc(ctx, rows)
-}
-
 // ListMetricSnapshotsForMigration 按 id 升序分页读取（迁移复制用）。
 func (s *clickhouseLogStore) ListMetricSnapshotsForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodeMetricSnapshot, error) {
 	return chListForMigration(ctx, afterID, limit,
 		analyticsmodel.NodeMetricSnapshot{}.TableName(),
 		analyticsmodel.NodeMetricSnapshot{}.InsertColumns(),
-		func(rows driver.Rows) ([]analyticsmodel.NodeMetricSnapshot, error) {
-			var result []analyticsmodel.NodeMetricSnapshot
-			for rows.Next() {
-				var item analyticsmodel.NodeMetricSnapshot
-				if err := rows.Scan(
-					&item.ID,
-					&item.NodeID,
-					&item.CapturedAt,
-					&item.CPUUsagePercent,
-					&item.MemoryUsedBytes,
-					&item.MemoryTotalBytes,
-					&item.StorageUsedBytes,
-					&item.StorageTotalBytes,
-					&item.DiskReadBytes,
-					&item.DiskWriteBytes,
-					&item.NetworkRxBytes,
-					&item.NetworkTxBytes,
-					&item.CreatedAt,
-				); err != nil {
-					return nil, fmt.Errorf("scan node metric snapshot row: %w", err)
-				}
-				item.CapturedAt = item.CapturedAt.UTC()
-				item.CreatedAt = item.CreatedAt.UTC()
-				result = append(result, item)
-			}
-			return result, nil
-		})
+		scanNodeMetricSnapshotRows)
 }
 
 // chObsRow 迁移读取共用的双字段观测行（字符串状态 + 数值计数）：
@@ -513,7 +340,6 @@ type chObsRow struct {
 	CreatedAt  time.Time
 }
 
-// countToInt32 将观测计数转为 int32（防御溢出；观测计数远小于 int32 上限）。
 func countToInt32(v int64) int32 {
 	if v > math.MaxInt32 {
 		return math.MaxInt32
@@ -524,7 +350,6 @@ func countToInt32(v int64) int32 {
 	return int32(v)
 }
 
-// scanChObsRow 扫描 chObsRow（含 UTC 归一化）。
 func scanChObsRow(rows driver.Rows) ([]chObsRow, error) {
 	var result []chObsRow
 	for rows.Next() {
@@ -567,28 +392,7 @@ func (s *clickhouseLogStore) ListNodeObsFrpsForMigration(ctx context.Context, af
 	return chListForMigration(ctx, afterID, limit,
 		analyticsmodel.NodeObsFrps{}.TableName(),
 		analyticsmodel.NodeObsFrps{}.InsertColumns(),
-		func(rows driver.Rows) ([]analyticsmodel.NodeObsFrps, error) {
-			var result []analyticsmodel.NodeObsFrps
-			for rows.Next() {
-				var item analyticsmodel.NodeObsFrps
-				if err := rows.Scan(
-					&item.ID,
-					&item.NodeID,
-					&item.CapturedAt,
-					&item.FrpsConnections,
-					&item.FrpsProxyCount,
-					&item.FrpsClientCount,
-					&item.FrpsProxies,
-					&item.CreatedAt,
-				); err != nil {
-					return nil, fmt.Errorf("scan node frps observation row: %w", err)
-				}
-				item.CapturedAt = item.CapturedAt.UTC()
-				item.CreatedAt = item.CreatedAt.UTC()
-				result = append(result, item)
-			}
-			return result, nil
-		})
+		scanNodeObsFrpsRows)
 }
 
 // ListNodeObsFrpcForMigration 按 id 升序分页读取（迁移复制用）。
@@ -633,11 +437,6 @@ func (s *clickhouseLogStore) ActiveDatabase(_ context.Context) (string, error) {
 	return dbNameClickHouse, nil
 }
 
-// ClickHouseOperationalStats 委托 analyticsrepo 汇总 CH 运行状态。
-func (s *clickhouseLogStore) ClickHouseOperationalStats(ctx context.Context) (*analyticsmodel.ClickHouseOperationalStats, error) {
-	return analyticsrepo.GetClickHouseOperationalStats(ctx)
-}
-
 // ---- UserAccessLogStore ----
 
 // clickhouseUserAccessLogStore 实现 UserAccessLogStore。clickhouseLogStore 已占用
@@ -649,25 +448,6 @@ type clickhouseUserAccessLogStore struct {
 
 func newClickHouseUserAccessLogStore() *clickhouseUserAccessLogStore {
 	return &clickhouseUserAccessLogStore{clickhouseLogStore: newClickHouseStore()}
-}
-
-// BatchInsert 是 batchwriter flush 目标：CH 原生批量写入；冻结期拒绝写入，空批次直接返回。
-func (s *clickhouseUserAccessLogStore) BatchInsert(ctx context.Context, logs []analyticsmodel.UserAccessLog) error {
-	if len(logs) == 0 {
-		return nil
-	}
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	return analyticsrepo.BatchInsert(ctx, logs)
-}
-
-// DeleteAll 清空全部用户访问日志（TRUNCATE 语义，迁移「覆盖目标库已有日志」幂等前提用）。
-func (s *clickhouseUserAccessLogStore) DeleteAll(ctx context.Context) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	return analyticsrepo.DeleteAllUserAccessLogs(ctx)
 }
 
 // ListForMigration 按 id 升序分页读取（迁移复制用）。
@@ -703,39 +483,4 @@ func (s *clickhouseUserAccessLogStore) ListForMigration(ctx context.Context, aft
 // MigrationRange 返回 w_user_access_logs.created_at 的最小/最大值（空表返回零值）。
 func (s *clickhouseUserAccessLogStore) MigrationRange(ctx context.Context) (time.Time, time.Time, error) {
 	return chMigrationRange(ctx, analyticsmodel.UserAccessLog{}.TableName(), "created_at")
-}
-
-func (s *clickhouseUserAccessLogStore) Count(ctx context.Context, filter analyticsmodel.AccessLogFilter) (uint64, error) {
-	return analyticsrepo.CountAccessLogs(ctx, filter)
-}
-
-func (s *clickhouseUserAccessLogStore) List(ctx context.Context, filter analyticsmodel.AccessLogFilter, page, pageSize int) ([]analyticsmodel.UserAccessLog, uint64, error) {
-	return analyticsrepo.ListAccessLogs(ctx, filter, page, pageSize)
-}
-
-func (s *clickhouseUserAccessLogStore) GetDailyTrend(ctx context.Context, days int) ([]analyticsmodel.DailyTrend, error) {
-	return analyticsrepo.GetDailyTrend(ctx, days)
-}
-
-func (s *clickhouseUserAccessLogStore) GetBrowserDistribution(ctx context.Context, startTime time.Time) ([]analyticsmodel.BrowserShare, error) {
-	return analyticsrepo.GetBrowserDistribution(ctx, startTime)
-}
-
-func (s *clickhouseUserAccessLogStore) GetTopActiveUsers(ctx context.Context, startTime time.Time, limit int) ([]analyticsmodel.TopUser, error) {
-	return analyticsrepo.GetTopActiveUsers(ctx, startTime, limit)
-}
-
-// toNodeObservabilityFilter 构造 CH 可观测查询过滤器（limit<=0 表示不限制）。
-func toNodeObservabilityFilter(nodeID string, since time.Time, limit int) analyticsmodel.NodeObservabilityFilter {
-	return analyticsmodel.NodeObservabilityFilter{
-		NodeID: nodeID,
-		Since:  since,
-		Limit:  limit,
-	}
-}
-
-// toNodeObservabilitySince 构造不带 limit 的可观测查询过滤器
-// （小时级聚合读无需分页，避免传无意义的 0）。
-func toNodeObservabilitySince(nodeID string, since time.Time) analyticsmodel.NodeObservabilityFilter {
-	return analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since}
 }

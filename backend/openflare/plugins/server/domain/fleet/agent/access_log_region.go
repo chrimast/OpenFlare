@@ -27,7 +27,11 @@ func sharedAccessLogGeoService(ctx context.Context) pkggeoip.Service {
 	sharedAccessLogGeoMu.Lock()
 	defer sharedAccessLogGeoMu.Unlock()
 	if sharedAccessLogGeoInstance == nil {
-		service, err := pkggeoip.NewMaxMindGeoIPServiceWithContext(ctx, "", "")
+		mmdbPath, err := ofgeoip.EnsureServerMMDB()
+		if err != nil {
+			slog.WarnContext(ctx, "seed access log geo database failed", "error", err)
+		}
+		service, err := pkggeoip.NewMaxMindGeoIPServiceWithContext(ctx, mmdbPath, "")
 		if err != nil {
 			slog.WarnContext(ctx, "initialize access log geo service failed", "error", err)
 			return nil

@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package stats maintains incremental upload statistics and aggregations.
-package stats
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/util"
@@ -30,7 +29,7 @@ func GetFileCategory(mimeType, ext string) string {
 	mimeType = strings.ToLower(mimeType)
 	ext = strings.ToLower(ext)
 
-	if strings.HasPrefix(mimeType, "image/") || util.IsImageExtension(ext) {
+	if strings.HasPrefix(mimeType, "image/") || IsImageExtension(ext) {
 		return catImage
 	}
 	if strings.HasPrefix(mimeType, "video/") {
@@ -39,10 +38,10 @@ func GetFileCategory(mimeType, ext string) string {
 	if strings.HasPrefix(mimeType, "audio/") {
 		return catAudio
 	}
-	if util.IsArchiveExtension(ext) || strings.Contains(mimeType, "zip") || strings.Contains(mimeType, "tar") || strings.Contains(mimeType, "gzip") {
+	if IsArchiveExtension(ext) || strings.Contains(mimeType, "zip") || strings.Contains(mimeType, "tar") || strings.Contains(mimeType, "gzip") {
 		return catArchive
 	}
-	if util.IsDocumentExtension(ext) || strings.HasPrefix(mimeType, "text/") || mimeType == "application/pdf" {
+	if IsDocumentExtension(ext) || strings.HasPrefix(mimeType, "text/") || mimeType == "application/pdf" {
 		return catDocument
 	}
 	return catOther

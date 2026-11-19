@@ -47,19 +47,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -102,19 +102,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或验证失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -167,25 +167,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或验证失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -220,7 +220,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -236,19 +236,19 @@ const docTemplate = `{
                     "400": {
                         "description": "ID 无效或删除失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -288,7 +288,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -304,19 +304,19 @@ const docTemplate = `{
                     "400": {
                         "description": "验证失败或认证源不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -341,25 +341,25 @@ const docTemplate = `{
                     "200": {
                         "description": "清理成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -398,31 +398,31 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -449,7 +449,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -465,19 +465,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -508,19 +508,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "导出失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -547,7 +547,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -563,13 +563,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -596,7 +596,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -612,19 +612,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -665,7 +665,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -681,25 +681,25 @@ const docTemplate = `{
                     "400": {
                         "description": "SQL 语句错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -726,7 +726,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -745,19 +745,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -800,7 +800,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -816,13 +816,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -889,7 +889,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -905,19 +905,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
@@ -950,7 +950,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -966,13 +966,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
@@ -1304,7 +1304,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1356,7 +1356,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1430,7 +1430,7 @@ const docTemplate = `{
                     "200": {
                         "description": "测试触发成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -1479,7 +1479,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1522,7 +1522,7 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -1549,7 +1549,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1601,7 +1601,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1684,7 +1684,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1728,7 +1728,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1774,7 +1774,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1876,7 +1876,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1913,7 +1913,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1929,13 +1929,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -1962,7 +1962,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -1978,19 +1978,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2025,7 +2025,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2044,19 +2044,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2095,7 +2095,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2111,25 +2111,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或配置键已存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2170,7 +2170,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2186,7 +2186,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2222,7 +2222,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2238,25 +2238,25 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "配置不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2302,7 +2302,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2318,31 +2318,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "配置不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2383,7 +2383,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2399,25 +2399,25 @@ const docTemplate = `{
                     "400": {
                         "description": "任务类型不存在或参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "任务入队失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2472,7 +2472,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2488,13 +2488,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2530,7 +2530,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2546,25 +2546,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2600,7 +2600,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2616,31 +2616,31 @@ const docTemplate = `{
                     "400": {
                         "description": "任务不支持重试或参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "重试失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2667,7 +2667,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2686,13 +2686,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2731,7 +2731,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2747,25 +2747,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Cron 表达式无效、异步任务类型不存在或参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "保存定时任务失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2813,7 +2813,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2829,31 +2829,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Cron 表达式无效、参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "定时任务不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "修改定时任务失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2887,7 +2887,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2903,25 +2903,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "删除定时任务失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -2948,7 +2948,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -2967,13 +2967,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3000,7 +3000,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3019,19 +3019,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3070,7 +3070,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3086,25 +3086,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或模板标识符已存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3140,7 +3140,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3156,25 +3156,25 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "模板不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3220,7 +3220,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3236,31 +3236,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "模板不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3294,7 +3294,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3310,31 +3310,31 @@ const docTemplate = `{
                     "400": {
                         "description": "不可删除系统模板",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "模板不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3361,7 +3361,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3377,19 +3377,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "查询失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3414,31 +3414,31 @@ const docTemplate = `{
                     "200": {
                         "description": "升级已准备并即将重启",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "当前版本不可升级",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "升级准备失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3503,13 +3503,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handler.listFilesResponse"
+                                            "$ref": "#/definitions/apps_upload.listFilesResponse"
                                         }
                                     }
                                 }
@@ -3519,7 +3519,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3550,7 +3550,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.batchDownloadRequest"
+                            "$ref": "#/definitions/apps_upload.batchDownloadRequest"
                         }
                     }
                 ],
@@ -3564,13 +3564,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "打包失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3616,19 +3616,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "文件不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3776,13 +3776,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handler.fileStatsResponse"
+                                            "$ref": "#/definitions/apps_upload.fileStatsResponse"
                                         }
                                     }
                                 }
@@ -3792,19 +3792,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3831,7 +3831,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3878,13 +3878,13 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "文件不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -3941,7 +3941,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -3957,25 +3957,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4014,7 +4014,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4030,25 +4030,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或用户名已存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4084,7 +4084,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4100,31 +4100,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4170,7 +4170,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4186,31 +4186,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限或尝试修改自身权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4244,7 +4244,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4260,31 +4260,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限、尝试删除管理员或当前用户",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4332,7 +4332,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4348,31 +4348,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无管理员权限或尝试禁用管理员",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4403,7 +4403,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/agent.ApplyLogPayload"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.ApplyLogPayload"
                         }
                     }
                 ],
@@ -4413,7 +4413,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4429,13 +4429,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4470,13 +4470,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/agent.ConfigResponse"
+                                            "$ref": "#/definitions/apps_openflare_agent.ConfigResponse"
                                         }
                                     }
                                 }
@@ -4486,13 +4486,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4523,7 +4523,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/agent.NodePayload"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NodePayload"
                         }
                     }
                 ],
@@ -4533,13 +4533,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/agent.HeartbeatResponse"
+                                            "$ref": "#/definitions/apps_openflare_agent.HeartbeatResponse"
                                         }
                                     }
                                 }
@@ -4549,13 +4549,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4586,7 +4586,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_pkg_protocol.RegisterNodeRequest"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.RegisterNodeRequest"
                         }
                     }
                 ],
@@ -4596,13 +4596,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/agent.RegistrationResponseDocs"
+                                            "$ref": "#/definitions/apps_openflare_agent.RegistrationResponseDocs"
                                         }
                                     }
                                 }
@@ -4612,13 +4612,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4654,7 +4654,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4670,13 +4670,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4716,13 +4716,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4758,7 +4758,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -4774,13 +4774,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4820,13 +4820,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4857,7 +4857,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/agent.WAFIPGroupSyncInput"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncRequest"
                         }
                     }
                 ],
@@ -4867,13 +4867,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/agent.WAFIPGroupSyncResult"
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncResponse"
                                         }
                                     }
                                 }
@@ -4883,13 +4883,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -4911,7 +4911,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5092,7 +5092,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5187,13 +5187,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogList"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogList"
                                         }
                                     }
                                 }
@@ -5203,25 +5203,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5252,7 +5252,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/observability.AccessLogCleanupInput"
+                            "$ref": "#/definitions/apps_openflare_observability.AccessLogCleanupInput"
                         }
                     }
                 ],
@@ -5262,13 +5262,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogCleanupResult"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogCleanupResult"
                                         }
                                     }
                                 }
@@ -5278,25 +5278,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5379,13 +5379,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.FoldedAccessLogList"
+                                            "$ref": "#/definitions/apps_openflare_observability.FoldedAccessLogList"
                                         }
                                     }
                                 }
@@ -5395,25 +5395,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5502,13 +5502,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.FoldedAccessLogIPList"
+                                            "$ref": "#/definitions/apps_openflare_observability.FoldedAccessLogIPList"
                                         }
                                     }
                                 }
@@ -5518,25 +5518,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5625,13 +5625,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogIPSummaryList"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogIPSummaryList"
                                         }
                                     }
                                 }
@@ -5641,25 +5641,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5712,13 +5712,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogIPAnalysisView"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogIPAnalysisView"
                                         }
                                     }
                                 }
@@ -5728,25 +5728,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5805,13 +5805,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogIPTrendView"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogIPTrendView"
                                         }
                                     }
                                 }
@@ -5821,25 +5821,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5902,13 +5902,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/observability.AccessLogOverview"
+                                            "$ref": "#/definitions/apps_openflare_observability.AccessLogOverview"
                                         }
                                     }
                                 }
@@ -5918,25 +5918,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -5963,7 +5963,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -5979,25 +5979,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6056,13 +6056,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/apply_log.ListResult"
+                                            "$ref": "#/definitions/apps_openflare_apply_log.ListResult"
                                         }
                                     }
                                 }
@@ -6072,19 +6072,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6115,7 +6115,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apply_log.CleanupInput"
+                            "$ref": "#/definitions/apps_openflare_apply_log.CleanupInput"
                         }
                     }
                 ],
@@ -6125,13 +6125,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/apply_log.CleanupResult"
+                                            "$ref": "#/definitions/apps_openflare_apply_log.CleanupResult"
                                         }
                                     }
                                 }
@@ -6141,19 +6141,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6179,13 +6179,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.ConnectionView"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.ConnectionView"
                                         }
                                     }
                                 }
@@ -6217,7 +6217,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.ConnectionInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.ConnectionInput"
                         }
                     }
                 ],
@@ -6227,13 +6227,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.ConnectionView"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.ConnectionView"
                                         }
                                     }
                                 }
@@ -6243,7 +6243,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6267,7 +6267,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6293,13 +6293,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.ConnectionView"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.ConnectionView"
                                         }
                                     }
                                 }
@@ -6309,7 +6309,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6335,7 +6335,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -6343,7 +6343,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/cloudflare.AvailableDomain"
+                                                "$ref": "#/definitions/apps_openflare_cloudflare.AvailableDomain"
                                             }
                                         }
                                     }
@@ -6374,7 +6374,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -6382,7 +6382,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/cloudflare.GroupItem"
+                                                "$ref": "#/definitions/apps_openflare_cloudflare.GroupItem"
                                             }
                                         }
                                     }
@@ -6415,7 +6415,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.GroupInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.GroupInput"
                         }
                     }
                 ],
@@ -6425,13 +6425,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.GroupItem"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.GroupItem"
                                         }
                                     }
                                 }
@@ -6441,7 +6441,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6476,13 +6476,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.GroupDetail"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.GroupDetail"
                                         }
                                     }
                                 }
@@ -6492,7 +6492,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6525,19 +6525,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6572,7 +6572,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -6580,7 +6580,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/cloudflare.MemberItem"
+                                                "$ref": "#/definitions/apps_openflare_cloudflare.MemberItem"
                                             }
                                         }
                                     }
@@ -6620,7 +6620,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberCreateInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberCreateInput"
                         }
                     }
                 ],
@@ -6630,13 +6630,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.MemberItem"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberItem"
                                         }
                                     }
                                 }
@@ -6646,13 +6646,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6689,7 +6689,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberBatchMoveInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberBatchMoveInput"
                         }
                     }
                 ],
@@ -6697,19 +6697,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6746,7 +6746,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberBatchProxyInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberBatchProxyInput"
                         }
                     }
                 ],
@@ -6754,19 +6754,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6803,7 +6803,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberBatchRemoveInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberBatchRemoveInput"
                         }
                     }
                 ],
@@ -6811,13 +6811,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6861,7 +6861,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberMoveInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberMoveInput"
                         }
                     }
                 ],
@@ -6871,13 +6871,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.MemberItem"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberItem"
                                         }
                                     }
                                 }
@@ -6887,13 +6887,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6933,7 +6933,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -6975,13 +6975,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.SyncReceipt"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.SyncReceipt"
                                         }
                                     }
                                 }
@@ -7029,7 +7029,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.MemberUpdateInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberUpdateInput"
                         }
                     }
                 ],
@@ -7039,13 +7039,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.MemberItem"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.MemberItem"
                                         }
                                     }
                                 }
@@ -7084,13 +7084,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.SyncReceipt"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.SyncReceipt"
                                         }
                                     }
                                 }
@@ -7100,7 +7100,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7137,7 +7137,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cloudflare.GroupInput"
+                            "$ref": "#/definitions/apps_openflare_cloudflare.GroupInput"
                         }
                     }
                 ],
@@ -7147,13 +7147,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.GroupItem"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.GroupItem"
                                         }
                                     }
                                 }
@@ -7163,13 +7163,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7195,13 +7195,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cloudflare.Overview"
+                                            "$ref": "#/definitions/apps_openflare_cloudflare.Overview"
                                         }
                                     }
                                 }
@@ -7232,7 +7232,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7251,19 +7251,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7290,7 +7290,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7306,13 +7306,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限、不存在或无活跃版本",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7343,7 +7343,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/config_version.CleanupInput"
+                            "$ref": "#/definitions/apps_openflare_config_version.CleanupInput"
                         }
                     }
                 ],
@@ -7353,13 +7353,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/config_version.CleanupResult"
+                                            "$ref": "#/definitions/apps_openflare_config_version.CleanupResult"
                                         }
                                     }
                                 }
@@ -7369,19 +7369,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7408,13 +7408,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/config_version.ConfigDiffResult"
+                                            "$ref": "#/definitions/apps_openflare_config_version.ConfigDiffResult"
                                         }
                                     }
                                 }
@@ -7424,19 +7424,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7463,13 +7463,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/config_version.ConfigPreviewResult"
+                                            "$ref": "#/definitions/apps_openflare_config_version.ConfigPreviewResult"
                                         }
                                     }
                                 }
@@ -7479,19 +7479,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7526,7 +7526,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7542,19 +7542,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7590,7 +7590,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7606,19 +7606,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或版本不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7654,7 +7654,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7670,19 +7670,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或版本不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7709,13 +7709,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dashboard.OverviewPayload"
+                                            "$ref": "#/definitions/apps_openflare_dashboard.OverviewPayload"
                                         }
                                     }
                                 }
@@ -7725,25 +7725,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7770,7 +7770,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7789,25 +7789,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7836,7 +7836,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.DNSAccountInput"
+                            "$ref": "#/definitions/apps_openflare_tls.DNSAccountInput"
                         }
                     }
                 ],
@@ -7846,7 +7846,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -7862,25 +7862,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7914,31 +7914,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -7976,7 +7976,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.DNSAccountInput"
+                            "$ref": "#/definitions/apps_openflare_tls.DNSAccountInput"
                         }
                     }
                 ],
@@ -7986,7 +7986,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -8002,25 +8002,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8047,7 +8047,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -8055,7 +8055,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/node.View"
+                                                "$ref": "#/definitions/apps_openflare_node.View"
                                             }
                                         }
                                     }
@@ -8066,19 +8066,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8107,7 +8107,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/node.Input"
+                            "$ref": "#/definitions/apps_openflare_node.Input"
                         }
                     }
                 ],
@@ -8117,13 +8117,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8133,19 +8133,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8172,13 +8172,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.BootstrapView"
+                                            "$ref": "#/definitions/apps_openflare_node.BootstrapView"
                                         }
                                     }
                                 }
@@ -8188,13 +8188,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8221,13 +8221,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.BootstrapView"
+                                            "$ref": "#/definitions/apps_openflare_node.BootstrapView"
                                         }
                                     }
                                 }
@@ -8237,13 +8237,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8302,13 +8302,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.ListResult"
+                                            "$ref": "#/definitions/apps_openflare_node.ListResult"
                                         }
                                     }
                                 }
@@ -8318,25 +8318,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "查询失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8372,13 +8372,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8388,25 +8388,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "查询失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8448,13 +8448,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.AgentReleaseInfo"
+                                            "$ref": "#/definitions/apps_openflare_node.AgentReleaseInfo"
                                         }
                                     }
                                 }
@@ -8464,19 +8464,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8513,7 +8513,7 @@ const docTemplate = `{
                         "name": "body",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/node.AgentUpdateInput"
+                            "$ref": "#/definitions/apps_openflare_node.AgentUpdateInput"
                         }
                     }
                 ],
@@ -8523,13 +8523,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8539,19 +8539,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8587,7 +8587,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -8603,19 +8603,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8651,13 +8651,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8667,19 +8667,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8727,13 +8727,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.ObservabilityView"
+                                            "$ref": "#/definitions/apps_openflare_node.ObservabilityView"
                                         }
                                     }
                                 }
@@ -8743,19 +8743,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8791,13 +8791,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.HealthEventCleanupResult"
+                                            "$ref": "#/definitions/apps_openflare_node.HealthEventCleanupResult"
                                         }
                                     }
                                 }
@@ -8807,19 +8807,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8855,13 +8855,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8871,19 +8871,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8921,7 +8921,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/node.Input"
+                            "$ref": "#/definitions/apps_openflare_node.Input"
                         }
                     }
                 ],
@@ -8931,13 +8931,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/node.View"
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8947,19 +8947,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或节点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -8986,7 +8986,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9005,25 +9005,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9054,7 +9054,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/option.geoIPLookupRequest"
+                            "$ref": "#/definitions/apps_openflare_option.geoIPLookupRequest"
                         }
                     }
                 ],
@@ -9064,13 +9064,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/option.geoIPLookupView"
+                                            "$ref": "#/definitions/apps_openflare_option.geoIPLookupView"
                                         }
                                     }
                                 }
@@ -9080,25 +9080,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9137,31 +9137,31 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9192,7 +9192,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/option.optionBatchPayload"
+                            "$ref": "#/definitions/apps_openflare_option.optionBatchPayload"
                         }
                     }
                 ],
@@ -9200,31 +9200,31 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9251,7 +9251,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9259,7 +9259,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/origin.View"
+                                                "$ref": "#/definitions/apps_openflare_origin.View"
                                             }
                                         }
                                     }
@@ -9270,19 +9270,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9311,7 +9311,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/origin.Input"
+                            "$ref": "#/definitions/apps_openflare_origin.Input"
                         }
                     }
                 ],
@@ -9321,13 +9321,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/origin.View"
+                                            "$ref": "#/definitions/apps_openflare_origin.View"
                                         }
                                     }
                                 }
@@ -9337,19 +9337,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9385,13 +9385,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/origin.DetailView"
+                                            "$ref": "#/definitions/apps_openflare_origin.DetailView"
                                         }
                                     }
                                 }
@@ -9401,19 +9401,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或源站不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9449,7 +9449,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9465,19 +9465,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或源站不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9515,7 +9515,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/origin.Input"
+                            "$ref": "#/definitions/apps_openflare_origin.Input"
                         }
                     }
                 ],
@@ -9525,13 +9525,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/origin.View"
+                                            "$ref": "#/definitions/apps_openflare_origin.View"
                                         }
                                     }
                                 }
@@ -9541,19 +9541,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或源站不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9580,7 +9580,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9588,7 +9588,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/pages.View"
+                                                "$ref": "#/definitions/apps_openflare_pages.View"
                                             }
                                         }
                                     }
@@ -9599,25 +9599,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9646,7 +9646,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pages.Input"
+                            "$ref": "#/definitions/apps_openflare_pages.Input"
                         }
                     }
                 ],
@@ -9656,13 +9656,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.View"
+                                            "$ref": "#/definitions/apps_openflare_pages.View"
                                         }
                                     }
                                 }
@@ -9672,25 +9672,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9726,7 +9726,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9734,7 +9734,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/pages.DeploymentFileView"
+                                                "$ref": "#/definitions/apps_openflare_pages.DeploymentFileView"
                                             }
                                         }
                                     }
@@ -9745,25 +9745,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "部署不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9799,13 +9799,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.View"
+                                            "$ref": "#/definitions/apps_openflare_pages.View"
                                         }
                                     }
                                 }
@@ -9815,25 +9815,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9867,31 +9867,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -9927,7 +9927,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -9935,7 +9935,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/pages.DeploymentView"
+                                                "$ref": "#/definitions/apps_openflare_pages.DeploymentView"
                                             }
                                         }
                                     }
@@ -9946,25 +9946,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10010,13 +10010,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.DeploymentView"
+                                            "$ref": "#/definitions/apps_openflare_pages.DeploymentView"
                                         }
                                     }
                                 }
@@ -10026,25 +10026,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10083,7 +10083,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pages.UploadFromURLInput"
+                            "$ref": "#/definitions/apps_openflare_pages.UploadFromURLInput"
                         }
                     }
                 ],
@@ -10093,13 +10093,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.DeploymentView"
+                                            "$ref": "#/definitions/apps_openflare_pages.DeploymentView"
                                         }
                                     }
                                 }
@@ -10109,25 +10109,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10170,13 +10170,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.View"
+                                            "$ref": "#/definitions/apps_openflare_pages.View"
                                         }
                                     }
                                 }
@@ -10186,25 +10186,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目或部署不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10245,31 +10245,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目或部署不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10305,13 +10305,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.SourceView"
+                                            "$ref": "#/definitions/apps_openflare_pages.SourceView"
                                         }
                                     }
                                 }
@@ -10321,25 +10321,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目或部署源不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10375,13 +10375,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.SourceActionReceipt"
+                                            "$ref": "#/definitions/apps_openflare_pages.SourceActionReceipt"
                                         }
                                     }
                                 }
@@ -10391,31 +10391,31 @@ const docTemplate = `{
                     "400": {
                         "description": "当前来源不支持检查",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "部署源不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "来源任务正在执行",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10451,13 +10451,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.SourceView"
+                                            "$ref": "#/definitions/apps_openflare_pages.SourceView"
                                         }
                                     }
                                 }
@@ -10467,25 +10467,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10522,7 +10522,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/pages.SourceSyncInput"
+                            "$ref": "#/definitions/apps_openflare_pages.SourceSyncInput"
                         }
                     }
                 ],
@@ -10532,13 +10532,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.SourceActionReceipt"
+                                            "$ref": "#/definitions/apps_openflare_pages.SourceActionReceipt"
                                         }
                                     }
                                 }
@@ -10548,31 +10548,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数或来源类型无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "部署源不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "来源任务正在执行",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10610,7 +10610,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pages.SourceUpdateInput"
+                            "$ref": "#/definitions/apps_openflare_pages.SourceUpdateInput"
                         }
                     }
                 ],
@@ -10620,13 +10620,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.SourceUpdateResult"
+                                            "$ref": "#/definitions/apps_openflare_pages.SourceUpdateResult"
                                         }
                                     }
                                 }
@@ -10636,25 +10636,25 @@ const docTemplate = `{
                     "400": {
                         "description": "配置无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10692,7 +10692,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pages.Input"
+                            "$ref": "#/definitions/apps_openflare_pages.Input"
                         }
                     }
                 ],
@@ -10702,13 +10702,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/pages.View"
+                                            "$ref": "#/definitions/apps_openflare_pages.View"
                                         }
                                     }
                                 }
@@ -10718,25 +10718,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "项目不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10762,7 +10762,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -10770,7 +10770,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/pow.Policy"
+                                                "$ref": "#/definitions/apps_openflare_pow.Policy"
                                             }
                                         }
                                     }
@@ -10781,19 +10781,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10830,7 +10830,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pow.Policy"
+                            "$ref": "#/definitions/apps_openflare_pow.Policy"
                         }
                     }
                 ],
@@ -10838,31 +10838,31 @@ const docTemplate = `{
                     "200": {
                         "description": "保存成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或站点不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10889,7 +10889,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -10897,7 +10897,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/proxy_route.View"
+                                                "$ref": "#/definitions/apps_openflare_proxy_route.View"
                                             }
                                         }
                                     }
@@ -10908,19 +10908,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -10949,7 +10949,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/proxy_route.Input"
+                            "$ref": "#/definitions/apps_openflare_proxy_route.Input"
                         }
                     }
                 ],
@@ -10959,13 +10959,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
+                                            "$ref": "#/definitions/apps_openflare_proxy_route.View"
                                         }
                                     }
                                 }
@@ -10975,19 +10975,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11023,13 +11023,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
+                                            "$ref": "#/definitions/apps_openflare_proxy_route.View"
                                         }
                                     }
                                 }
@@ -11039,19 +11039,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或规则不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11087,7 +11087,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11103,19 +11103,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或规则不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11153,7 +11153,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/proxy_route.Input"
+                            "$ref": "#/definitions/apps_openflare_proxy_route.Input"
                         }
                     }
                 ],
@@ -11163,13 +11163,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/proxy_route.View"
+                                            "$ref": "#/definitions/apps_openflare_proxy_route.View"
                                         }
                                     }
                                 }
@@ -11179,19 +11179,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或规则不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11213,13 +11213,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/option.statusView"
+                                            "$ref": "#/definitions/apps_openflare_option.statusView"
                                         }
                                     }
                                 }
@@ -11229,13 +11229,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11262,7 +11262,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11281,25 +11281,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11328,7 +11328,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.CertificateInput"
+                            "$ref": "#/definitions/apps_openflare_tls.CertificateInput"
                         }
                     }
                 ],
@@ -11338,7 +11338,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11354,25 +11354,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11403,7 +11403,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
+                            "$ref": "#/definitions/apps_openflare_tls.ApplyInput"
                         }
                     }
                 ],
@@ -11413,7 +11413,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11429,25 +11429,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11505,7 +11505,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11521,25 +11521,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11575,7 +11575,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11591,25 +11591,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11645,13 +11645,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/tls.CertificateContent"
+                                            "$ref": "#/definitions/apps_openflare_tls.CertificateContent"
                                         }
                                     }
                                 }
@@ -11661,25 +11661,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11717,7 +11717,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
+                            "$ref": "#/definitions/apps_openflare_tls.ApplyInput"
                         }
                     }
                 ],
@@ -11727,7 +11727,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11743,25 +11743,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11795,31 +11795,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11855,7 +11855,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11871,25 +11871,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -11927,7 +11927,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.CertificateInput"
+                            "$ref": "#/definitions/apps_openflare_tls.CertificateInput"
                         }
                     }
                 ],
@@ -11937,7 +11937,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -11953,25 +11953,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12009,7 +12009,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tls.ApplyInput"
+                            "$ref": "#/definitions/apps_openflare_tls.ApplyInput"
                         }
                     }
                 ],
@@ -12019,7 +12019,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -12035,25 +12035,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12083,7 +12083,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -12099,25 +12099,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12144,7 +12144,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -12152,7 +12152,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/waf.IPGroupView"
+                                                "$ref": "#/definitions/apps_openflare_waf.IPGroupView"
                                             }
                                         }
                                     }
@@ -12163,25 +12163,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12210,7 +12210,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.IPGroupInput"
+                            "$ref": "#/definitions/apps_openflare_waf.IPGroupInput"
                         }
                     }
                 ],
@@ -12220,13 +12220,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
+                                            "$ref": "#/definitions/apps_openflare_waf.IPGroupView"
                                         }
                                     }
                                 }
@@ -12236,25 +12236,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12285,7 +12285,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.IPGroupAutoTestInput"
+                            "$ref": "#/definitions/apps_openflare_waf.IPGroupAutoTestInput"
                         }
                     }
                 ],
@@ -12295,13 +12295,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.IPGroupAutoTestResult"
+                                            "$ref": "#/definitions/apps_openflare_waf.IPGroupAutoTestResult"
                                         }
                                     }
                                 }
@@ -12311,25 +12311,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12365,13 +12365,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
+                                            "$ref": "#/definitions/apps_openflare_waf.IPGroupView"
                                         }
                                     }
                                 }
@@ -12381,25 +12381,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12433,31 +12433,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12493,13 +12493,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.IPGroupSyncResult"
+                                            "$ref": "#/definitions/apps_openflare_waf.IPGroupSyncResult"
                                         }
                                     }
                                 }
@@ -12509,25 +12509,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12565,7 +12565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.IPGroupInput"
+                            "$ref": "#/definitions/apps_openflare_waf.IPGroupInput"
                         }
                     }
                 ],
@@ -12575,13 +12575,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.IPGroupView"
+                                            "$ref": "#/definitions/apps_openflare_waf.IPGroupView"
                                         }
                                     }
                                 }
@@ -12591,25 +12591,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12635,7 +12635,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -12643,7 +12643,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/waf.RuleView"
+                                                "$ref": "#/definitions/apps_openflare_waf.RuleView"
                                             }
                                         }
                                     }
@@ -12654,19 +12654,19 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12694,7 +12694,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.CreateRuleInput"
+                            "$ref": "#/definitions/apps_openflare_waf.CreateRuleInput"
                         }
                     }
                 ],
@@ -12704,13 +12704,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.RuleView"
+                                            "$ref": "#/definitions/apps_openflare_waf.RuleView"
                                         }
                                     }
                                 }
@@ -12720,25 +12720,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12773,13 +12773,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.RuleView"
+                                            "$ref": "#/definitions/apps_openflare_waf.RuleView"
                                         }
                                     }
                                 }
@@ -12789,25 +12789,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12840,31 +12840,31 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12901,7 +12901,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.SaveRuleGraphInput"
+                            "$ref": "#/definitions/apps_openflare_waf.SaveRuleGraphInput"
                         }
                     }
                 ],
@@ -12911,13 +12911,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.RuleView"
+                                            "$ref": "#/definitions/apps_openflare_waf.RuleView"
                                         }
                                     }
                                 }
@@ -12927,31 +12927,31 @@ const docTemplate = `{
                     "400": {
                         "description": "参数或规则图错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "修订冲突",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -12988,7 +12988,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.UpdateRuleMetaInput"
+                            "$ref": "#/definitions/apps_openflare_waf.UpdateRuleMetaInput"
                         }
                     }
                 ],
@@ -12998,13 +12998,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.RuleView"
+                                            "$ref": "#/definitions/apps_openflare_waf.RuleView"
                                         }
                                     }
                                 }
@@ -13014,25 +13014,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "无权限或不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13068,13 +13068,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
+                                            "$ref": "#/definitions/apps_openflare_waf.SiteRuleGroupsView"
                                         }
                                     }
                                 }
@@ -13084,25 +13084,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13138,7 +13138,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/waf.IDsRequest"
+                            "$ref": "#/definitions/apps_openflare_waf.IDsRequest"
                         }
                     }
                 ],
@@ -13148,13 +13148,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/waf.SiteRuleGroupsView"
+                                            "$ref": "#/definitions/apps_openflare_waf.SiteRuleGroupsView"
                                         }
                                     }
                                 }
@@ -13164,25 +13164,25 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "记录不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13208,7 +13208,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -13216,7 +13216,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/zone.ListItem"
+                                                "$ref": "#/definitions/apps_openflare_zone.ListItem"
                                             }
                                         }
                                     }
@@ -13249,7 +13249,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/zone.Input"
+                            "$ref": "#/definitions/apps_openflare_zone.Input"
                         }
                     }
                 ],
@@ -13259,7 +13259,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -13275,13 +13275,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13314,19 +13314,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13364,7 +13364,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/zone.DomainInput"
+                            "$ref": "#/definitions/apps_openflare_zone.DomainInput"
                         }
                     }
                 ],
@@ -13374,7 +13374,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -13390,19 +13390,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13438,13 +13438,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/zone.CleanupUnlinkedDomainsResult"
+                                            "$ref": "#/definitions/apps_openflare_zone.CleanupUnlinkedDomainsResult"
                                         }
                                     }
                                 }
@@ -13454,13 +13454,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13500,19 +13500,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13557,7 +13557,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/zone.DomainInput"
+                            "$ref": "#/definitions/apps_openflare_zone.DomainInput"
                         }
                     }
                 ],
@@ -13567,7 +13567,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -13583,19 +13583,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13630,13 +13630,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/zone.Overview"
+                                            "$ref": "#/definitions/apps_openflare_zone.Overview"
                                         }
                                     }
                                 }
@@ -13646,7 +13646,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13688,13 +13688,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/zone.Stats"
+                                            "$ref": "#/definitions/apps_openflare_zone.Stats"
                                         }
                                     }
                                 }
@@ -13704,13 +13704,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -13747,7 +13747,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/zone.Input"
+                            "$ref": "#/definitions/apps_openflare_zone.Input"
                         }
                     }
                 ],
@@ -13757,7 +13757,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -13773,19 +13773,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14020,7 +14020,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14036,19 +14036,19 @@ const docTemplate = `{
                     "400": {
                         "description": "state 无效、参数错误或认证源错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "绑定场景未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "OAuth 认证失败或内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14079,13 +14079,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14122,7 +14122,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14138,13 +14138,13 @@ const docTemplate = `{
                     "400": {
                         "description": "ID 无效或解除失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14174,7 +14174,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14190,13 +14190,13 @@ const docTemplate = `{
                     "400": {
                         "description": "认证源不存在或未配置",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "构造 URL 失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14223,7 +14223,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14239,7 +14239,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Session 清除失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14261,7 +14261,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14301,7 +14301,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14317,7 +14317,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14354,7 +14354,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14370,13 +14370,13 @@ const docTemplate = `{
                     "400": {
                         "description": "认证源不存在或未启用",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "构造 URL 失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14407,7 +14407,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/relay.HeartbeatPayload"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.RelayHeartbeatPayload"
                         }
                     }
                 ],
@@ -14417,13 +14417,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/relay.HeartbeatResponse"
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.RelayHeartbeatResponse"
                                         }
                                     }
                                 }
@@ -14433,19 +14433,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Agent Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14467,13 +14467,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Agent Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14504,7 +14504,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/flared.ApplyLogPayload"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.ApplyLogPayload"
                         }
                     }
                 ],
@@ -14514,7 +14514,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14530,19 +14530,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Tunnel Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14569,13 +14569,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/flared.TunnelConfigResponse"
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredTunnelConfigResponse"
                                         }
                                     }
                                 }
@@ -14585,19 +14585,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Tunnel Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14628,7 +14628,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/flared.HeartbeatPayload"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredHeartbeatPayload"
                         }
                     }
                 ],
@@ -14638,13 +14638,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/flared.HeartbeatResponse"
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredHeartbeatResponse"
                                         }
                                     }
                                 }
@@ -14654,19 +14654,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "Tunnel Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14688,13 +14688,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Tunnel Token 无效",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "节点类型不匹配",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14745,7 +14745,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14761,19 +14761,19 @@ const docTemplate = `{
                     "400": {
                         "description": "请求参数错误或文件受限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14832,13 +14832,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/handler.listMyFilesResponse"
+                                            "$ref": "#/definitions/apps_upload.listMyFilesResponse"
                                         }
                                     }
                                 }
@@ -14848,7 +14848,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14886,7 +14886,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.updateMyFileRequest"
+                            "$ref": "#/definitions/apps_upload.updateMyFileRequest"
                         }
                     }
                 ],
@@ -14896,7 +14896,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -14912,13 +14912,13 @@ const docTemplate = `{
                     "403": {
                         "description": "无权操作",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "文件不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14950,19 +14950,19 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "403": {
                         "description": "无权操作",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "文件不存在",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -14989,7 +14989,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -15005,7 +15005,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15032,7 +15032,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -15051,7 +15051,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15094,7 +15094,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误或超限",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15130,7 +15130,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -15146,7 +15146,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15186,7 +15186,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15212,7 +15212,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.changePasswordRequest"
+                            "$ref": "#/definitions/apps_user.changePasswordRequest"
                         }
                     }
                 ],
@@ -15222,7 +15222,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -15238,13 +15238,13 @@ const docTemplate = `{
                     "400": {
                         "description": "原密码错误或新密码不符合要求",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "请先登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15270,7 +15270,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.loginRequest"
+                            "$ref": "#/definitions/apps_user.loginRequest"
                         }
                     }
                 ],
@@ -15284,7 +15284,7 @@ const docTemplate = `{
                     "400": {
                         "description": "用户名或密码错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "429": {
@@ -15296,7 +15296,7 @@ const docTemplate = `{
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15323,7 +15323,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Any"
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                                 },
                                 {
                                     "type": "object",
@@ -15339,7 +15339,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Session 清除失败",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15365,7 +15365,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.updateProfileRequest"
+                            "$ref": "#/definitions/apps_user.updateProfileRequest"
                         }
                     }
                 ],
@@ -15379,13 +15379,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15411,7 +15411,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.registerRequest"
+                            "$ref": "#/definitions/apps_user.registerRequest"
                         }
                     }
                 ],
@@ -15425,7 +15425,7 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误、用户名已存在或注册已关闭",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "429": {
@@ -15437,7 +15437,7 @@ const docTemplate = `{
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15468,7 +15468,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -15494,7 +15494,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.sendEmailCodeRequest"
+                            "$ref": "#/definitions/apps_user.sendEmailCodeRequest"
                         }
                     }
                 ],
@@ -15502,13 +15502,13 @@ const docTemplate = `{
                     "200": {
                         "description": "发送成功",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
@@ -15555,25 +15555,25 @@ const docTemplate = `{
                     "400": {
                         "description": "文件 ID 格式错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
                         "description": "未登录",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "404": {
                         "description": "文件未找到",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "500": {
                         "description": "服务内部错误",
                         "schema": {
-                            "$ref": "#/definitions/response.Any"
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     }
                 }
@@ -16251,7 +16251,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.ConnectionInput": {
+        "apps_openflare_cloudflare.ConnectionInput": {
             "type": "object",
             "properties": {
                 "api_token": {
@@ -16265,7 +16265,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.ConnectionView": {
+        "apps_openflare_cloudflare.ConnectionView": {
             "type": "object",
             "properties": {
                 "configured": {
@@ -16288,21 +16288,21 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.GroupDetail": {
+        "apps_openflare_cloudflare.GroupDetail": {
             "type": "object",
             "properties": {
                 "group": {
-                    "$ref": "#/definitions/cloudflare.GroupItem"
+                    "$ref": "#/definitions/apps_openflare_cloudflare.GroupItem"
                 },
                 "members": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/cloudflare.MemberItem"
+                        "$ref": "#/definitions/apps_openflare_cloudflare.MemberItem"
                     }
                 }
             }
         },
-        "cloudflare.GroupInput": {
+        "apps_openflare_cloudflare.GroupInput": {
             "type": "object",
             "properties": {
                 "backup_node_id": {
@@ -16336,14 +16336,14 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.GroupItem": {
+        "apps_openflare_cloudflare.GroupItem": {
             "type": "object",
             "properties": {
                 "active_node": {
-                    "$ref": "#/definitions/cloudflare.NodeOption"
+                    "$ref": "#/definitions/apps_openflare_cloudflare.NodeOption"
                 },
                 "backup_node": {
-                    "$ref": "#/definitions/cloudflare.NodeOption"
+                    "$ref": "#/definitions/apps_openflare_cloudflare.NodeOption"
                 },
                 "created_at": {
                     "type": "string"
@@ -16364,7 +16364,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "primary_node": {
-                    "$ref": "#/definitions/cloudflare.NodeOption"
+                    "$ref": "#/definitions/apps_openflare_cloudflare.NodeOption"
                 },
                 "record_content": {
                     "type": "string"
@@ -16385,7 +16385,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberBatchMoveInput": {
+        "apps_openflare_cloudflare.MemberBatchMoveInput": {
             "type": "object",
             "properties": {
                 "member_ids": {
@@ -16399,7 +16399,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberBatchProxyInput": {
+        "apps_openflare_cloudflare.MemberBatchProxyInput": {
             "type": "object",
             "properties": {
                 "member_ids": {
@@ -16410,7 +16410,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberBatchRemoveInput": {
+        "apps_openflare_cloudflare.MemberBatchRemoveInput": {
             "type": "object",
             "properties": {
                 "member_ids": {
@@ -16421,7 +16421,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberCreateInput": {
+        "apps_openflare_cloudflare.MemberCreateInput": {
             "type": "object",
             "properties": {
                 "proxied": {
@@ -16432,7 +16432,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberItem": {
+        "apps_openflare_cloudflare.MemberItem": {
             "type": "object",
             "properties": {
                 "desired_ip": {
@@ -16467,7 +16467,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberMoveInput": {
+        "apps_openflare_cloudflare.MemberMoveInput": {
             "type": "object",
             "properties": {
                 "target_group_id": {
@@ -16475,7 +16475,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.MemberUpdateInput": {
+        "apps_openflare_cloudflare.MemberUpdateInput": {
             "type": "object",
             "properties": {
                 "proxied": {
@@ -16483,7 +16483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.NodeOption": {
+        "apps_openflare_cloudflare.NodeOption": {
             "type": "object",
             "properties": {
                 "id": {
@@ -16497,11 +16497,11 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.Overview": {
+        "apps_openflare_cloudflare.Overview": {
             "type": "object",
             "properties": {
                 "connection": {
-                    "$ref": "#/definitions/cloudflare.ConnectionView"
+                    "$ref": "#/definitions/apps_openflare_cloudflare.ConnectionView"
                 },
                 "error_count": {
                     "type": "integer"
@@ -16520,7 +16520,7 @@ const docTemplate = `{
                 }
             }
         },
-        "cloudflare.SyncReceipt": {
+        "apps_openflare_cloudflare.SyncReceipt": {
             "type": "object",
             "properties": {
                 "task_id": {
@@ -16528,7 +16528,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.CleanupInput": {
+        "apps_openflare_config_version.CleanupInput": {
             "type": "object",
             "properties": {
                 "keep_count": {
@@ -16536,7 +16536,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.CleanupResult": {
+        "apps_openflare_config_version.CleanupResult": {
             "type": "object",
             "properties": {
                 "deleted_count": {
@@ -16547,7 +16547,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.ConfigDiffResult": {
+        "apps_openflare_config_version.ConfigDiffResult": {
             "type": "object",
             "properties": {
                 "active_version": {
@@ -16571,7 +16571,7 @@ const docTemplate = `{
                 "changed_option_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/config_version.ConfigOptionDiffItem"
+                        "$ref": "#/definitions/apps_openflare_config_version.ConfigOptionDiffItem"
                     }
                 },
                 "changed_option_keys": {
@@ -16615,7 +16615,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.ConfigOptionDiffItem": {
+        "apps_openflare_config_version.ConfigOptionDiffItem": {
             "type": "object",
             "properties": {
                 "current_value": {
@@ -16629,7 +16629,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.ConfigPreviewResult": {
+        "apps_openflare_config_version.ConfigPreviewResult": {
             "type": "object",
             "properties": {
                 "checksum": {
@@ -16653,7 +16653,7 @@ const docTemplate = `{
                 "support_files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/config_version.SupportFile"
+                        "$ref": "#/definitions/apps_openflare_config_version.SupportFile"
                     }
                 },
                 "website_count": {
@@ -16661,7 +16661,7 @@ const docTemplate = `{
                 }
             }
         },
-        "config_version.SupportFile": {
+        "apps_openflare_config_version.SupportFile": {
             "type": "object",
             "properties": {
                 "content": {
@@ -16805,14 +16805,14 @@ const docTemplate = `{
                 }
             }
         },
-        "dashboard.OverviewPayload": {
+        "apps_openflare_dashboard.OverviewPayload": {
             "type": "object",
             "properties": {
                 "capacity": {
-                    "$ref": "#/definitions/dashboard.Capacity"
+                    "$ref": "#/definitions/apps_openflare_dashboard.Capacity"
                 },
                 "distributions": {
-                    "$ref": "#/definitions/dashboard.distributionsPayload"
+                    "$ref": "#/definitions/apps_openflare_dashboard.distributionsPayload"
                 },
                 "generated_at": {},
                 "nodes": {
@@ -16823,17 +16823,17 @@ const docTemplate = `{
                     }
                 },
                 "summary": {
-                    "$ref": "#/definitions/dashboard.Summary"
+                    "$ref": "#/definitions/apps_openflare_dashboard.Summary"
                 },
                 "traffic": {
-                    "$ref": "#/definitions/dashboard.Traffic"
+                    "$ref": "#/definitions/apps_openflare_dashboard.Traffic"
                 },
                 "trends": {
-                    "$ref": "#/definitions/dashboard.trendsPayload"
+                    "$ref": "#/definitions/apps_openflare_dashboard.trendsPayload"
                 }
             }
         },
-        "dashboard.Summary": {
+        "apps_openflare_dashboard.Summary": {
             "type": "object",
             "properties": {
                 "offline_nodes": {
@@ -16853,7 +16853,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dashboard.Traffic": {
+        "apps_openflare_dashboard.Traffic": {
             "type": "object",
             "properties": {
                 "error_count": {
@@ -16876,7 +16876,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dashboard.distributionsPayload": {
+        "apps_openflare_dashboard.distributionsPayload": {
             "type": "object",
             "properties": {
                 "source_countries": {
@@ -16902,7 +16902,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dashboard.trendsPayload": {
+        "apps_openflare_dashboard.trendsPayload": {
             "type": "object",
             "properties": {
                 "capacity_24h": {
@@ -17554,7 +17554,41 @@ const docTemplate = `{
                 }
             }
         },
-        "flared.HeartbeatPayload": {
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.BufferedObservabilityRecord": {
+            "type": "object",
+            "properties": {
+                "access_logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NodeAccessLog"
+                    }
+                },
+                "captured_at_unix": {
+                    "type": "integer"
+                },
+                "edge_health": {
+                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NodeEdgeHealth"
+                },
+                "host_metrics": {
+                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NodeMetricSnapshot"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredConnectedRelay": {
+            "type": "object",
+            "properties": {
+                "proxy_count": {
+                    "type": "integer"
+                },
+                "relay_node_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredHeartbeatPayload": {
             "type": "object",
             "properties": {
                 "client_version": {
@@ -17563,7 +17597,7 @@ const docTemplate = `{
                 "connected_relays": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/protocol.FlaredConnectedRelay"
+                        "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredConnectedRelay"
                     }
                 },
                 "current_checksum": {
@@ -17583,18 +17617,58 @@ const docTemplate = `{
                 }
             }
         },
-        "flared.HeartbeatResponse": {
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredHeartbeatResponse": {
             "type": "object",
             "properties": {
                 "active_config": {
                     "$ref": "#/definitions/Wavelet_openflare_share_protocol.ActiveConfigMeta"
                 },
                 "tunnel_settings": {
-                    "$ref": "#/definitions/protocol.RelaySettings"
+                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.RelaySettings"
                 }
             }
         },
-        "flared.TunnelConfigResponse": {
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredProxyEntry": {
+            "type": "object",
+            "properties": {
+                "custom_domains": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "local_addr": {
+                    "type": "string"
+                },
+                "local_port": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredRelayInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "auth_token": {
+                    "type": "string"
+                },
+                "proxy_url": {
+                    "type": "string"
+                },
+                "relay_node_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredTunnelConfigResponse": {
             "type": "object",
             "properties": {
                 "checksum": {
@@ -17603,13 +17677,13 @@ const docTemplate = `{
                 "proxies": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/protocol.FlaredProxyEntry"
+                        "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredProxyEntry"
                     }
                 },
                 "relays": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/protocol.FlaredRelayInfo"
+                        "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.FlaredRelayInfo"
                     }
                 },
                 "version": {
@@ -17619,83 +17693,33 @@ const docTemplate = `{
         },
         "handler.batchDownloadRequest": {
             "type": "object",
-            "required": [
-                "ids"
-            ],
             "properties": {
-                "ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
+                "checksums": {
+                    "type": "object",
+                    "additionalProperties": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "handler.distributionItem": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handler.fileStatsResponse": {
-            "type": "object",
-            "properties": {
-                "categories": {
+                "ids": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.distributionItem"
-                    }
-                },
-                "total_count": {
-                    "type": "integer"
-                },
-                "total_size": {
-                    "type": "integer"
-                },
-                "trend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.trendItem"
-                    }
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.distributionItem"
+                        "type": "integer"
                     }
                 }
             }
         },
-        "handler.listFilesResponse": {
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncResponse": {
             "type": "object",
             "properties": {
-                "items": {
+                "groups": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Upload"
                     }
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
                 }
             }
         },
-        "handler.listMyFilesResponse": {
+        "github_com_Rain-kl_Wavelet_internal_shared_response.Any": {
             "type": "object",
             "properties": {
                 "items": {
@@ -17741,7 +17765,7 @@ const docTemplate = `{
                 },
                 "file_name": {
                     "type": "string",
-                    "maxLength": 255
+                    "example": ""
                 }
             }
         },
@@ -20344,1011 +20368,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/openresty.PoWPathMatch"
                     }
-                }
-            }
-        },
-        "option.geoIPLookupRequest": {
-            "type": "object",
-            "properties": {
-                "ip": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                }
-            }
-        },
-        "option.geoIPLookupView": {
-            "type": "object",
-            "properties": {
-                "ip": {
-                    "type": "string"
-                },
-                "iso_code": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                }
-            }
-        },
-        "option.optionBatchPayload": {
-            "type": "object",
-            "properties": {
-                "options": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.OpenFlareOption"
-                    }
-                }
-            }
-        },
-        "option.publicAuthSourceView": {
-            "type": "object",
-            "properties": {
-                "authorize_url": {
-                    "type": "string"
-                },
-                "display_name": {
-                    "type": "string"
-                },
-                "icon_url": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "option.statusView": {
-            "type": "object",
-            "properties": {
-                "auth_sources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/option.publicAuthSourceView"
-                    }
-                },
-                "cap_login_enabled": {
-                    "type": "boolean"
-                },
-                "email_verification": {
-                    "type": "boolean"
-                },
-                "password_register_enabled": {
-                    "type": "boolean"
-                },
-                "server_address": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "integer"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "origin.DetailView": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "route_count": {
-                    "type": "integer"
-                },
-                "routes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/origin.RouteSummary"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "origin.Input": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
-                }
-            }
-        },
-        "origin.RouteSummary": {
-            "type": "object",
-            "properties": {
-                "domain": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "origin_url": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "origin.View": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "route_count": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.DeploymentFileView": {
-            "type": "object",
-            "properties": {
-                "checksum": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deployment_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "pages.DeploymentView": {
-            "type": "object",
-            "properties": {
-                "activated_at": {
-                    "type": "string"
-                },
-                "checksum": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "deployment_number": {
-                    "type": "integer"
-                },
-                "file_count": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "project_id": {
-                    "type": "integer"
-                },
-                "source_label": {
-                    "type": "string"
-                },
-                "source_type": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_size": {
-                    "type": "integer"
-                },
-                "trigger_type": {
-                    "type": "string"
-                },
-                "upload_id": {
-                    "type": "string",
-                    "example": "0"
-                }
-            }
-        },
-        "pages.Input": {
-            "type": "object",
-            "properties": {
-                "api_proxy_enabled": {
-                    "type": "boolean"
-                },
-                "api_proxy_pass": {
-                    "type": "string"
-                },
-                "api_proxy_path": {
-                    "type": "string"
-                },
-                "api_proxy_rewrite": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "entry_file": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "root_dir": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "spa_fallback_enabled": {
-                    "type": "boolean"
-                },
-                "spa_fallback_path": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceActionReceipt": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "execution_id": {
-                    "type": "string"
-                },
-                "task_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceRevisionView": {
-            "type": "object",
-            "properties": {
-                "asset_name": {
-                    "type": "string"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "revision": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceSyncInput": {
-            "type": "object",
-            "properties": {
-                "confirmed_revision": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceUpdateInput": {
-            "type": "object",
-            "properties": {
-                "allow_insecure": {
-                    "type": "boolean"
-                },
-                "asset_name": {
-                    "type": "string"
-                },
-                "auto_update_enabled": {
-                    "type": "boolean"
-                },
-                "check_interval_minutes": {
-                    "type": "integer"
-                },
-                "release_selector": {
-                    "type": "string"
-                },
-                "release_tag": {
-                    "type": "string"
-                },
-                "remote_url": {
-                    "type": "string"
-                },
-                "repository_url": {
-                    "type": "string"
-                },
-                "source_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceUpdateResult": {
-            "type": "object",
-            "properties": {
-                "check_task": {
-                    "$ref": "#/definitions/pages.SourceActionReceipt"
-                },
-                "source": {
-                    "$ref": "#/definitions/pages.SourceView"
-                },
-                "warning": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.SourceView": {
-            "type": "object",
-            "properties": {
-                "allow_insecure": {
-                    "type": "boolean"
-                },
-                "asset_name": {
-                    "type": "string"
-                },
-                "auto_update_enabled": {
-                    "type": "boolean"
-                },
-                "check_interval_minutes": {
-                    "type": "integer"
-                },
-                "github_repository": {
-                    "type": "string"
-                },
-                "last_applied": {
-                    "$ref": "#/definitions/pages.SourceRevisionView"
-                },
-                "last_checked_at": {
-                    "type": "string"
-                },
-                "last_error": {
-                    "type": "string"
-                },
-                "last_seen": {
-                    "$ref": "#/definitions/pages.SourceRevisionView"
-                },
-                "last_synced_at": {
-                    "type": "string"
-                },
-                "next_check_at": {
-                    "type": "string"
-                },
-                "release_selector": {
-                    "type": "string"
-                },
-                "release_tag": {
-                    "type": "string"
-                },
-                "remote_url": {
-                    "type": "string"
-                },
-                "source_type": {
-                    "type": "string"
-                },
-                "sync_status": {
-                    "type": "string"
-                },
-                "update_available": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "pages.UploadFromURLInput": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "pages.View": {
-            "type": "object",
-            "properties": {
-                "active_deployment": {
-                    "$ref": "#/definitions/pages.DeploymentView"
-                },
-                "active_deployment_id": {
-                    "type": "integer"
-                },
-                "api_proxy_enabled": {
-                    "type": "boolean"
-                },
-                "api_proxy_pass": {
-                    "type": "string"
-                },
-                "api_proxy_path": {
-                    "type": "string"
-                },
-                "api_proxy_rewrite": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deployment_count": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "entry_file": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "root_dir": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "spa_fallback_enabled": {
-                    "type": "boolean"
-                },
-                "spa_fallback_path": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "pow.Policy": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/openresty.PoWConfig"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "route_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "protocol.AgentNodeHealthEvent": {
-            "type": "object",
-            "properties": {
-                "event_type": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "triggered_at_unix": {
-                    "type": "integer"
-                }
-            }
-        },
-        "protocol.AgentNodeMetricSnapshot": {
-            "type": "object",
-            "properties": {
-                "captured_at_unix": {
-                    "type": "integer"
-                },
-                "cpu_usage_percent": {
-                    "type": "number"
-                },
-                "disk_read_bytes": {
-                    "type": "integer"
-                },
-                "disk_write_bytes": {
-                    "type": "integer"
-                },
-                "memory_total_bytes": {
-                    "type": "integer"
-                },
-                "memory_used_bytes": {
-                    "type": "integer"
-                },
-                "storage_total_bytes": {
-                    "type": "integer"
-                },
-                "storage_used_bytes": {
-                    "type": "integer"
-                }
-            }
-        },
-        "protocol.AgentNodeSystemProfile": {
-            "type": "object",
-            "properties": {
-                "architecture": {
-                    "type": "string"
-                },
-                "cpu_cores": {
-                    "type": "integer"
-                },
-                "cpu_model": {
-                    "type": "string"
-                },
-                "hostname": {
-                    "type": "string"
-                },
-                "kernel_version": {
-                    "type": "string"
-                },
-                "os_name": {
-                    "type": "string"
-                },
-                "os_version": {
-                    "type": "string"
-                },
-                "reported_at_unix": {
-                    "type": "integer"
-                },
-                "total_disk_bytes": {
-                    "type": "integer"
-                },
-                "total_memory_bytes": {
-                    "type": "integer"
-                },
-                "uptime_seconds": {
-                    "type": "integer"
-                }
-            }
-        },
-        "protocol.FlaredConnectedRelay": {
-            "type": "object",
-            "properties": {
-                "proxy_count": {
-                    "type": "integer"
-                },
-                "relay_node_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "protocol.FlaredProxyEntry": {
-            "type": "object",
-            "properties": {
-                "custom_domains": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "local_addr": {
-                    "type": "string"
-                },
-                "local_port": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "protocol.FlaredRelayInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "auth_token": {
-                    "type": "string"
-                },
-                "proxy_url": {
-                    "type": "string"
-                },
-                "relay_node_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "protocol.RelayConfig": {
-            "type": "object",
-            "properties": {
-                "auth_token": {
-                    "type": "string"
-                },
-                "bind_port": {
-                    "type": "integer"
-                },
-                "log_level": {
-                    "type": "string"
-                },
-                "vhost_http_port": {
-                    "type": "integer"
-                },
-                "web_server_enabled": {
-                    "type": "boolean"
-                },
-                "web_server_port": {
-                    "type": "integer"
-                }
-            }
-        },
-        "protocol.RelayProxyStat": {
-            "type": "object",
-            "properties": {
-                "client_addr": {
-                    "type": "string"
-                },
-                "client_version": {
-                    "type": "string"
-                },
-                "last_close_time": {
-                    "type": "string"
-                },
-                "last_start_time": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "protocol.RelaySettings": {
-            "type": "object",
-            "properties": {
-                "auto_update": {
-                    "type": "boolean"
-                },
-                "heartbeat_interval": {
-                    "type": "integer"
-                },
-                "update_channel": {
-                    "type": "string"
-                },
-                "update_now": {
-                    "type": "boolean"
-                },
-                "update_repo": {
-                    "type": "string"
-                },
-                "update_tag": {
-                    "type": "string"
-                },
-                "websocket_upgrade_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "proxy_route.CustomHeaderInput": {
-            "type": "object",
-            "properties": {
-                "key": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "proxy_route.Input": {
-            "type": "object",
-            "properties": {
-                "basic_auth_enabled": {
-                    "type": "boolean"
-                },
-                "basic_auth_password": {
-                    "type": "string"
-                },
-                "basic_auth_username": {
-                    "type": "string"
-                },
-                "cache_enabled": {
-                    "type": "boolean"
-                },
-                "cache_policy": {
-                    "type": "string"
-                },
-                "cache_rules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "custom_headers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/proxy_route.CustomHeaderInput"
-                    }
-                },
-                "enable_http2": {
-                    "type": "boolean"
-                },
-                "enable_https": {
-                    "type": "boolean"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "limit_conn_per_ip": {
-                    "type": "integer"
-                },
-                "limit_conn_per_server": {
-                    "type": "integer"
-                },
-                "limit_rate": {
-                    "type": "string"
-                },
-                "limit_req_per_ip": {
-                    "type": "string"
-                },
-                "origin_address": {
-                    "type": "string"
-                },
-                "origin_host": {
-                    "type": "string"
-                },
-                "origin_id": {
-                    "type": "integer"
-                },
-                "origin_port": {
-                    "type": "string"
-                },
-                "origin_scheme": {
-                    "type": "string"
-                },
-                "origin_uri": {
-                    "type": "string"
-                },
-                "origin_url": {
-                    "type": "string"
-                },
-                "pages_project_id": {
-                    "type": "integer"
-                },
-                "redirect_http": {
-                    "type": "boolean"
-                },
-                "site_auth_ttl_hours": {
-                    "type": "integer"
-                },
-                "site_name": {
-                    "type": "string"
-                },
-                "tunnel_id": {
-                    "type": "integer"
-                },
-                "tunnel_node_id": {
-                    "type": "integer"
-                },
-                "tunnel_target_addr": {
-                    "type": "string"
-                },
-                "tunnel_target_protocol": {
-                    "type": "string"
-                },
-                "upstream_type": {
-                    "type": "string"
-                },
-                "upstreams": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "zone_domain_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "proxy_route.View": {
-            "type": "object",
-            "properties": {
-                "basic_auth_enabled": {
-                    "type": "boolean"
-                },
-                "basic_auth_password": {
-                    "type": "string"
-                },
-                "basic_auth_username": {
-                    "type": "string"
-                },
-                "cache_enabled": {
-                    "type": "boolean"
-                },
-                "cache_policy": {
-                    "type": "string"
-                },
-                "cache_rule_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "cache_rules": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "custom_header_list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/proxy_route.CustomHeaderInput"
-                    }
-                },
-                "custom_headers": {
-                    "type": "string"
-                },
-                "enable_http2": {
-                    "type": "boolean"
-                },
-                "enable_https": {
-                    "type": "boolean"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "limit_conn_per_ip": {
-                    "type": "integer"
-                },
-                "limit_conn_per_server": {
-                    "type": "integer"
-                },
-                "limit_rate": {
-                    "type": "string"
-                },
-                "limit_req_per_ip": {
-                    "type": "string"
-                },
-                "origin_host": {
-                    "type": "string"
-                },
-                "origin_id": {
-                    "type": "integer"
-                },
-                "origin_url": {
-                    "type": "string"
-                },
-                "pages_project_id": {
-                    "type": "integer"
-                },
-                "redirect_http": {
-                    "type": "boolean"
-                },
-                "site_auth_ttl_hours": {
-                    "type": "integer"
-                },
-                "site_name": {
-                    "type": "string"
-                },
-                "tunnel_id": {
-                    "type": "integer"
-                },
-                "tunnel_node_id": {
-                    "type": "integer"
-                },
-                "tunnel_target_addr": {
-                    "type": "string"
-                },
-                "tunnel_target_protocol": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "upstream_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "upstream_type": {
-                    "type": "string"
-                },
-                "upstreams": {
-                    "type": "string"
-                },
-                "zone_domain_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "zone_domains": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/proxy_route.ZoneDomainView"
-                    }
-                }
-            }
-        },
-        "proxy_route.ZoneDomainView": {
-            "type": "object",
-            "properties": {
-                "cert_id": {
-                    "type": "integer"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "zone_id": {
-                    "type": "integer"
                 }
             }
         },

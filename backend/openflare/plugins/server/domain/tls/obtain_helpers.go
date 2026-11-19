@@ -41,7 +41,7 @@ func persistAcmeAccountUpdates(
 		return nil
 	}
 	if newPrivateKeyPEM != "" && acmePrivateKey != newPrivateKeyPEM {
-		sealedKey, sealErr := sealSensitive(newPrivateKeyPEM)
+		sealedKey, sealErr := credential.Seal(newPrivateKeyPEM)
 		if sealErr != nil {
 			return fmt.Errorf("failed to seal ACME account key: %w", sealErr)
 		}
@@ -62,7 +62,7 @@ func persistAcmeAccountUpdates(
 }
 
 func saveObtainedCertificate(ctx context.Context, cert *model.TLSCertificate, result *acme.CertificateResult) error {
-	sealedKey, err := sealSensitive(result.KeyPEM)
+	sealedKey, err := credential.Seal(result.KeyPEM)
 	if err != nil {
 		return fmt.Errorf("failed to seal certificate key: %w", err)
 	}

@@ -1,9 +1,9 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package chwriter queues OpenFlare ClickHouse writes and flushes them through
+// Package logwriter queues OpenFlare ClickHouse writes and flushes them through
 // internal/infra/persistence/batchwriter with per-table writer instances.
-package chwriter
+package logwriter
 
 import (
 	"context"
@@ -259,7 +259,7 @@ func mustNewObservabilityWriter[T any](
 		}),
 	)
 	if err != nil {
-		panic(fmt.Sprintf("openflare chwriter %s: %v", name, err))
+		panic(fmt.Sprintf("openflare logwriter %s: %v", name, err))
 	}
 	return writer
 }
@@ -284,7 +284,7 @@ func mustNewNodeAccessLogWriter() *batchwriter.Writer[analyticsmodel.NodeAccessL
 		}),
 	)
 	if err != nil {
-		panic(fmt.Sprintf("openflare chwriter node_access_logs: %v", err))
+		panic(fmt.Sprintf("openflare logwriter node_access_logs: %v", err))
 	}
 	return writer
 }

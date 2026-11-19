@@ -26,7 +26,7 @@ type Service struct {
 	frpsManager *frps.Manager
 	config      *config.Config
 	stateStore  *state.Store
-	updater     *updater.Service
+	updater     *edgeupdater.Service
 }
 
 // New constructs a Service using the provided HTTP client, frps manager,
@@ -37,7 +37,11 @@ func New(client *httpclient.Client, manager *frps.Manager, cfg *config.Config, s
 		frpsManager: manager,
 		config:      cfg,
 		stateStore:  stateStore,
-		updater:     updater.New(),
+		updater: edgeupdater.New(edgeupdater.Config{
+			LocalVersion: config.Version,
+			AssetPrefix:  "openflare-relay",
+			LogLabel:     "relay",
+		}),
 	}
 }
 

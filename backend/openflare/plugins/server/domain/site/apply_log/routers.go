@@ -56,7 +56,7 @@ func GetApplyLogs(c *gin.Context) {
 // @Router /api/v1/d/apply-logs/cleanup [post]
 func CleanupApplyLogs(c *gin.Context) {
 	var input CleanupInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 

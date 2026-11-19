@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package cache provides in-process upload access-control caches.
-package cache
+package upload
 
 import (
 	"Wavelet/pkg/logger"
@@ -31,7 +30,7 @@ var (
 
 // ResetAccessCaches clears in-process upload access caches.
 func ResetAccessCaches() {
-	uploadstorage.ResetMigrationAccessCache()
+	ResetMigrationAccessCache()
 
 	fileAccessWhitelistMu.Lock()
 	fileAccessWhitelistValid = false
@@ -56,7 +55,7 @@ func IsFilePublic(ctx context.Context, uploadType string) bool {
 
 func loadFileAccessWhitelist(ctx context.Context) map[string]struct{} {
 	fileAccessWhitelistMu.RLock()
-	if fileAccessWhitelistValid && time.Since(fileAccessWhitelistCheckedAt) < time.Duration(shared.AccessCacheTTL)*time.Second {
+	if fileAccessWhitelistValid && time.Since(fileAccessWhitelistCheckedAt) < time.Duration(AccessCacheTTL)*time.Second {
 		types := fileAccessWhitelistTypes
 		fileAccessWhitelistMu.RUnlock()
 		return types
@@ -66,7 +65,7 @@ func loadFileAccessWhitelist(ctx context.Context) map[string]struct{} {
 	fileAccessWhitelistMu.Lock()
 	defer fileAccessWhitelistMu.Unlock()
 
-	if fileAccessWhitelistValid && time.Since(fileAccessWhitelistCheckedAt) < time.Duration(shared.AccessCacheTTL)*time.Second {
+	if fileAccessWhitelistValid && time.Since(fileAccessWhitelistCheckedAt) < time.Duration(AccessCacheTTL)*time.Second {
 		return fileAccessWhitelistTypes
 	}
 

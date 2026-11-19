@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/Rain-kl/Wavelet/internal/apps/agent/localfile"
+	"github.com/Rain-kl/Wavelet/internal/edge/agent/localfile"
 )
 
 const (

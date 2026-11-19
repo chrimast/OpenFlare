@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -18,65 +18,79 @@ func observabilityConn() (driver.Conn, error) {
 	return ChConn(context.Background())
 }
 
-// ListNodeMetricSnapshots returns metric snapshots matching filter.
-func ListNodeMetricSnapshots(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.NodeMetricSnapshot, error) {
-	conn, err := observabilityConn()
+func listCHNodeObservability[A any, M any](
+	ctx context.Context,
+	tableName, columns, opName string,
+	filter analyticsmodel.NodeObservabilityFilter,
+	extraSuffix string,
+	scan func(driver.Rows) ([]A, error),
+	convert func([]A) []*M,
+) ([]*M, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	tableName := nodeMetricSnapshotTableName()
+	clause, args := buildCHNodeObservabilityFilterClause(filter, "captured_at")
 	sql := fmt.Sprintf(`
-SELECT id, node_id, captured_at, cpu_usage_percent, memory_used_bytes, memory_total_bytes, storage_used_bytes, storage_total_bytes, disk_read_bytes, disk_write_bytes, network_rx_bytes, network_tx_bytes, created_at
+SELECT %s
 FROM %s
 WHERE %s
-ORDER BY %s`, tableName, clause, nodeObservabilityCapturedAtOrderClause())
+ORDER BY %s%s`, columns, tableName, clause, chNodeObservabilityCapturedAtOrderClause(), extraSuffix)
 	if filter.Limit > 0 {
 		sql += clickHouseLimitClause
 		args = append(args, filter.Limit)
 	}
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("list node metric snapshots: %w", err)
+		return nil, fmt.Errorf("%s: %w", opName, err)
 	}
 	defer func() { _ = rows.Close() }()
-	return scanNodeMetricSnapshotRows(rows)
-}
-
-// ListLatestNodeMetricSnapshots returns the latest metric snapshot per node_id.
-// Uses ClickHouse LIMIT 1 BY so dashboard health does not depend on a global raw LIMIT.
-func ListLatestNodeMetricSnapshots(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.NodeMetricSnapshot, error) {
-	conn, err := observabilityConn()
+	scanned, err := scan(rows)
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	sql := fmt.Sprintf(`
-SELECT id, node_id, captured_at, cpu_usage_percent, memory_used_bytes, memory_total_bytes, storage_used_bytes, storage_total_bytes, disk_read_bytes, disk_write_bytes, network_rx_bytes, network_tx_bytes, created_at
-FROM %s
-WHERE %s
-ORDER BY %s%s`, nodeMetricSnapshotTableName(), clause, nodeObservabilityCapturedAtOrderClause(), clickHouseLimit1ByNodeIDClause)
-	rows, err := conn.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("list latest node metric snapshots: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	return scanNodeMetricSnapshotRows(rows)
+	return convert(scanned), nil
 }
 
-// ListNodeEdgeHealth returns L2 OpenResty health snapshots.
-func ListNodeEdgeHealth(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.NodeEdgeHealth, error) {
-	conn, err := observabilityConn()
+func (s *clickhouseLogStore) ListMetricSnapshots(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareMetricSnapshot, error) {
+	return listCHNodeObservability(
+		ctx,
+		chNodeMetricSnapshotTableName(),
+		chNodeMetricSnapshotSelectColumns,
+		"list node metric snapshots",
+		analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since, Limit: limit},
+		"",
+		scanNodeMetricSnapshotRows,
+		fromAnalyticsNodeMetricSnapshots,
+	)
+}
+
+// ListLatestMetricSnapshots uses ClickHouse LIMIT 1 BY node_id so dashboard health does not depend on a global raw LIMIT.
+func (s *clickhouseLogStore) ListLatestMetricSnapshots(ctx context.Context, nodeID string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error) {
+	return listCHNodeObservability(
+		ctx,
+		chNodeMetricSnapshotTableName(),
+		chNodeMetricSnapshotSelectColumns,
+		"list latest node metric snapshots",
+		analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since},
+		clickHouseLimit1ByNodeIDClause,
+		scanNodeMetricSnapshotRows,
+		fromAnalyticsNodeMetricSnapshots,
+	)
+}
+
+func (s *clickhouseLogStore) ListEdgeHealth(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareEdgeHealth, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	tableName := nodeEdgeHealthTableName()
+	filter := analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since, Limit: limit}
+	clause, args := buildCHNodeObservabilityFilterClause(filter, "captured_at")
 	sql := fmt.Sprintf(`
 SELECT id, node_id, captured_at, status, connections, created_at
 FROM %s
 WHERE %s
-ORDER BY %s`, tableName, clause, nodeObservabilityCapturedAtOrderClause())
+ORDER BY %s`, chNodeEdgeHealthTableName(), clause, chNodeObservabilityCapturedAtOrderClause())
 	if filter.Limit > 0 {
 		sql += clickHouseLimitClause
 		args = append(args, filter.Limit)
@@ -103,57 +117,33 @@ ORDER BY %s`, tableName, clause, nodeObservabilityCapturedAtOrderClause())
 		item.CreatedAt = item.CreatedAt.UTC()
 		result = append(result, item)
 	}
-	return result, nil
+	return fromAnalyticsNodeEdgeHealths(result), nil
 }
 
-// ListNodeObsFrps returns FRPS observations matching filter.
-func ListNodeObsFrps(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.NodeObsFrps, error) {
-	conn, err := observabilityConn()
-	if err != nil {
-		return nil, err
-	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	tableName := nodeObsFrpsTableName()
-	sql := fmt.Sprintf(`
-SELECT id, node_id, captured_at, frps_connections, frps_proxy_count, frps_client_count, frps_proxies, created_at
-FROM %s
-WHERE %s
-ORDER BY %s`, tableName, clause, nodeObservabilityCapturedAtOrderClause())
-	if filter.Limit > 0 {
-		sql += clickHouseLimitClause
-		args = append(args, filter.Limit)
-	}
-	rows, err := conn.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("list node frps observations: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	return scanNodeObsFrpsRows(rows)
+func (s *clickhouseLogStore) ListNodeObservationFrps(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareNodeObservationFrps, error) {
+	return listCHNodeObservability(
+		ctx,
+		chNodeObsFrpsTableName(),
+		"id, node_id, captured_at, frps_connections, frps_proxy_count, frps_client_count, frps_proxies, created_at",
+		"list node frps observations",
+		analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since, Limit: limit},
+		"",
+		scanNodeObsFrpsRows,
+		fromAnalyticsNodeObsFrps,
+	)
 }
 
-// ListNodeObsFrpc returns FRPC observations matching filter.
-func ListNodeObsFrpc(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.NodeObsFrpc, error) {
-	conn, err := observabilityConn()
-	if err != nil {
-		return nil, err
-	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	tableName := nodeObsFrpcTableName()
-	sql := fmt.Sprintf(`
-SELECT id, node_id, captured_at, tunnel_status, connected_relays_count, created_at
-FROM %s
-WHERE %s
-ORDER BY %s`, tableName, clause, nodeObservabilityCapturedAtOrderClause())
-	if filter.Limit > 0 {
-		sql += clickHouseLimitClause
-		args = append(args, filter.Limit)
-	}
-	rows, err := conn.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("list node frpc observations: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	return scanNodeObsFrpcRows(rows)
+func (s *clickhouseLogStore) ListNodeObservationFrpc(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareNodeObservationFrpc, error) {
+	return listCHNodeObservability(
+		ctx,
+		chNodeObsFrpcTableName(),
+		"id, node_id, captured_at, tunnel_status, connected_relays_count, created_at",
+		"list node frpc observations",
+		analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since, Limit: limit},
+		"",
+		scanNodeObsFrpcRows,
+		fromAnalyticsNodeObsFrpc,
+	)
 }
 
 //nolint:dupl // scan shapes differ by model fields; shared helper would obscure CH column mapping
@@ -208,51 +198,43 @@ func scanNodeObsFrpsRows(rows driver.Rows) ([]analyticsmodel.NodeObsFrps, error)
 	return result, nil
 }
 
-// NodeTrafficHourly 为小时级流量汇总行（别名，定义见 model/analytics）。
-type NodeTrafficHourly = analyticsmodel.NodeTrafficHourly
-
-// NodeMetricHourly 为小时级指标聚合行（别名，定义见 model/analytics）。
-type NodeMetricHourly = analyticsmodel.NodeMetricHourly
-
-// ListNodeTrafficHourly returns hourly traffic from of_access_log_hourly (M5).
-// UniqueVisitorCount is always 0 here (UV requires raw uniqExact on access logs).
-func ListNodeTrafficHourly(ctx context.Context, filter NodeObservabilityFilter) ([]NodeTrafficHourly, error) {
-	rows, err := ListAccessLogHourly(ctx, filter)
+// ListTrafficHourly 读 of_access_log_hourly rollup（M5 口径，UV 恒 0）。
+func (s *clickhouseLogStore) ListTrafficHourly(ctx context.Context, nodeID string, since time.Time) ([]analyticsmodel.NodeTrafficHourly, error) {
+	rows, err := s.ListAccessLogHourly(ctx, nodeID, since)
 	if err != nil {
 		return nil, err
 	}
-	// Aggregate across hosts per node/hour.
 	type key struct {
 		node string
 		hour int64
 	}
-	merged := make(map[key]*NodeTrafficHourly)
+	merged := make(map[key]*analyticsmodel.NodeTrafficHourly)
 	order := make([]key, 0)
 	for _, row := range rows {
 		k := key{node: row.NodeID, hour: row.Hour.UTC().Unix()}
 		item := merged[k]
 		if item == nil {
-			item = &NodeTrafficHourly{NodeID: row.NodeID, Hour: row.Hour.UTC()}
+			item = &analyticsmodel.NodeTrafficHourly{NodeID: row.NodeID, Hour: row.Hour.UTC()}
 			merged[k] = item
 			order = append(order, k)
 		}
 		item.RequestCount += row.RequestCount
 		item.ErrorCount += row.ErrorCount
 	}
-	result := make([]NodeTrafficHourly, 0, len(order))
+	result := make([]analyticsmodel.NodeTrafficHourly, 0, len(order))
 	for _, k := range order {
 		result = append(result, *merged[k])
 	}
 	return result, nil
 }
 
-// ListAccessLogHourly returns Server-side access log hourly rollups.
-func ListAccessLogHourly(ctx context.Context, filter NodeObservabilityFilter) ([]analyticsmodel.AccessLogHourly, error) {
-	conn, err := observabilityConn()
+// ListAccessLogHourly 读 of_access_log_hourly rollup。
+func (s *clickhouseLogStore) ListAccessLogHourly(ctx context.Context, nodeID string, since time.Time) ([]analyticsmodel.AccessLogHourly, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "hour")
+	clause, args := buildCHNodeObservabilityFilterClause(analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since}, "hour")
 	sql := fmt.Sprintf(`
 SELECT
 	node_id,
@@ -265,7 +247,7 @@ SELECT
 FROM %s
 WHERE %s
 GROUP BY node_id, hour, host
-ORDER BY hour ASC, node_id ASC, host ASC`, accessLogHourlyTableName(), clause)
+ORDER BY hour ASC, node_id ASC, host ASC`, chAccessLogHourlyTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list access log hourly: %w", err)
@@ -302,9 +284,7 @@ ORDER BY hour ASC, node_id ASC, host ASC`, accessLogHourlyTableName(), clause)
 // while still treating pre-aggregated tables as a complete window (skip raw query).
 const hourlyRollupMaxLead = 2 * time.Hour
 
-// hourlyRollupCoversWindow reports whether rollup coverage starts near the requested window.
-// rows must be ordered by hour ascending.
-func hourlyRollupCoversWindow(earliestHour time.Time, since time.Time) bool {
+func hourlyRollupCoversWindow(earliestHour, since time.Time) bool {
 	if since.IsZero() {
 		return true
 	}
@@ -313,14 +293,9 @@ func hourlyRollupCoversWindow(earliestHour time.Time, since time.Time) bool {
 	return !earliest.After(sinceHour.Add(hourlyRollupMaxLead))
 }
 
-// ListNodeMetricHourly returns hourly metric snapshot aggregates matching filter.
-//
-// Strategy (optimal for correctness + cost):
-//  1. Load of_node_metric_capacity_hourly rollup.
-//  2. If rollup spans the window from filter.Since, return it alone (cheap path).
-//  3. Otherwise load raw lagInFrame aggregates and merge by hour: rollup wins on
-//     overlap, raw fills historical gaps (MV never backfills pre-creation data).
-func ListNodeMetricHourly(ctx context.Context, filter NodeObservabilityFilter) ([]NodeMetricHourly, error) {
+// ListMetricHourly rollup 覆盖窗口时读 of_node_metric_capacity_hourly，否则合并 raw 兜底。
+func (s *clickhouseLogStore) ListMetricHourly(ctx context.Context, nodeID string, since time.Time) ([]analyticsmodel.NodeMetricHourly, error) {
+	filter := analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since}
 	rollup, rollupErr := listNodeMetricHourlyFromRollup(ctx, filter)
 	if rollupErr == nil && len(rollup) > 0 && hourlyRollupCoversWindow(rollup[0].Hour, filter.Since) {
 		return rollup, nil
@@ -336,16 +311,13 @@ func ListNodeMetricHourly(ctx context.Context, filter NodeObservabilityFilter) (
 	if len(rollup) == 0 {
 		return raw, nil
 	}
-	// Partial rollup (or rollupErr with empty slice): merge; raw fills historical gaps.
 	return mergeNodeMetricHourlyPreferRollup(rollup, raw), nil
 }
 
-// mergeNodeMetricHourlyPreferRollup unions two hour series (both ASC by Hour).
-// Rollup values replace raw for the same hour; raw supplies missing hours.
-func mergeNodeMetricHourlyPreferRollup(rollup, raw []NodeMetricHourly) []NodeMetricHourly {
-	byHour := make(map[int64]NodeMetricHourly, len(raw)+len(rollup))
+func mergeNodeMetricHourlyPreferRollup(rollup, raw []analyticsmodel.NodeMetricHourly) []analyticsmodel.NodeMetricHourly {
+	byHour := make(map[int64]analyticsmodel.NodeMetricHourly, len(raw)+len(rollup))
 	order := make([]int64, 0, len(raw)+len(rollup))
-	add := func(row NodeMetricHourly, overwrite bool) {
+	add := func(row analyticsmodel.NodeMetricHourly, overwrite bool) {
 		key := row.Hour.UTC().Truncate(time.Hour).Unix()
 		if _, exists := byHour[key]; !exists {
 			order = append(order, key)
@@ -362,8 +334,7 @@ func mergeNodeMetricHourlyPreferRollup(rollup, raw []NodeMetricHourly) []NodeMet
 	for _, row := range rollup {
 		add(row, true)
 	}
-	result := make([]NodeMetricHourly, 0, len(order))
-	// Keep chronological order of first-seen keys; re-sort by hour for stability.
+	result := make([]analyticsmodel.NodeMetricHourly, 0, len(order))
 	slices.Sort(order)
 	for _, key := range order {
 		result = append(result, byHour[key])
@@ -371,12 +342,12 @@ func mergeNodeMetricHourlyPreferRollup(rollup, raw []NodeMetricHourly) []NodeMet
 	return result
 }
 
-func listNodeMetricHourlyFromRollup(ctx context.Context, filter NodeObservabilityFilter) ([]NodeMetricHourly, error) {
-	conn, err := observabilityConn()
+func listNodeMetricHourlyFromRollup(ctx context.Context, filter analyticsmodel.NodeObservabilityFilter) ([]analyticsmodel.NodeMetricHourly, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "hour")
+	clause, args := buildCHNodeObservabilityFilterClause(filter, "hour")
 	sql := fmt.Sprintf(`
 SELECT
 	hour,
@@ -390,7 +361,7 @@ SELECT
 FROM %s
 WHERE %s
 GROUP BY hour
-ORDER BY hour ASC`, nodeMetricCapacityHourlyTableName(), clause)
+ORDER BY hour ASC`, chNodeMetricCapacityHourlyTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list node metric hourly from rollup: %w", err)
@@ -399,13 +370,12 @@ ORDER BY hour ASC`, nodeMetricCapacityHourlyTableName(), clause)
 	return scanNodeMetricHourlyRows(rows)
 }
 
-func listNodeMetricHourlyFromRaw(ctx context.Context, filter NodeObservabilityFilter) ([]NodeMetricHourly, error) {
-	conn, err := observabilityConn()
+func listNodeMetricHourlyFromRaw(ctx context.Context, filter analyticsmodel.NodeObservabilityFilter) ([]analyticsmodel.NodeMetricHourly, error) {
+	conn, err := chConn()
 	if err != nil {
 		return nil, err
 	}
-	clause, args := buildNodeObservabilityFilterClause(filter, "captured_at")
-	tableName := nodeMetricSnapshotTableName()
+	clause, args := buildCHNodeObservabilityFilterClause(filter, "captured_at")
 	sql := fmt.Sprintf(`
 SELECT
 	hour,
@@ -442,7 +412,7 @@ FROM (
 	WHERE %s
 )
 GROUP BY hour
-ORDER BY hour ASC`, tableName, clause)
+ORDER BY hour ASC`, chNodeMetricSnapshotTableName(), clause)
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list node metric hourly: %w", err)
@@ -451,11 +421,11 @@ ORDER BY hour ASC`, tableName, clause)
 	return scanNodeMetricHourlyRows(rows)
 }
 
-func scanNodeMetricHourlyRows(rows driver.Rows) ([]NodeMetricHourly, error) {
-	result := make([]NodeMetricHourly, 0)
+func scanNodeMetricHourlyRows(rows driver.Rows) ([]analyticsmodel.NodeMetricHourly, error) {
+	result := make([]analyticsmodel.NodeMetricHourly, 0)
 	for rows.Next() {
 		var (
-			item          NodeMetricHourly
+			item          analyticsmodel.NodeMetricHourly
 			reportedNodes uint64
 			networkRx     int64
 			networkTx     int64

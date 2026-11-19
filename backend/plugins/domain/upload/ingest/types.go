@@ -1,20 +1,19 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package ingest provides the programmatic upload domain service for Wavelet.
-package ingest
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/models"
 	"io"
 )
 
-// Policy controls how ingest handles hash collisions and record creation.
-type Policy int
+// IngestPolicy controls how ingest handles hash collisions and record creation.
+type IngestPolicy int
 
 const (
 	// PolicyCreate always stores a new object and creates a new upload record.
-	PolicyCreate Policy = iota
+	PolicyCreate IngestPolicy = iota
 
 	// PolicyDedupNewRecord reuses an existing object path on hash match but creates a new record and stats delta.
 	PolicyDedupNewRecord
@@ -26,8 +25,8 @@ const (
 // ObjectKeyFn builds the storage object key for a new upload.
 type ObjectKeyFn func(id uint64, ext string) string
 
-// Request describes a programmatic file ingest operation.
-type Request struct {
+// IngestRequest describes a programmatic file ingest operation.
+type IngestRequest struct {
 	UserID uint64
 	Type   string
 

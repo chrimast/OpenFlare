@@ -157,3 +157,18 @@ func (conn *Connection) Close() error {
 func (conn *AgentConnection) SendStatus(payload pkgprotocol.NodePayload) error {
 	return conn.sharedConn.SendMessage(pkgprotocol.WSMessageTypeStatus, payload)
 }
+
+// AgentClient is a WebSocket client configured for agent connections that satisfies the agent WebSocketService interface.
+type AgentClient struct {
+	*Client
+}
+
+// NewAgentClient creates a new AgentClient for the agent preset.
+func NewAgentClient(baseURL, token string, timeout time.Duration) *AgentClient {
+	return &AgentClient{Client: New(PresetAgent, baseURL, token, timeout)}
+}
+
+// Connect establishes an agent WebSocket connection implementing protocol.WebSocketConnection.
+func (c *AgentClient) Connect(ctx context.Context) (pkgprotocol.WebSocketConnection, error) {
+	return c.ConnectAgent(ctx)
+}

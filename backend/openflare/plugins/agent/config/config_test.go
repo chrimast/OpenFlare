@@ -423,8 +423,8 @@ func TestSavePersistsMillisecondsAndOmitsRuntimeVersions(t *testing.T) {
 		t.Fatalf("Load failed: %v", err)
 	}
 	cfg.ExtVersion = "1.27.1.2"
-	cfg.HeartbeatInterval = MillisecondDuration(5 * time.Second)
-	cfg.RequestTimeout = MillisecondDuration(7 * time.Second)
+	cfg.HeartbeatInterval = edgeconfig.MillisecondDuration(5 * time.Second)
+	cfg.RequestTimeout = edgeconfig.MillisecondDuration(7 * time.Second)
 	cfg.OpenrestyResolvers = []string{"10.0.0.2", "1.1.1.1"}
 
 	if err = cfg.Save(); err != nil {

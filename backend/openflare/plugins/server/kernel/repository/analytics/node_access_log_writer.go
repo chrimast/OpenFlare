@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"context"
@@ -13,8 +13,26 @@ import (
 	"Wavelet/pkg/idgen"
 )
 
-// BatchInsertNodeAccessLogs writes node access logs to ClickHouse using the native batch API.
-func BatchInsertNodeAccessLogs(ctx context.Context, logs []analyticsmodel.NodeAccessLog) error {
+// InsertBatch 节点访问日志写入入口：冻结检查后经 hook 入队（异步），不直接落库。
+func (s *clickhouseLogStore) InsertBatch(ctx context.Context, records []*model.OpenFlareAccessLog) error {
+	if err := s.ensureWritable(ctx); err != nil {
+		return err
+	}
+	rows := make([]analyticsmodel.NodeAccessLog, 0, len(records))
+	for _, r := range records {
+		if r == nil {
+			continue
+		}
+		rows = append(rows, toAnalyticsNodeAccessLog(r))
+	}
+	if h := currentAccessLogHooks().QueueNodeAccessLogs; h != nil {
+		h(rows)
+	}
+	return nil
+}
+
+// BatchInsertNodeAccessLogs 是 batchwriter flush 目标：CH 原生批量写入。
+func (s *clickhouseLogStore) BatchInsertNodeAccessLogs(ctx context.Context, logs []analyticsmodel.NodeAccessLog) error {
 	if len(logs) == 0 {
 		return nil
 	}

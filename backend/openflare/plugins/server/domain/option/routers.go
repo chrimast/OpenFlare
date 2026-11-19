@@ -63,7 +63,7 @@ func ListOptionsHandler(c *gin.Context) {
 // @Router /api/v1/d/option/update [post]
 func UpdateOptionHandler(c *gin.Context) {
 	var option model.OpenFlareOption
-	if !apiutil.BindJSON(c, &option) {
+	if !httpx.BindJSON(c, &option) {
 		return
 	}
 	if response.AbortBadRequestOnError(c, updateOption(c.Request.Context(), option)) {
@@ -88,7 +88,7 @@ func UpdateOptionHandler(c *gin.Context) {
 // @Router /api/v1/d/option/update-batch [post]
 func UpdateOptionsBatchHandler(c *gin.Context) {
 	var payload optionBatchPayload
-	if !apiutil.BindJSON(c, &payload) {
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 	if response.AbortBadRequestOnError(c, updateOptionsBatch(c.Request.Context(), payload)) {
@@ -113,7 +113,7 @@ func UpdateOptionsBatchHandler(c *gin.Context) {
 // @Router /api/v1/d/option/geoip/lookup [post]
 func LookupGeoIPHandler(c *gin.Context) {
 	var request geoIPLookupRequest
-	if !apiutil.BindJSON(c, &request) {
+	if !httpx.BindJSON(c, &request) {
 		return
 	}
 	view, err := lookupGeoIP(c.Request.Context(), request.Provider, request.IP)

@@ -242,7 +242,7 @@ func (h *agentWSHandler) OnConnect(ctx context.Context) error {
 	return h.runner.sendWebSocketStatus(ctx, h.nodeID, h.conn)
 }
 
-func (h *agentWSHandler) HandleMessage(ctx context.Context, msg wsclient.WSMessage) error {
+func (h *agentWSHandler) HandleMessage(ctx context.Context, msg edgews.WSMessage) error {
 	var payloadBytes []byte
 	if msg.Payload != nil {
 		payloadBytes = []byte(msg.Payload)
@@ -288,7 +288,7 @@ func (r *Runner) runWebSocket(ctx context.Context, nodeID string, conn protocol.
 		}
 	})
 
-	wsConn, ok := conn.(*wsclient.Connection)
+	wsConn, ok := conn.(*edgews.AgentConnection)
 	if !ok {
 		return errors.New("invalid websocket connection type")
 	}
@@ -439,7 +439,7 @@ func (r *Runner) applySettings(settings *protocol.AgentSettings) bool {
 	}
 	changed := false
 	if settings.HeartbeatInterval > 0 {
-		newInterval := config.MillisecondDuration(time.Duration(settings.HeartbeatInterval) * time.Millisecond)
+		newInterval := edgeconfig.MillisecondDuration(time.Duration(settings.HeartbeatInterval) * time.Millisecond)
 		if newInterval != r.Config.HeartbeatInterval {
 			slog.Info("agent heartbeat interval updated", "from", r.Config.HeartbeatInterval, "to", newInterval)
 			r.Config.HeartbeatInterval = newInterval

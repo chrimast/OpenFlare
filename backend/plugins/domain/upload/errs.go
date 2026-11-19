@@ -1,12 +1,12 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package upload 提供文件上传与下载功能
+// Package upload 提供文件上传、存储管理、访问服务与统计功能
 package upload
 
 import "Wavelet/plugins/domain/upload/shared"
 
-// 文件管理常量
+// 文件管理文案常量与摄取 sentinel 错误
 const (
 	ErrNoFileSelected               = shared.ErrNoFileSelected
 	ErrUnsupportedFormat            = shared.ErrUnsupportedFormat

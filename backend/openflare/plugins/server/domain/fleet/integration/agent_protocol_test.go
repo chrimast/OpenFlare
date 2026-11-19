@@ -154,7 +154,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		resp := requireAPIOK(t, rec)
-		var registration agent.RegistrationResponse
+		var registration protocol.RegisterNodeResponse
 		unmarshalAPIData(t, resp.Data, &registration)
 		assert.NotEmpty(t, registration.NodeID)
 		assert.NotEmpty(t, registration.AccessToken)

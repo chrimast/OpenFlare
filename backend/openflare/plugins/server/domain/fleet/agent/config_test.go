@@ -29,7 +29,7 @@ func TestIsRuntimeGeneratedSupportFile(t *testing.T) {
 }
 
 func TestSourceSupportFilesFiltersRuntimeGeneratedFiles(t *testing.T) {
-	files := []SupportFile{
+	files := []protocol.SupportFile{
 		{Path: "certs/example.pem", Content: "pem"},
 		{Path: "pow_config.json", Content: "{}"},
 		{Path: "waf_config.json", Content: "{}"},

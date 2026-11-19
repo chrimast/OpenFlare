@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package analytics
+package logstore
 
 import (
 	"strings"
@@ -11,10 +11,7 @@ import (
 
 const nodeObservabilityFilterClauseCapacity = 3
 
-// NodeObservabilityFilter scopes ClickHouse node observability queries.
-type NodeObservabilityFilter = analyticsmodel.NodeObservabilityFilter
-
-func buildNodeObservabilityFilterClause(filter NodeObservabilityFilter, sinceColumn string) (string, []any) {
+func buildCHNodeObservabilityFilterClause(filter analyticsmodel.NodeObservabilityFilter, sinceColumn string) (string, []any) {
 	parts := make([]string, 0, nodeObservabilityFilterClauseCapacity)
 	args := make([]any, 0, nodeObservabilityFilterClauseCapacity)
 	if trimmed := strings.TrimSpace(filter.NodeID); trimmed != "" {
@@ -31,31 +28,31 @@ func buildNodeObservabilityFilterClause(filter NodeObservabilityFilter, sinceCol
 	return strings.Join(parts, " AND "), args
 }
 
-func nodeObservabilityCapturedAtOrderClause() string {
+func chNodeObservabilityCapturedAtOrderClause() string {
 	return "captured_at DESC, id DESC"
 }
 
-func nodeMetricSnapshotTableName() string {
+func chNodeMetricSnapshotTableName() string {
 	return "of_node_metric_snapshots"
 }
 
-func nodeEdgeHealthTableName() string {
+func chNodeEdgeHealthTableName() string {
 	return "of_node_edge_health"
 }
 
-func accessLogHourlyTableName() string {
+func chAccessLogHourlyTableName() string {
 	return "of_access_log_hourly"
 }
 
-func nodeObsFrpsTableName() string {
+func chNodeObsFrpsTableName() string {
 	return "of_node_obs_frps"
 }
 
-func nodeObsFrpcTableName() string {
+func chNodeObsFrpcTableName() string {
 	return "of_node_obs_frpc"
 }
 
-func nodeMetricCapacityHourlyTableName() string {
+func chNodeMetricCapacityHourlyTableName() string {
 	return "of_node_metric_capacity_hourly"
 }
 

@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package shared
+package upload
 
 // Upload size, path, media quality, and cache constants shared across subpackages.
 const (

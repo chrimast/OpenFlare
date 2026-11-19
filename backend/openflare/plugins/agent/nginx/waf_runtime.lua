@@ -300,7 +300,7 @@ local function match_ua_rules(ua_lower, rules, fallback)
     return fallback
 end
 
--- Mirrors internal/repository/analytics/browser.go browserRules / osRules.
+-- Mirrors internal/model/analytics/user_agent.go browserRules / osRules.
 local browser_rules = {
     { label = "WeChat", contains = { "micromessenger" } },
     { label = "Postman", contains = { "postman" } },

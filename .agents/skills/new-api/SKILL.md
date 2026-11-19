@@ -68,8 +68,8 @@ backend/openflare/plugins/<name>/ (或 backend/plugins/domain/<name>/)
   - 失败时返回：`response.Err(msg)`
 - 编写规范的 Swagger 注释。
 
-### 步骤 4：在自定义包中注册路由并委派
-根据 **路由归属判定表**，在 [root/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/root/custom.go) 或 [v1/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/v1/custom.go) 中编写注册代码，将路由路径绑定到步骤 3 中编写的 Handler。
+### 步骤 4：在模块路由注册文件中挂载路由
+根据 **路由归属判定表**，在对应的 `internal/router/root/<domain>.go` 或 `internal/router/v1/<domain>.go` 中编写注册代码，将路由路径绑定到步骤 3 中编写的 Handler。
 
 ---
 

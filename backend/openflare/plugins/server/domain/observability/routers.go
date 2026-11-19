@@ -272,7 +272,7 @@ func GetAccessLogIPAnalysisHandler(c *gin.Context) {
 // @Router /api/v1/d/access-logs/cleanup [post]
 func CleanupAccessLogsHandler(c *gin.Context) {
 	var input AccessLogCleanupInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	result, err := CleanupAccessLogs(c.Request.Context(), input)

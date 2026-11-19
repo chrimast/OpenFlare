@@ -21,15 +21,15 @@ import (
 // @Accept json
 // @Produce json
 // @Security AgentTokenAuth
-// @Param body body relay.HeartbeatPayload true "心跳载荷"
-// @Success 200 {object} response.Any{data=relay.HeartbeatResponse} "心跳响应"
+// @Param body body protocol.RelayHeartbeatPayload true "心跳载荷"
+// @Success 200 {object} response.Any{data=protocol.RelayHeartbeatResponse} "心跳响应"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Agent Token 无效"
 // @Failure 403 {object} response.Any "节点类型不匹配"
 // @Router /api/v1/relay/heartbeat [post]
 func PostHeartbeat(c *gin.Context) {
-	var payload HeartbeatPayload
-	if !apiutil.BindJSON(c, &payload) {
+	var payload protocol.RelayHeartbeatPayload
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)

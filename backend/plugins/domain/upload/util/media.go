@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package util
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/shared"
@@ -45,6 +45,6 @@ func NormalizeImageQuality(quality string) string {
 	case shared.ImageQualityLow, shared.ImageQualityMedium, shared.ImageQualityHigh:
 		return q
 	default:
-		return shared.ImageQualityOrigin
+		return ImageQualityOrigin
 	}
 }

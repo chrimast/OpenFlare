@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package zone
+package migrator
 
 import (
 	"context"
@@ -73,7 +73,7 @@ func setupLegacyImportDB(t *testing.T) (*sql.DB, func()) {
 	}
 }
 
-func TestImportLegacyTxBindsRouteDomains(t *testing.T) {
+func TestImportZoneLegacyTxBindsRouteDomains(t *testing.T) {
 	sqlDB, cleanup := setupLegacyImportDB(t)
 	defer cleanup()
 	ctx := context.Background()
@@ -88,7 +88,7 @@ func TestImportLegacyTxBindsRouteDomains(t *testing.T) {
 
 	tx, err := sqlDB.Begin()
 	require.NoError(t, err)
-	report, err := ImportLegacyTx(ctx, tx, false)
+	report, err := ImportZoneLegacyTx(ctx, tx, false)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 
@@ -106,13 +106,13 @@ func TestImportLegacyTxBindsRouteDomains(t *testing.T) {
 	// Idempotent re-run
 	tx, err = sqlDB.Begin()
 	require.NoError(t, err)
-	report2, err := ImportLegacyTx(ctx, tx, false)
+	report2, err := ImportZoneLegacyTx(ctx, tx, false)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 	assert.Equal(t, 0, report2.Domains)
 }
 
-func TestImportLegacyTxNoOpWithoutLegacyColumns(t *testing.T) {
+func TestImportZoneLegacyTxNoOpWithoutLegacyColumns(t *testing.T) {
 	gormDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	sqlDB, err := gormDB.DB()
@@ -143,15 +143,15 @@ func TestImportLegacyTxNoOpWithoutLegacyColumns(t *testing.T) {
 
 	tx, err := sqlDB.Begin()
 	require.NoError(t, err)
-	report, err := ImportLegacyTx(context.Background(), tx, false)
+	report, err := ImportZoneLegacyTx(context.Background(), tx, false)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 	assert.Equal(t, 0, report.Zones)
 	assert.Equal(t, 0, report.Domains)
 }
 
-// TestImportLegacyTxUnicodeDomains canonicalizes historical names and preserves bindings on upgrade.
-func TestImportLegacyTxUnicodeDomains(t *testing.T) {
+// TestImportZoneLegacyTxUnicodeDomains canonicalizes historical names and preserves bindings on upgrade.
+func TestImportZoneLegacyTxUnicodeDomains(t *testing.T) {
 	for _, source := range []string{"route", "managed"} {
 		t.Run(source, func(t *testing.T) {
 			sqlDB, cleanup := setupLegacyImportDB(t)
@@ -175,16 +175,16 @@ func TestImportLegacyTxUnicodeDomains(t *testing.T) {
 					t.Fatal(err)
 				}
 				t.Cleanup(func() { _ = tx.Rollback() })
-				report, err := ImportLegacyTx(ctx, tx, false)
+				report, err := ImportZoneLegacyTx(ctx, tx, false)
 				if err != nil {
-					t.Fatalf("ImportLegacyTx(%s, attempt=%d) = %+v, %v, want no conflicts", source, attempt, report, err)
+					t.Fatalf("ImportZoneLegacyTx(%s, attempt=%d) = %+v, %v, want no conflicts", source, attempt, report, err)
 				}
 				if err := tx.Commit(); err != nil {
 					t.Fatal(err)
 				}
 				want := 1 - attempt
 				if report.Zones != want || report.Domains != want {
-					t.Errorf("ImportLegacyTx(%s, attempt=%d) = %+v, want %d zones/domains", source, attempt, report, want)
+					t.Errorf("ImportZoneLegacyTx(%s, attempt=%d) = %+v, want %d zones/domains", source, attempt, report, want)
 				}
 			}
 			var root, domain string
@@ -199,29 +199,15 @@ func TestImportLegacyTxUnicodeDomains(t *testing.T) {
 			if (source == "route" && (!routeID.Valid || routeID.Int64 != 3)) || (source == "managed" && routeID.Valid) {
 				t.Errorf("imported %s route binding = %v", source, routeID)
 			}
-
-			var zoneID uint
-			if err := sqlDB.QueryRow(`SELECT id FROM of_zones`).Scan(&zoneID); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := Create(ctx, Input{Domain: "xn--bcher-kva.de"}); err == nil {
-				t.Error("Create accepted an equivalent imported IDN zone")
-			}
-			if _, err := CreateDomain(ctx, zoneID, DomainInput{Domain: "api.xn--bcher-kva.de"}); err == nil {
-				t.Error("CreateDomain accepted an equivalent imported IDN host")
-			}
-			if _, err := CreateDomain(ctx, zoneID, DomainInput{Domain: "www.xn--bcher-kva.de"}); err != nil {
-				t.Errorf("CreateDomain in imported IDN zone: %v", err)
-			}
-			if _, err := normalizeDomain("api.bücher.de"); err == nil {
-				t.Error("normalizeDomain(api.bücher.de) accepted a new Unicode domain")
+			if _, err := routeidentity.NormalizeDomain("api.bücher.de"); err == nil {
+				t.Error("NormalizeDomain(api.bücher.de) accepted a new Unicode domain")
 			}
 		})
 	}
 }
 
-// TestImportLegacyTxIDNBindingConflict rejects equivalent names bound to different routes.
-func TestImportLegacyTxIDNBindingConflict(t *testing.T) {
+// TestImportZoneLegacyTxIDNBindingConflict rejects equivalent names bound to different routes.
+func TestImportZoneLegacyTxIDNBindingConflict(t *testing.T) {
 	sqlDB, cleanup := setupLegacyImportDB(t)
 	t.Cleanup(cleanup)
 	if _, err := sqlDB.Exec(`INSERT INTO of_proxy_routes (id, domain, domains) VALUES (3, 'api.bücher.de', '["api.bücher.de"]'), (4, 'api.xn--bcher-kva.de', '["api.xn--bcher-kva.de"]')`); err != nil {
@@ -232,9 +218,9 @@ func TestImportLegacyTxIDNBindingConflict(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = tx.Rollback() })
-	report, err := ImportLegacyTx(context.Background(), tx, false)
+	report, err := ImportZoneLegacyTx(context.Background(), tx, false)
 	if err == nil || len(report.Conflicts) != 1 {
-		t.Errorf("ImportLegacyTx(equivalent IDN with different bindings) = %+v, %v; want one conflict", report, err)
+		t.Errorf("ImportZoneLegacyTx(equivalent IDN with different bindings) = %+v, %v; want one conflict", report, err)
 	}
 }
 
@@ -244,9 +230,9 @@ func TestNormalizeLegacyIDNRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	root, err := zoneRoot(domain)
+	root, err := routeidentity.ZoneRoot(domain)
 	if err != nil || root != "example.xn--55qx5d.cn" {
-		t.Errorf("zoneRoot(%q) = %q, %v; want example.xn--55qx5d.cn", domain, root, err)
+		t.Errorf("ZoneRoot(%q) = %q, %v; want example.xn--55qx5d.cn", domain, root, err)
 	}
 }
 

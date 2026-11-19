@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package ingest
+package upload
 
 import (
 	"Wavelet/pkg/idgen"
@@ -25,7 +25,7 @@ import (
 	uploadstorage "Wavelet/plugins/domain/upload/storage"
 )
 
-func normalizeRequest(req *Request) {
+func normalizeRequest(req *IngestRequest) {
 	req.Extension = strings.ToLower(strings.TrimSpace(req.Extension))
 	if req.Extension == "" {
 		req.Extension = "bin"
@@ -42,7 +42,7 @@ func resolveAccessMode(uploadType string, explicit *int) int {
 	if explicit != nil {
 		return *explicit
 	}
-	if uploadType == shared.DefaultPublicUploadType {
+	if uploadType == DefaultPublicUploadType {
 		return 1
 	}
 	return 0
@@ -81,14 +81,14 @@ func validateAllowedExtension(ctx context.Context, ext string) error {
 			return nil
 		}
 	}
-	return errors.New(shared.ErrUnsupportedFormat)
+	return errors.New(ErrUnsupportedFormat)
 }
 
 func defaultObjectKey(id uint64, ext string) string {
 	return fmt.Sprintf("uploads/%s/%d.%s", time.Now().Format("2006/01/02"), id, ext)
 }
 
-func buildObjectKey(req Request, id uint64) string {
+func buildObjectKey(req IngestRequest, id uint64) string {
 	if req.ObjectKeyFn != nil {
 		return req.ObjectKeyFn(id, req.Extension)
 	}
@@ -138,7 +138,7 @@ func createUploadWithStats(ctx context.Context, upload *models.Upload) error {
 		if err := repository.CreateUploadTx(tx, upload); err != nil {
 			return err
 		}
-		return uploadstats.ApplyUploadStatsDeltaTx(tx, upload, 1)
+		return ApplyUploadStatsDeltaTx(tx, upload, 1)
 	})
 }
 
@@ -162,7 +162,7 @@ func createDedupRecord(ctx context.Context, existing models.Upload, req Request)
 		return Result{}, err
 	}
 	logger.InfoF(ctx, "Upload deduplication succeeded ID: %d, Path: %s", newUpload.ID, existing.FilePath)
-	return Result{
+	return IngestResult{
 		Upload:  newUpload,
 		Created: true,
 		Stored:  false,
@@ -170,16 +170,16 @@ func createDedupRecord(ctx context.Context, existing models.Upload, req Request)
 }
 
 func uploadstorageReadOnly(ctx context.Context) bool {
-	return uploadstorage.ReadOnly(ctx)
+	return ReadOnly(ctx)
 }
 
-func createNewUpload(ctx context.Context, req Request) (Result, error) {
+func createNewUpload(ctx context.Context, req IngestRequest) (IngestResult, error) {
 	if uploadstorageReadOnly(ctx) {
-		return Result{}, ErrStorageReadOnly
+		return IngestResult{}, ErrIngestStorageReadOnly
 	}
 	if !req.SkipExtensionCheck {
 		if err := validateAllowedExtension(ctx, req.Extension); err != nil {
-			return Result{}, err
+			return IngestResult{}, err
 		}
 	}
 
@@ -187,7 +187,7 @@ func createNewUpload(ctx context.Context, req Request) (Result, error) {
 	objectKey := buildObjectKey(req, id)
 	storedKey, err := storeObject(ctx, objectKey, req.Reader, req.Size, req.MimeType, &req.Metadata)
 	if err != nil {
-		return Result{}, err
+		return IngestResult{}, err
 	}
 
 	accessMode := resolveAccessMode(req.Type, req.AccessMode)
@@ -209,7 +209,7 @@ func createNewUpload(ctx context.Context, req Request) (Result, error) {
 		return Result{}, err
 	}
 
-	return Result{
+	return IngestResult{
 		Upload:  upload,
 		Created: true,
 		Stored:  true,

@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package task
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -67,19 +67,19 @@ type WarmImageCacheHandler struct{}
 // ValidatePayload validates and normalizes image cache warmup parameters.
 func (h *WarmImageCacheHandler) ValidatePayload(payload []byte) ([]byte, error) {
 	if len(payload) == 0 {
-		return nil, errors.New(shared.ErrImageCacheWarmupPayloadRequired)
+		return nil, errors.New(ErrImageCacheWarmupPayloadRequired)
 	}
 
 	var req WarmImageCachePayload
 	if err := json.Unmarshal(payload, &req); err != nil {
-		return nil, fmt.Errorf(shared.ErrInvalidImageCacheWarmupPayload, err)
+		return nil, fmt.Errorf(ErrInvalidImageCacheWarmupPayload, err)
 	}
 
 	req.Quality = strings.ToLower(strings.TrimSpace(req.Quality))
-	if req.Quality != shared.ImageQualityLow &&
-		req.Quality != shared.ImageQualityMedium &&
-		req.Quality != shared.ImageQualityHigh {
-		return nil, errors.New(shared.ErrInvalidImageCacheWarmupQuality)
+	if req.Quality != ImageQualityLow &&
+		req.Quality != ImageQualityMedium &&
+		req.Quality != ImageQualityHigh {
+		return nil, errors.New(ErrInvalidImageCacheWarmupQuality)
 	}
 
 	return json.Marshal(req)
@@ -95,7 +95,7 @@ func (h *WarmImageCacheHandler) Execute(ctx context.Context, payload []byte) (*c
 
 	var req WarmImageCachePayload
 	if err := json.Unmarshal(normalizedPayload, &req); err != nil {
-		return nil, fmt.Errorf(shared.ErrParseImageCacheWarmupPayload, err)
+		return nil, fmt.Errorf(ErrParseImageCacheWarmupPayload, err)
 	}
 
 	logger.InfoF(ctx, "等待获取图片缓存预热执行锁，质量: %s", req.Quality)
@@ -155,7 +155,7 @@ func (h *WarmImageCacheHandler) Execute(ctx context.Context, payload []byte) (*c
 			totalProcessed++
 			lastID = upload.ID
 
-			_, cacheHit, err := filesrv.EnsureCompressedImageCache(ctx, upload, req.Quality)
+			_, cacheHit, err := EnsureCompressedImageCache(ctx, upload, req.Quality)
 			if err != nil {
 				totalFailed++
 				batchFailed++

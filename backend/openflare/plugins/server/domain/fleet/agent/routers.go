@@ -30,14 +30,14 @@ import (
 // @Router /api/v1/agent/nodes/register [post]
 func RegisterHandler(c *gin.Context) {
 	var request protocol.RegisterNodeRequest
-	if !apiutil.BindJSON(c, &request) {
+	if !httpx.BindJSON(c, &request) {
 		return
 	}
 	payload := request.NodePayload
 	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
 
 	var (
-		result *RegistrationResponse
+		result *protocol.RegisterNodeResponse
 		err    error
 	)
 	if authNode, ok := NodeFromContext(c); ok {
@@ -58,14 +58,14 @@ func RegisterHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security AgentTokenAuth
-// @Param body body agent.NodePayload true "心跳数据"
+// @Param body body protocol.NodePayload true "心跳数据"
 // @Success 200 {object} response.Any{data=agent.HeartbeatResponse} "心跳成功"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
 // @Router /api/v1/agent/nodes/heartbeat [post]
 func HeartbeatHandler(c *gin.Context) {
-	var payload NodePayload
-	if !apiutil.BindJSON(c, &payload) {
+	var payload protocol.NodePayload
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
@@ -113,14 +113,14 @@ func GetActiveConfigHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security AgentTokenAuth
-// @Param body body agent.WAFIPGroupSyncInput true "同步请求"
-// @Success 200 {object} response.Any{data=agent.WAFIPGroupSyncResult} "同步结果"
+// @Param body body protocol.WAFIPGroupSyncRequest true "同步请求"
+// @Success 200 {object} response.Any{data=protocol.WAFIPGroupSyncResponse} "同步结果"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
 // @Router /api/v1/agent/waf/ip-groups/sync [post]
 func SyncWAFIPGroupsHandler(c *gin.Context) {
-	var input WAFIPGroupSyncInput
-	if !apiutil.BindJSON(c, &input) {
+	var input protocol.WAFIPGroupSyncRequest
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	result, err := SyncWAFIPGroups(c.Request.Context(), input)
@@ -137,14 +137,14 @@ func SyncWAFIPGroupsHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security AgentTokenAuth
-// @Param body body agent.ApplyLogPayload true "应用日志"
+// @Param body body protocol.ApplyLogPayload true "应用日志"
 // @Success 200 {object} response.Any{data=model.OpenFlareApplyLog} "日志记录"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
 // @Router /api/v1/agent/apply-logs [post]
 func ReportApplyLogHandler(c *gin.Context) {
-	var payload ApplyLogPayload
-	if !apiutil.BindJSON(c, &payload) {
+	var payload protocol.ApplyLogPayload
+	if !httpx.BindJSON(c, &payload) {
 		return
 	}
 	if authNode, ok := NodeFromContext(c); ok {

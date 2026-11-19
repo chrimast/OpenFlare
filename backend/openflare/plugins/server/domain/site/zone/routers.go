@@ -57,7 +57,7 @@ func ListHandler(c *gin.Context) {
 // @Router /api/v1/d/zones [post]
 func CreateHandler(c *gin.Context) {
 	var input Input
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	item, err := Create(c.Request.Context(), input)
@@ -77,7 +77,7 @@ func CreateHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any
 // @Router /api/v1/d/zones/{id}/overview [get]
 func GetOverviewHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
@@ -101,7 +101,7 @@ func GetOverviewHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any
 // @Router /api/v1/d/zones/{id}/stats [get]
 func GetStatsHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
@@ -126,12 +126,12 @@ func GetStatsHandler(c *gin.Context) {
 // @Failure 409 {object} response.Any
 // @Router /api/v1/d/zones/{id}/update [post]
 func UpdateHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
 	var input Input
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	item, err := Update(c.Request.Context(), id, input)
@@ -152,7 +152,7 @@ func UpdateHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any
 // @Router /api/v1/d/zones/{id}/delete [post]
 func DeleteHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
@@ -177,12 +177,12 @@ func DeleteHandler(c *gin.Context) {
 // @Failure 409 {object} response.Any
 // @Router /api/v1/d/zones/{id}/domains [post]
 func CreateDomainHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	id, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
 	var input DomainInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	item, err := CreateDomain(c.Request.Context(), id, input)
@@ -208,16 +208,16 @@ func CreateDomainHandler(c *gin.Context) {
 // @Failure 409 {object} response.Any
 // @Router /api/v1/d/zones/{id}/domains/{domainId}/update [post]
 func UpdateDomainHandler(c *gin.Context) {
-	zoneID, ok := apiutil.IDParam(c)
+	zoneID, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
-	domainID, ok := apiutil.NamedIDParam(c, "domainId")
+	domainID, ok := httpx.NamedIDParam(c, "domainId")
 	if !ok {
 		return
 	}
 	var input DomainInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	item, err := UpdateDomain(c.Request.Context(), zoneID, domainID, input)
@@ -239,11 +239,11 @@ func UpdateDomainHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any
 // @Router /api/v1/d/zones/{id}/domains/{domainId}/delete [post]
 func DeleteDomainHandler(c *gin.Context) {
-	zoneID, ok := apiutil.IDParam(c)
+	zoneID, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}
-	domainID, ok := apiutil.NamedIDParam(c, "domainId")
+	domainID, ok := httpx.NamedIDParam(c, "domainId")
 	if !ok {
 		return
 	}
@@ -265,7 +265,7 @@ func DeleteDomainHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any
 // @Router /api/v1/d/zones/{id}/domains/cleanup-unlinked [post]
 func CleanupUnlinkedDomainsHandler(c *gin.Context) {
-	zoneID, ok := apiutil.IDParam(c)
+	zoneID, ok := httpx.IDParam(c)
 	if !ok {
 		return
 	}

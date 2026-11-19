@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package filesrv serves uploaded files with access control and image compression.
-package filesrv
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -119,7 +118,7 @@ func GetUploadRecordByID(c *gin.Context) (*models.Upload, error) {
 		return nil, err
 	}
 
-	upload, err := cache.GetUploadByID(c.Request.Context(), uploadID)
+	upload, err := GetUploadByID(c.Request.Context(), uploadID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +130,7 @@ func getFileTypeCategory(upload *models.Upload) fileTypeCategory {
 	mime := strings.ToLower(upload.MimeType)
 	ext := strings.ToLower(upload.Extension)
 
-	if strings.HasPrefix(mime, "image/") || util.IsImageExtension(ext) {
+	if strings.HasPrefix(mime, "image/") || IsImageExtension(ext) {
 		return fileTypeImage
 	}
 	if strings.HasPrefix(mime, "video/") {
@@ -148,11 +147,11 @@ func ServeUpload(c *gin.Context, upload *models.Upload) {
 	setCacheHeaders(c, upload)
 
 	category := getFileTypeCategory(upload)
-	quality := util.NormalizeImageQuality(c.Query("quality"))
+	quality := NormalizeImageQuality(c.Query("quality"))
 
 	switch category {
 	case fileTypeImage:
-		if quality != shared.ImageQualityOrigin {
+		if quality != ImageQualityOrigin {
 			serveCompressedImage(c, upload, quality)
 			return
 		}
@@ -262,7 +261,7 @@ func generateCompressedImageCache(
 		return compressedImageCacheResult{}, fmt.Errorf("read original image: %w", err)
 	}
 
-	webpBytes, err = util.CompressImageToWebP(bytes.NewReader(origBytes), quality)
+	webpBytes, err = CompressImageToWebP(bytes.NewReader(origBytes), quality)
 	if err != nil {
 		return compressedImageCacheResult{}, fmt.Errorf("compress image to WebP: %w", err)
 	}

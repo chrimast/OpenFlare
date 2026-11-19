@@ -188,7 +188,7 @@ func ActivateConfigVersionHandler(c *gin.Context) {
 // @Router /api/v1/d/config-versions/cleanup [post]
 func CleanupConfigVersionsHandler(c *gin.Context) {
 	var input CleanupInput
-	if !apiutil.BindJSON(c, &input) {
+	if !httpx.BindJSON(c, &input) {
 		return
 	}
 	result, err := CleanupConfigVersions(c.Request.Context(), input.KeepCount)

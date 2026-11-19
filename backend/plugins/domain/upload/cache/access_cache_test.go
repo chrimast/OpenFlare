@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package cache
+package upload
 
 import (
 	"Wavelet/plugins/domain/upload/shared"
@@ -18,8 +18,8 @@ func TestLoadMigrationAccessStateCachesResult(t *testing.T) {
 	ResetAccessCaches()
 
 	ctx := context.Background()
-	first := uploadstorage.LoadMigrationAccessState(ctx)
-	second := uploadstorage.LoadMigrationAccessState(ctx)
+	first := LoadMigrationAccessState(ctx)
+	second := LoadMigrationAccessState(ctx)
 
 	if first.ReadOnly != second.ReadOnly {
 		t.Fatalf("readOnly mismatch: first=%v second=%v", first.ReadOnly, second.ReadOnly)
@@ -78,7 +78,7 @@ func TestAccessCacheTTLExpires(t *testing.T) {
 	_ = loadFileAccessWhitelist(ctx)
 
 	fileAccessWhitelistMu.Lock()
-	fileAccessWhitelistCheckedAt = time.Now().Add(-time.Duration(shared.AccessCacheTTL)*time.Second - time.Second)
+	fileAccessWhitelistCheckedAt = time.Now().Add(-time.Duration(AccessCacheTTL)*time.Second - time.Second)
 	fileAccessWhitelistMu.Unlock()
 
 	// Should still work after TTL by reloading from config.

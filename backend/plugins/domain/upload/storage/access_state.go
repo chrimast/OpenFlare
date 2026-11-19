@@ -1,8 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package storage provides upload storage backend operations and migration state.
-package storage
+package upload
 
 import (
 	"Wavelet/core/contracts"
@@ -38,7 +37,7 @@ func ResetMigrationAccessCache() {
 // LoadMigrationAccessState returns cached migration maintenance state.
 func LoadMigrationAccessState(ctx context.Context) MigrationAccessState {
 	migrationAccessMu.RLock()
-	if migrationAccessValid && time.Since(migrationAccessCheckedAt) < time.Duration(shared.AccessCacheTTL)*time.Second {
+	if migrationAccessValid && time.Since(migrationAccessCheckedAt) < time.Duration(AccessCacheTTL)*time.Second {
 		state := migrationAccessCached
 		migrationAccessMu.RUnlock()
 		return state
@@ -48,7 +47,7 @@ func LoadMigrationAccessState(ctx context.Context) MigrationAccessState {
 	migrationAccessMu.Lock()
 	defer migrationAccessMu.Unlock()
 
-	if migrationAccessValid && time.Since(migrationAccessCheckedAt) < time.Duration(shared.AccessCacheTTL)*time.Second {
+	if migrationAccessValid && time.Since(migrationAccessCheckedAt) < time.Duration(AccessCacheTTL)*time.Second {
 		return migrationAccessCached
 	}
 
