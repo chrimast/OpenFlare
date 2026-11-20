@@ -1269,12 +1269,18 @@ definitions:
     properties:
       checksum:
         type: string
+      engine:
+        type: string
       main_config_checksum:
         type: string
       message:
         type: string
       node_id:
         type: string
+      payload_checksum:
+        type: string
+      release_sequence:
+        type: integer
       result:
         type: string
       route_config_checksum:
@@ -1744,6 +1750,8 @@ definitions:
         type: string
       created_at:
         type: string
+      engine:
+        type: string
       id:
         type: integer
       main_config_checksum:
@@ -1752,6 +1760,10 @@ definitions:
         type: string
       node_id:
         type: string
+      payload_checksum:
+        type: string
+      release_sequence:
+        type: integer
       result:
         type: string
       route_config_checksum:
@@ -1759,6 +1771,38 @@ definitions:
       support_file_count:
         type: integer
       version:
+        type: string
+    type: object
+  model.OpenFlareAttackEvent:
+    properties:
+      bucket_unix:
+        type: integer
+      count:
+        type: integer
+      first_unix:
+        type: integer
+      host:
+        type: string
+      last_unix:
+        type: integer
+      remote_addr:
+        type: string
+    type: object
+  model.OpenFlareAttackGroup:
+    properties:
+      id:
+        type: integer
+      levels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      rule_overrides:
+        additionalProperties:
+          type: string
+        type: object
+      updated_at:
         type: string
     type: object
   model.OpenFlareHealthEvent:
@@ -1796,9 +1840,13 @@ definitions:
         type: boolean
       capabilities_json:
         type: string
+      contract_version:
+        type: integer
       created_at:
         type: string
       current_version:
+        type: string
+      engine:
         type: string
       ext_version:
         type: string
@@ -6432,37 +6480,53 @@ paths:
       summary: 上报配置应用日志
       tags:
       - openflare-agent
-  /api/v1/agent/config-versions/active:
+  /api/v1/agent/config/pull:
     get:
-      description: 返回当前生效的完整配置包，供 Agent 拉取并应用
       parameters:
-      - description: Agent 支持站点身份验证
+      - description: 配置资源标识
         in: query
-        name: site_auth
-        type: boolean
+        name: key
+        required: true
+        type: string
+      - description: 配置资源 SHA-256
+        in: query
+        name: sha256
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: 活跃配置
+          description: 配置 JSON
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/apps_openflare_agent.ConfigResponse'
-              type: object
+            type: string
         "400":
-          description: 参数错误
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
         "401":
-          description: Token 无效
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
       security:
       - AgentTokenAuth: []
-      summary: 获取活跃配置版本
+      summary: 拉取边缘配置资源
       tags:
       - openflare-agent
   /api/v1/agent/nodes/heartbeat:
@@ -6506,7 +6570,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: 使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token
+      description: 使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token。支持当前配置契约的
+        Pingora Edge 使用原节点 Token 注册时，可接替已登记的 OpenResty 节点。
       parameters:
       - description: 节点上报数据；registration_key 为首次注册重试凭证
         in: body
@@ -6631,6 +6696,10 @@ paths:
           description: Token 无效
           schema:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: 资源不在节点发布范围内
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
       security:
       - AgentTokenAuth: []
       summary: 查询 Pages 项目最新激活部署哈希
@@ -6660,46 +6729,13 @@ paths:
           description: Token 无效
           schema:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: 资源不在节点发布范围内
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
       security:
       - AgentTokenAuth: []
       summary: 下载 Pages 项目最新激活部署包
-      tags:
-      - openflare-agent
-  /api/v1/agent/waf/ip-groups/sync:
-    post:
-      consumes:
-      - application/json
-      description: 按 ID 与校验和增量同步 WAF IP 组定义
-      parameters:
-      - description: 同步请求
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 同步结果
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncResponse'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: Token 无效
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - AgentTokenAuth: []
-      summary: 同步 WAF IP 组
       tags:
       - openflare-agent
   /api/v1/agent/ws:
@@ -8093,286 +8129,6 @@ paths:
       summary: 获取 Cloudflare 指向总览
       tags:
       - openflare-cloudflare
-  /api/v1/d/config-versions:
-    get:
-      description: 返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 配置版本列表
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/model.ConfigVersionSummary'
-                  type: array
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 获取配置版本列表
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/{id}:
-    get:
-      description: 返回指定配置版本的完整快照与渲染内容，需要管理员权限
-      parameters:
-      - description: 配置版本 ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 配置版本详情
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/model.ConfigVersion'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或版本不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 获取配置版本详情
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/{id}/activate:
-    post:
-      description: 将指定历史版本设为当前活跃配置，需要管理员权限
-      parameters:
-      - description: 配置版本 ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 激活成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/model.ConfigVersion'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或版本不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 激活配置版本
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/active:
-    get:
-      description: 返回当前正在使用的配置版本，需要管理员权限
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 活跃配置版本
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/model.ConfigVersion'
-              type: object
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限、不存在或无活跃版本
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 获取当前活跃配置版本
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/cleanup:
-    post:
-      consumes:
-      - application/json
-      description: 删除超出保留数量的非活跃配置版本，需要管理员权限
-      parameters:
-      - description: 清理参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apps_openflare_config_version.CleanupInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 清理结果
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/apps_openflare_config_version.CleanupResult'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 清理历史配置版本
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/diff:
-    get:
-      description: 对比当前草稿配置与活跃版本之间的差异，需要管理员权限
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 配置差异
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/apps_openflare_config_version.ConfigDiffResult'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 对比草稿与活跃配置
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/preview:
-    get:
-      description: 渲染并返回当前草稿配置的预览结果，需要管理员权限
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 配置预览
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/apps_openflare_config_version.ConfigPreviewResult'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 预览当前草稿配置
-      tags:
-      - openflare-config-version
-  /api/v1/d/config-versions/publish:
-    post:
-      description: 将当前草稿配置发布为新版本，需要管理员权限
-      parameters:
-      - description: 是否强制发布
-        in: query
-        name: force
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 发布成功
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/model.ConfigVersion'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 发布配置版本
-      tags:
-      - openflare-config-version
   /api/v1/d/dashboard/overview:
     get:
       description: 聚合节点与可观测性数据，返回 OpenFlare 控制台仪表盘概览，需要管理员权限
@@ -8696,7 +8452,7 @@ paths:
       - openflare-node
   /api/v1/d/nodes/{id}/agent-release:
     get:
-      description: 返回指定节点可用的最新 Agent 版本信息，需要管理员权限
+      description: 按节点类型返回指定发布渠道的最新版本，需要管理员权限
       parameters:
       - description: 节点 ID
         in: path
@@ -8711,7 +8467,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Agent 发布信息
+          description: 节点发布信息
           schema:
             allOf:
             - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
@@ -8733,14 +8489,14 @@ paths:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
       security:
       - SessionCookie: []
-      summary: 获取 Agent 发布信息
+      summary: 获取节点发布信息
       tags:
       - openflare-node
   /api/v1/d/nodes/{id}/agent-update:
     post:
       consumes:
       - application/json
-      description: 向指定节点下发 Agent 自更新指令，需要管理员权限
+      description: 为指定节点登记更新请求，Pingora 节点的请求固定到目标版本，需要管理员权限
       parameters:
       - description: 节点 ID
         in: path
@@ -8756,7 +8512,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: 更新请求已下发
+          description: 更新请求已登记
           schema:
             allOf:
             - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
@@ -8778,7 +8534,7 @@ paths:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
       security:
       - SessionCookie: []
-      summary: 请求 Agent 更新
+      summary: 请求更新节点
       tags:
       - openflare-node
   /api/v1/d/nodes/{id}/delete:
@@ -8817,6 +8573,44 @@ paths:
       security:
       - SessionCookie: []
       summary: 删除节点
+      tags:
+      - openflare-node
+  /api/v1/d/nodes/{id}/edge-restart:
+    post:
+      description: 向指定节点下发 OpenResty 重启指令，需要管理员权限
+      parameters:
+      - description: 节点 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 重启请求已下发
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_node.View'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或节点不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 请求重启 Pingora
       tags:
       - openflare-node
   /api/v1/d/nodes/{id}/force-sync:
@@ -8939,44 +8733,6 @@ paths:
       security:
       - SessionCookie: []
       summary: 清理节点健康事件
-      tags:
-      - openflare-node
-  /api/v1/d/nodes/{id}/openresty-restart:
-    post:
-      description: 向指定节点下发 OpenResty 重启指令，需要管理员权限
-      parameters:
-      - description: 节点 ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 重启请求已下发
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/apps_openflare_node.View'
-              type: object
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "401":
-          description: 未登录
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-        "404":
-          description: 无权限或节点不存在
-          schema:
-            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
-      security:
-      - SessionCookie: []
-      summary: 请求重启 OpenResty
       tags:
       - openflare-node
   /api/v1/d/nodes/{id}/update:
@@ -11052,6 +10808,330 @@ paths:
       summary: 同步 Uptime Kuma
       tags:
       - openflare-option
+  /api/v1/d/waf/attack-events:
+    get:
+      parameters:
+      - enum:
+        - all
+        - blocked
+        - observed
+        in: query
+        name: action
+        type: string
+      - description: Exact host and source IP
+        in: query
+        name: exact
+        type: boolean
+      - in: query
+        maxLength: 255
+        name: host
+        type: string
+      - in: query
+        maxLength: 64
+        name: node_id
+        type: string
+      - description: Zero-based page
+        in: query
+        maximum: 1000000
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        maxLength: 128
+        name: remote_addr
+        type: string
+      - description: Unix seconds, inclusive
+        in: query
+        minimum: 0
+        name: since
+        type: integer
+      - description: Unix seconds, exclusive
+        in: query
+        minimum: 0
+        name: until
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_waf.attackLogPage-model_OpenFlareAttackEvent'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 列出聚合攻击事件
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/attack-groups:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.OpenFlareAttackGroup'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 列出攻击防护规则组
+      tags:
+      - openflare-waf
+    post:
+      description: 可按类别配置防护等级。rule_overrides 以规则 ID 为键，支持 off（关闭）、enabled（开启）、observe（记录），优先于类别等级。
+      parameters:
+      - description: 规则组
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_waf.attackGroupInput'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.OpenFlareAttackGroup'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 创建攻击防护规则组
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/attack-groups/{id}/update:
+    post:
+      description: 替换规则组等级配置，省略的类别按禁用处理。rule_overrides 支持 off、enabled、observe；省略字段时保留已有逐条设置，传入空对象时清空。
+      parameters:
+      - description: 规则组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 规则组
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_waf.attackGroupInput'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.OpenFlareAttackGroup'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 更新攻击防护规则组
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/attack-logs:
+    get:
+      parameters:
+      - enum:
+        - all
+        - blocked
+        - observed
+        in: query
+        name: action
+        type: string
+      - description: Exact host and source IP
+        in: query
+        name: exact
+        type: boolean
+      - in: query
+        maxLength: 255
+        name: host
+        type: string
+      - in: query
+        maxLength: 64
+        name: node_id
+        type: string
+      - description: Zero-based page
+        in: query
+        maximum: 1000000
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        maxLength: 128
+        name: remote_addr
+        type: string
+      - description: Unix seconds, inclusive
+        in: query
+        minimum: 0
+        name: since
+        type: integer
+      - description: Unix seconds, exclusive
+        in: query
+        minimum: 0
+        name: until
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_waf.attackLogPage-apps_openflare_waf_attackLogEntry'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 列出攻击日志记录
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/attack-logs/{id}/request:
+    get:
+      parameters:
+      - description: 记录 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Unix seconds
+        in: query
+        maximum: 253402300798
+        minimum: 1
+        name: logged_at
+        required: true
+        type: integer
+      - in: query
+        maxLength: 64
+        name: node_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_waf.attackLogRequestResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取攻击日志请求报文
+      tags:
+      - openflare-waf
   /api/v1/d/waf/ip-groups:
     get:
       description: 返回全部 WAF IP 组，需要管理员权限
@@ -11603,6 +11683,98 @@ paths:
       security:
       - SessionCookie: []
       summary: 更新 WAF 规则元数据
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/rule-groups/{id}/sites:
+    get:
+      parameters:
+      - description: 规则组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 网站列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/apps_openflare_waf.RuleGroupSite'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 列出 WAF 规则组关联网站
+      tags:
+      - openflare-waf
+  /api/v1/d/waf/rule-groups/{id}/sites/remove:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 规则组 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 待解绑的代理路由 ID 列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_waf.IDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解绑结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_waf.RemoveRuleGroupSitesResult'
+              type: object
+        "400":
+          description: 参数错误或规则组是全局规则组
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 批量解除 WAF 规则组的网站绑定
       tags:
       - openflare-waf
   /api/v1/d/waf/sites/{route_id}/rule-groups:
@@ -13096,6 +13268,192 @@ paths:
       summary: 发送邮箱验证码
       tags:
       - user
+  /d/performance-policies:
+    get:
+      description: The default policy is inherited by nodes without an explicit assignment.
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_performance.policyList'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: List Pingora performance policies
+      tags:
+      - Performance Policies
+    post:
+      parameters:
+      - description: Policy name and parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_performance.policyRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_performance.policyView'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Create a Pingora performance policy
+      tags:
+      - Performance Policies
+  /d/performance-policies/{id}/assign:
+    post:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Selected Pingora node IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_performance.assignmentRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: The default performance policy is inherited automatically
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Assign a Pingora performance policy to a set of nodes
+      tags:
+      - Performance Policies
+  /d/performance-policies/{id}/delete:
+    post:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: The default performance policy is inherited automatically
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Delete a Pingora performance policy
+      tags:
+      - Performance Policies
+  /d/performance-policies/{id}/update:
+    post:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Policy name and parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_performance.policyRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_performance.policyView'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Update a Pingora performance policy
+      tags:
+      - Performance Policies
   /f/{id}:
     get:
       description: 根据文件 ID 获取并提供已上传的临时或正式文件，若配置了缓存则优先走本地缓存，否则从 S3 等后端存储读取并流式返回

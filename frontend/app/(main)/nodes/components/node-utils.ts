@@ -151,22 +151,35 @@ export function getImageTag(version?: string): string {
   return 'latest';
 }
 
+function quoteShellArgument(value: string) {
+  return "'" + value.replaceAll("'", "'\\''") + "'";
+}
+
+export function buildEdgeInstallCommand(serverUrl: string, agentToken: string) {
+  return [
+    'curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-openflare-edge.sh -o install-openflare-edge.sh && \\',
+    'sudo bash install-openflare-edge.sh \\',
+    `  --server-url ${quoteShellArgument(serverUrl)} \\`,
+    '  --token-type node \\',
+    `  --token ${quoteShellArgument(agentToken)}`,
+  ].join('\n');
+}
+
 export function buildEdgeDockerInstallCommand(
   serverUrl: string,
   agentToken: string,
-  version?: string,
+  serverVersion?: string,
 ) {
-  const tag = getImageTag(version);
-  const image = `ghcr.io/rain-kl/openflare-agent:${tag}`;
-
+  const tag =
+    serverVersion?.trim().toLowerCase() === 'canary' ? 'canary' : 'latest';
+  const image = `ghcr.io/rain-kl/openflare-edge:${tag}`;
   return [
-    `docker pull ${image}`,
-    `docker rm -f openflare-agent 2>/dev/null || true`,
-    `docker run -d --name openflare-agent --restart unless-stopped \\`,
-    `  -p 80:80 -p 443:443/tcp -p 443:443/udp \\`,
-    `  -v openflare-agent-pages:/data/var/lib/openflare/pages \\`,
-    `  -e OPENFLARE_SERVER_URL=${serverUrl} \\`,
-    `  -e OPENFLARE_AGENT_TOKEN=${agentToken} \\`,
+    'docker run -d --pull always --name openflare-edge --restart unless-stopped \\',
+    '  -p 80:8080 -p 443:8443 \\',
+    '  -v openflare-edge-data:/var/lib/openflare-edge \\',
+    `  -e OPENFLARE_EDGE_SERVER_URL=${quoteShellArgument(serverUrl)} \\`,
+    '  -e OPENFLARE_EDGE_TOKEN_TYPE=node \\',
+    `  -e OPENFLARE_EDGE_TOKEN=${quoteShellArgument(agentToken)} \\`,
     `  ${image}`,
   ].join('\n');
 }

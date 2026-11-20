@@ -145,12 +145,12 @@ export const searchData: SearchItemSource[] = [
     keywordKey: 'search.keywords.console-ip-groups',
   },
   {
-    id: 'console-rate-limits',
-    titleKey: 'nav.rateLimits',
-    descriptionKey: 'search.items.rateLimitsDesc',
-    url: '/rate-limits',
+    id: 'console-security-settings',
+    titleKey: 'nav.securitySettings',
+    descriptionKey: 'search.items.securitySettingsDesc',
+    url: '/security-settings',
     category: 'page',
-    keywordKey: 'search.keywords.console-rate-limits',
+    keywordKey: 'search.keywords.console-security-settings',
   },
   {
     id: 'console-pages',
@@ -159,14 +159,6 @@ export const searchData: SearchItemSource[] = [
     url: '/pages',
     category: 'page',
     keywordKey: 'search.keywords.console-pages',
-  },
-  {
-    id: 'console-config-versions',
-    titleKey: 'nav.configVersions',
-    descriptionKey: 'search.items.configVersionsDesc',
-    url: '/config-versions',
-    category: 'page',
-    keywordKey: 'search.keywords.console-config-versions',
   },
   {
     id: 'console-access-logs',

@@ -15,6 +15,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/option"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/origin"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/pages"
+	"github.com/Rain-kl/Wavelet/internal/apps/openflare/performance"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/pow"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/proxy_route"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/tls"
@@ -32,7 +33,7 @@ func openFlareAdminMiddlewares() []gin.HandlerFunc {
 }
 
 func registerOpenFlareConsoleRoutes(apiV1Router *gin.RouterGroup) {
-	group := apiV1Router.Group("/d")
+	group := apiV1Router.Group("/d", config_version.WakeAfterWrite)
 	registerOpenFlareSystemRoutes(group)
 	registerOpenFlareTrafficRoutes(group)
 	registerOpenFlareNodeRoutes(group)
@@ -121,21 +122,16 @@ func registerOpenFlareTrafficRoutes(apiGroup *gin.RouterGroup) {
 	zoneGroup.POST("/:id/domains/:domainId/update", zone.UpdateDomainHandler)
 	zoneGroup.POST("/:id/domains/:domainId/delete", zone.DeleteDomainHandler)
 
-	configVersionGroup := apiGroup.Group("/config-versions")
-	configVersionGroup.Use(openFlareAdminMiddlewares()...)
-	{
-		httpx.RegisterCollection(configVersionGroup, "GET", config_version.ListConfigVersionsHandler)
-		configVersionGroup.GET("/active", config_version.GetActiveConfigVersionHandler)
-		configVersionGroup.GET("/preview", config_version.PreviewConfigVersionHandler)
-		configVersionGroup.GET("/diff", config_version.DiffConfigVersionHandler)
-		configVersionGroup.GET("/:id", config_version.GetConfigVersionHandler)
-		configVersionGroup.POST("/publish", config_version.PublishConfigVersionHandler)
-		configVersionGroup.POST("/:id/activate", config_version.ActivateConfigVersionHandler)
-		configVersionGroup.POST("/cleanup", config_version.CleanupConfigVersionsHandler)
-	}
 }
 
 func registerOpenFlareNodeRoutes(apiGroup *gin.RouterGroup) {
+	policies := apiGroup.Group("/performance-policies", openFlareAdminMiddlewares()...)
+	httpx.RegisterCollection(policies, "GET", performance.ListHandler)
+	httpx.RegisterCollection(policies, "POST", performance.CreateHandler)
+	policies.POST("/:id/update", performance.UpdateHandler)
+	policies.POST("/:id/assign", performance.AssignHandler)
+	policies.POST("/:id/delete", performance.DeleteHandler)
+
 	nodeRoute := apiGroup.Group("/nodes")
 	nodeRoute.Use(openFlareAdminMiddlewares()...)
 	{
@@ -149,7 +145,7 @@ func registerOpenFlareNodeRoutes(apiGroup *gin.RouterGroup) {
 		nodeRoute.POST("/:id/update", node.UpdateNodeHandler)
 		nodeRoute.POST("/:id/delete", node.DeleteNodeHandler)
 		nodeRoute.POST("/:id/agent-update", node.RequestAgentUpdateHandler)
-		nodeRoute.POST("/:id/openresty-restart", node.RequestOpenrestyRestartHandler)
+		nodeRoute.POST("/:id/edge-restart", node.RequestEdgeRestartHandler)
 		nodeRoute.POST("/:id/force-sync", node.RequestForceSyncHandler)
 		nodeRoute.GET("/:id/observability", node.GetObservabilityHandler)
 		nodeRoute.POST("/:id/observability/cleanup", node.CleanupHealthEventsHandler)
@@ -168,8 +164,17 @@ func registerOpenFlareSecurityRoutes(apiGroup *gin.RouterGroup) {
 		wafRoute.POST("/ip-groups/:id/delete", waf.DeleteIPGroupHandler)
 		wafRoute.POST("/ip-groups/:id/sync", waf.SyncIPGroupHandler)
 
+		wafRoute.GET("/attack-events", waf.ListAttackEventsHandler)
+		wafRoute.GET("/attack-logs", waf.ListAttackLogsHandler)
+		wafRoute.GET("/attack-logs/:id/request", waf.GetAttackLogRequestHandler)
+		wafRoute.GET("/attack-groups", waf.ListAttackGroupsHandler)
+		wafRoute.POST("/attack-groups", waf.CreateAttackGroupHandler)
+		wafRoute.POST("/attack-groups/:id/update", waf.UpdateAttackGroupHandler)
+
 		wafRoute.GET("/rule-groups", waf.ListRulesHandler)
 		wafRoute.GET("/rule-groups/:id", waf.GetRuleHandler)
+		wafRoute.GET("/rule-groups/:id/sites", waf.ListRuleGroupSitesHandler)
+		wafRoute.POST("/rule-groups/:id/sites/remove", waf.RemoveRuleGroupSitesHandler)
 		wafRoute.POST("/rule-groups", waf.CreateRuleHandler)
 		wafRoute.POST("/rule-groups/:id/meta", waf.UpdateRuleMetaHandler)
 		wafRoute.POST("/rule-groups/:id/graph", waf.SaveRuleGraphHandler)

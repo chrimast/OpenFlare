@@ -1,0 +1,49 @@
+[package]
+name = "openflare-edge"
+version = "0.1.3"
+edition = "2021"
+description = "OpenFlare Pingora edge node"
+license = "Apache-2.0"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+clap = { version = "4", features = ["derive"] }
+pingora = { version = "0.9.1", features = ["openssl", "proxy", "cache"] }
+pingap-cache = { git = "https://github.com/vicanso/pingap.git", rev = "a2c7975b1573afc8480efae58167bd0a362ed53c" }
+pingora-error = "0.9.1"
+pingora-http = "0.9.1"
+http = "1"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-native-roots"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+semver = "1"
+sha1 = "0.10"
+sha2 = "0.10"
+same-file = "1.0.6"
+flate2 = "1"
+bzip2 = "0.4"
+xz2 = "0.1"
+sevenz-rust = "0.6"
+base64 = "0.22"
+hmac = "0.12"
+include_dir = "0.7"
+libc = "0.2"
+maxminddb = "0.33"
+regex = "1"
+tar = "0.4"
+tempfile = "3"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+time = { version = "0.3", features = ["formatting", "parsing"] }
+url = "2"
+tokio = { version = "1", features = ["fs", "macros", "process", "rt-multi-thread", "signal", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+futures-util = { version = "0.3", features = ["sink"] }
+tokio-tungstenite = { version = "0.29", features = ["rustls-tls-native-roots"] }
+httpdate = "1"
+bytes = "1"
+sysinfo = "0.37"
+zentinel-modsec = { git = "https://github.com/zentinelproxy/zentinel-modsec.git", rev = "f85a24022ca85eec0e1e502623f963e91eca07bc" }

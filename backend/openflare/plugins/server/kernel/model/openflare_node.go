@@ -4,11 +4,17 @@
 package model
 
 import (
+	"encoding/json"
+	"slices"
 	"time"
 )
 
+// EdgeUpdateCapability identifies nodes that support managed binary updates.
+const EdgeUpdateCapability = "edge_self_update_v1"
+
 // OpenFlareNode stores an edge, relay, or tunnel client node.
 type OpenFlareNode struct {
+	PerformancePolicyID       *uint      `json:"-" gorm:"->;index:idx_of_nodes_performance_policy_id"`
 	ID                        uint       `json:"id" gorm:"primaryKey;autoIncrement"`
 	NodeID                    string     `json:"node_id" gorm:"uniqueIndex;size:64;not null"`
 	Name                      string     `json:"name" gorm:"size:128;not null"`
@@ -28,6 +34,8 @@ type OpenFlareNode struct {
 	ExtVersion                string     `json:"ext_version" gorm:"size:64;not null;default:''"`
 	OpenrestyStatus           string     `json:"openresty_status" gorm:"size:16;not null;default:'unknown'"`
 	OpenrestyMessage          string     `json:"openresty_message" gorm:"type:text"`
+	Engine                    string     `json:"engine" gorm:"size:32;not null;default:'pingora';index"`
+	ContractVersion           int        `json:"contract_version" gorm:"not null;default:0"`
 	Status                    string     `json:"status" gorm:"size:16;not null;default:'offline'"`
 	CurrentVersion            string     `json:"current_version" gorm:"size:32;not null;default:''"`
 	LastSeenAt                *time.Time `json:"last_seen_at"`
@@ -49,6 +57,12 @@ type OpenFlareNode struct {
 // TableName returns the GORM table name.
 func (OpenFlareNode) TableName() string {
 	return "of_nodes"
+}
+
+// HasCapability reports whether the node advertised a runtime capability.
+func (node *OpenFlareNode) HasCapability(name string) bool {
+	var capabilities []string
+	return json.Unmarshal([]byte(node.CapabilitiesJSON), &capabilities) == nil && slices.Contains(capabilities, name)
 }
 
 // OpenFlareNodeListQuery describes a bounded node query.

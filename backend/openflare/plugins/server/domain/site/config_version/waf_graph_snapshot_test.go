@@ -6,6 +6,7 @@ package config_version
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -65,7 +66,7 @@ func TestWAFGraphSnapshotPreservesOrderAndGraphReferences(t *testing.T) {
 	customB := createSnapshotRule(t, ctx, "custom-b", snapshotIPMatchGraph(referenced.ID))
 	require.NoError(t, repository.ReplaceOpenFlareWAFSiteRuleGroupBindings(ctx, route.ID, []uint{customB.ID, customA.ID}))
 
-	snapshot, err := buildSnapshotWAFDocument(ctx, []*model.ProxyRoute{route})
+	snapshot, err := buildSnapshotWAFDocument(ctx, []snapshotRoute{{ID: route.ID, SiteName: route.SiteName}})
 	require.NoError(t, err)
 	require.Len(t, snapshot.Bindings, 1)
 	assert.Equal(t, []uint{customB.ID, customA.ID}, snapshot.Bindings[0].RuleGroupIDs)
@@ -96,7 +97,7 @@ func TestWAFGraphSnapshotEncodesEmptyBindingsAsArrays(t *testing.T) {
 	require.NoError(t, repository.CreateProxyRouteRecord(ctx, route))
 	createSnapshotZoneDomains(t, ctx, route, route.SiteName)
 
-	snapshot, err := buildSnapshotWAFDocument(ctx, []*model.ProxyRoute{route})
+	snapshot, err := buildSnapshotWAFDocument(ctx, []snapshotRoute{{ID: route.ID, SiteName: route.SiteName}})
 	require.NoError(t, err)
 	require.Len(t, snapshot.Bindings, 1)
 	require.NotNil(t, snapshot.Bindings[0].RuleGroupIDs)
@@ -154,4 +155,48 @@ func snapshotPoWGraph() waf.RuleGraph {
 		{ID: "e1", Source: "start", SourceHandle: "next", Target: "pow"},
 		{ID: "e2", Source: "pow", SourceHandle: "next", Target: "allow"},
 	}}
+}
+
+func TestWAFSnapshotResolvesCurrentAttackGroupLevels(t *testing.T) {
+	cleanup := setupConfigVersionTestDB(t)
+	defer cleanup()
+	ctx := context.Background()
+
+	group := model.OpenFlareAttackGroup{Name: "Ruleset", Levels: map[string]string{"sql_injection": "observe", "malformed_http": "off"}}
+	require.NoError(t, repository.SaveOpenFlareAttackGroup(ctx, &group))
+	graph := waf.DefaultRuleGraph()
+	graph.Nodes = append(graph.Nodes, waf.RuleNode{
+		ID: "inspect", Type: waf.RuleNodeSecurityCheck,
+		Config: json.RawMessage(fmt.Sprintf(`{"attack_group_id":%d}`, group.ID)),
+	}, waf.RuleNode{Type: waf.RuleNodeBlock, ID: "block", Config: json.RawMessage(`{"status_code":403}`)})
+	graph.Edges = []waf.RuleEdge{
+		{ID: "start", Source: "start", Target: "inspect", SourceHandle: "next"},
+		{ID: "pass", Source: "inspect", Target: "allow", SourceHandle: "true"},
+		{ID: "deny", Source: "inspect", Target: "block", SourceHandle: "false"},
+	}
+	createSnapshotRule(t, ctx, "ruleset fixture", graph)
+	for _, scenario := range []struct {
+		level             string
+		ruleOverrides     map[string]string
+		expectedOverrides string
+	}{
+		{level: "observe"},
+		{level: "strict", ruleOverrides: map[string]string{"942100": "observe"}, expectedOverrides: `,"rule_overrides":{"942100":"observe"}`},
+		{level: "balanced", expectedOverrides: `,"rule_overrides":{"942100":"observe"}`},
+		{level: "strict", ruleOverrides: map[string]string{}},
+	} {
+		group.RuleOverrides = scenario.ruleOverrides
+		level := scenario.level
+		group.Levels["sql_injection"] = level
+		group.Levels["csrf"] = level
+		require.NoError(t, repository.SaveOpenFlareAttackGroup(ctx, &group))
+		snapshot, err := buildSnapshotWAFDocument(ctx, nil)
+		require.NoError(t, err)
+		require.Len(t, snapshot.RuleGroups, 1)
+		node := snapshot.RuleGroups[0].Graph.Nodes["inspect"]
+		require.Equal(t, waf.RuleNodeType("attack_protection"), node.Type)
+		compiled, err := json.Marshal(node.Config)
+		require.NoError(t, err)
+		require.JSONEq(t, fmt.Sprintf(`{"id":%d,"name":"Ruleset","levels":{"sql_injection":%q,"csrf":%q}%s}`, group.ID, level, level, scenario.expectedOverrides), string(compiled))
+	}
 }

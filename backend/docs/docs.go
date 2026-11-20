@@ -4441,56 +4441,75 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/agent/config-versions/active": {
+        "/api/v1/agent/config/pull": {
             "get": {
                 "security": [
                     {
                         "AgentTokenAuth": []
                     }
                 ],
-                "description": "返回当前生效的完整配置包，供 Agent 拉取并应用",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "openflare-agent"
                 ],
-                "summary": "获取活跃配置版本",
+                "summary": "拉取边缘配置资源",
                 "parameters": [
                     {
-                        "type": "boolean",
-                        "description": "Agent 支持站点身份验证",
-                        "name": "site_auth",
-                        "in": "query"
+                        "type": "string",
+                        "description": "配置资源标识",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "配置资源 SHA-256",
+                        "name": "sha256",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "活跃配置",
+                        "description": "配置 JSON",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apps_openflare_agent.ConfigResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "string"
                         }
                     },
                     "400": {
-                        "description": "参数错误",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
                     "401": {
-                        "description": "Token 无效",
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
@@ -4568,7 +4587,7 @@ const docTemplate = `{
                         "AgentTokenAuth": []
                     }
                 ],
-                "description": "使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token",
+                "description": "使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token。支持当前配置契约的 Pingora Edge 使用原节点 Token 注册时，可接替已登记的 OpenResty 节点。",
                 "consumes": [
                     "application/json"
                 ],
@@ -4782,6 +4801,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
+                    },
+                    "403": {
+                        "description": "资源不在节点发布范围内",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
                     }
                 }
             }
@@ -4828,66 +4853,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
-                    }
-                }
-            }
-        },
-        "/api/v1/agent/waf/ip-groups/sync": {
-            "post": {
-                "security": [
-                    {
-                        "AgentTokenAuth": []
-                    }
-                ],
-                "description": "按 ID 与校验和增量同步 WAF IP 组定义",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-agent"
-                ],
-                "summary": "同步 WAF IP 组",
-                "parameters": [
-                    {
-                        "description": "同步请求",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "同步结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.WAFIPGroupSyncResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
                     },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "Token 无效",
+                    "403": {
+                        "description": "资源不在节点发布范围内",
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
@@ -7211,483 +7179,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/d/config-versions": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取配置版本列表",
-                "responses": {
-                    "200": {
-                        "description": "配置版本列表",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.ConfigVersionSummary"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/active": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回当前正在使用的配置版本，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取当前活跃配置版本",
-                "responses": {
-                    "200": {
-                        "description": "活跃配置版本",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限、不存在或无活跃版本",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "删除超出保留数量的非活跃配置版本，需要管理员权限",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "清理历史配置版本",
-                "parameters": [
-                    {
-                        "description": "清理参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/apps_openflare_config_version.CleanupInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "清理结果",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apps_openflare_config_version.CleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/diff": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "对比当前草稿配置与活跃版本之间的差异，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "对比草稿与活跃配置",
-                "responses": {
-                    "200": {
-                        "description": "配置差异",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apps_openflare_config_version.ConfigDiffResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/preview": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "渲染并返回当前草稿配置的预览结果，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "预览当前草稿配置",
-                "responses": {
-                    "200": {
-                        "description": "配置预览",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apps_openflare_config_version.ConfigPreviewResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/publish": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将当前草稿配置发布为新版本，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "发布配置版本",
-                "parameters": [
-                    {
-                        "type": "boolean",
-                        "description": "是否强制发布",
-                        "name": "force",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "发布成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "返回指定配置版本的完整快照与渲染内容，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "获取配置版本详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "配置版本 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "配置版本详情",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或版本不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/config-versions/{id}/activate": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "将指定历史版本设为当前活跃配置，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-config-version"
-                ],
-                "summary": "激活配置版本",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "配置版本 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "激活成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.ConfigVersion"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或版本不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/d/dashboard/overview": {
             "get": {
                 "security": [
@@ -8419,14 +7910,14 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回指定节点可用的最新 Agent 版本信息，需要管理员权限",
+                "description": "按节点类型返回指定发布渠道的最新版本，需要管理员权限",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "openflare-node"
                 ],
-                "summary": "获取 Agent 发布信息",
+                "summary": "获取节点发布信息",
                 "parameters": [
                     {
                         "type": "integer",
@@ -8444,7 +7935,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Agent 发布信息",
+                        "description": "节点发布信息",
                         "schema": {
                             "allOf": [
                                 {
@@ -8489,7 +7980,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "向指定节点下发 Agent 自更新指令，需要管理员权限",
+                "description": "为指定节点登记更新请求，Pingora 节点的请求固定到目标版本，需要管理员权限",
                 "consumes": [
                     "application/json"
                 ],
@@ -8499,7 +7990,7 @@ const docTemplate = `{
                 "tags": [
                     "openflare-node"
                 ],
-                "summary": "请求 Agent 更新",
+                "summary": "请求更新节点",
                 "parameters": [
                     {
                         "type": "integer",
@@ -8519,7 +8010,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "更新请求已下发",
+                        "description": "更新请求已登记",
                         "schema": {
                             "allOf": [
                                 {
@@ -8594,6 +8085,70 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或节点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/nodes/{id}/edge-restart": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "向指定节点下发 OpenResty 重启指令，需要管理员权限",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-node"
+                ],
+                "summary": "请求重启 Pingora",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "节点 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "重启请求已下发",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -8798,70 +8353,6 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/apps_openflare_node.HealthEventCleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    },
-                    "404": {
-                        "description": "无权限或节点不存在",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/d/nodes/{id}/openresty-restart": {
-            "post": {
-                "security": [
-                    {
-                        "SessionCookie": []
-                    }
-                ],
-                "description": "向指定节点下发 OpenResty 重启指令，需要管理员权限",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "openflare-node"
-                ],
-                "summary": "请求重启 OpenResty",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "重启请求已下发",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/apps_openflare_node.View"
                                         }
                                     }
                                 }
@@ -12123,6 +11614,529 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/d/waf/attack-events": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出聚合攻击事件",
+                "parameters": [
+                    {
+                        "enum": [
+                            "all",
+                            "blocked",
+                            "observed"
+                        ],
+                        "type": "string",
+                        "name": "action",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Exact host and source IP",
+                        "name": "exact",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 255,
+                        "type": "string",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Zero-based page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 128,
+                        "type": "string",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Unix seconds, inclusive",
+                        "name": "since",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Unix seconds, exclusive",
+                        "name": "until",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_waf.attackLogPage-model_OpenFlareAttackEvent"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/attack-groups": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出攻击防护规则组",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.OpenFlareAttackGroup"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "可按类别配置防护等级。rule_overrides 以规则 ID 为键，支持 off（关闭）、enabled（开启）、observe（记录），优先于类别等级。",
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "创建攻击防护规则组",
+                "parameters": [
+                    {
+                        "description": "规则组",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_waf.attackGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.OpenFlareAttackGroup"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/attack-groups/{id}/update": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "替换规则组等级配置，省略的类别按禁用处理。rule_overrides 支持 off、enabled、observe；省略字段时保留已有逐条设置，传入空对象时清空。",
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "更新攻击防护规则组",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "规则组",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_waf.attackGroupInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.OpenFlareAttackGroup"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/attack-logs": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出攻击日志记录",
+                "parameters": [
+                    {
+                        "enum": [
+                            "all",
+                            "blocked",
+                            "observed"
+                        ],
+                        "type": "string",
+                        "name": "action",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Exact host and source IP",
+                        "name": "exact",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 255,
+                        "type": "string",
+                        "name": "host",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "name": "node_id",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Zero-based page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 128,
+                        "type": "string",
+                        "name": "remote_addr",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Unix seconds, inclusive",
+                        "name": "since",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Unix seconds, exclusive",
+                        "name": "until",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_waf.attackLogPage-apps_openflare_waf_attackLogEntry"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/attack-logs/{id}/request": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "获取攻击日志请求报文",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "记录 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "maximum": 253402300798,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Unix seconds",
+                        "name": "logged_at",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "name": "node_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_waf.attackLogRequestResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/d/waf/ip-groups": {
             "get": {
                 "security": [
@@ -13013,6 +13027,159 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/rule-groups/{id}/sites": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "列出 WAF 规则组关联网站",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "网站列表",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/apps_openflare_waf.RuleGroupSite"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "无权限或不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/d/waf/rule-groups/{id}/sites/remove": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openflare-waf"
+                ],
+                "summary": "批量解除 WAF 规则组的网站绑定",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则组 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "待解绑的代理路由 ID 列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_waf.IDsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解绑结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_waf.RemoveRuleGroupSitesResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或规则组是全局规则组",
                         "schema": {
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
@@ -15520,6 +15687,303 @@ const docTemplate = `{
                 }
             }
         },
+        "/d/performance-policies": {
+            "get": {
+                "description": "The default policy is inherited by nodes without an explicit assignment.",
+                "tags": [
+                    "Performance Policies"
+                ],
+                "summary": "List Pingora performance policies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_performance.policyList"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Performance Policies"
+                ],
+                "summary": "Create a Pingora performance policy",
+                "parameters": [
+                    {
+                        "description": "Policy name and parameters",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_performance.policyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_performance.policyView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/d/performance-policies/{id}/assign": {
+            "post": {
+                "tags": [
+                    "Performance Policies"
+                ],
+                "summary": "Assign a Pingora performance policy to a set of nodes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Selected Pingora node IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_performance.assignmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "409": {
+                        "description": "The default performance policy is inherited automatically",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/d/performance-policies/{id}/delete": {
+            "post": {
+                "tags": [
+                    "Performance Policies"
+                ],
+                "summary": "Delete a Pingora performance policy",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "409": {
+                        "description": "The default performance policy is inherited automatically",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/d/performance-policies/{id}/update": {
+            "post": {
+                "tags": [
+                    "Performance Policies"
+                ],
+                "summary": "Update a Pingora performance policy",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Policy name and parameters",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apps_openflare_performance.policyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_performance.policyView"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/f/{id}": {
             "get": {
                 "description": "根据文件 ID 获取并提供已上传的临时或正式文件，若配置了缓存则优先走本地缓存，否则从 S3 等后端存储读取并流式返回",
@@ -15995,6 +16459,9 @@ const docTemplate = `{
                 },
                 "agent_settings": {
                     "$ref": "#/definitions/agent.Settings"
+                },
+                "config": {
+                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.ConfigManifest"
                 },
                 "node": {
                     "$ref": "#/definitions/model.OpenFlareNode"
@@ -17531,6 +17998,9 @@ const docTemplate = `{
                 "checksum": {
                     "type": "string"
                 },
+                "engine": {
+                    "type": "string"
+                },
                 "main_config_checksum": {
                     "type": "string"
                 },
@@ -17539,6 +18009,12 @@ const docTemplate = `{
                 },
                 "node_id": {
                     "type": "string"
+                },
+                "payload_checksum": {
+                    "type": "string"
+                },
+                "release_sequence": {
+                    "type": "integer"
                 },
                 "result": {
                     "type": "string"
@@ -17571,6 +18047,49 @@ const docTemplate = `{
                 },
                 "host_metrics": {
                     "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NodeMetricSnapshot"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.ConfigManifest": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.ConfigResource"
+                    }
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.ConfigResource": {
+            "type": "object",
+            "properties": {
+                "inline_json": {
+                    "type": "string"
+                },
+                "metadata": {},
+                "revision": {
+                    "type": "string"
+                },
+                "sha256": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_openflare_protocol.EdgeUpdateSettings": {
+            "type": "object",
+            "properties": {
+                "auto_update": {
+                    "type": "boolean"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
                 }
             }
         },
@@ -18266,6 +18785,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "engine": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -18278,6 +18800,12 @@ const docTemplate = `{
                 "node_id": {
                     "type": "string"
                 },
+                "payload_checksum": {
+                    "type": "string"
+                },
+                "release_sequence": {
+                    "type": "integer"
+                },
                 "result": {
                     "type": "string"
                 },
@@ -18288,6 +18816,55 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OpenFlareAttackEvent": {
+            "type": "object",
+            "properties": {
+                "bucket_unix": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "first_unix": {
+                    "type": "integer"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "last_unix": {
+                    "type": "integer"
+                },
+                "remote_addr": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OpenFlareAttackGroup": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "levels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rule_overrides": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -18345,10 +18922,16 @@ const docTemplate = `{
                 "capabilities_json": {
                     "type": "string"
                 },
+                "contract_version": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "current_version": {
+                    "type": "string"
+                },
+                "engine": {
                     "type": "string"
                 },
                 "ext_version": {

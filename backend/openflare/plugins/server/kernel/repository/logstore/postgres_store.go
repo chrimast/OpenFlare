@@ -805,18 +805,21 @@ func nodeAccessLogValueColumn(column string) (string, bool) {
 // toNodeAccessLogFilter 由 model 查询 DTO 转为 analytics 过滤结构。
 func toNodeAccessLogFilter(query model.OpenFlareAccessLogQuery) analyticsmodel.NodeAccessLogFilter {
 	return analyticsmodel.NodeAccessLogFilter{
-		NodeID:     query.NodeID,
-		RemoteAddr: query.RemoteAddr,
-		Host:       query.Host,
-		Hosts:      query.Hosts,
-		Path:       query.Path,
-		StatusCode: query.StatusCode,
-		Since:      query.Since,
-		Until:      query.Until,
-		Page:       query.Page,
-		PageSize:   query.PageSize,
-		SortBy:     query.SortBy,
-		SortOrder:  query.SortOrder,
+		ID:              query.ID,
+		NodeID:          query.NodeID,
+		RemoteAddr:      query.RemoteAddr,
+		ExactRemoteAddr: query.ExactRemoteAddr,
+		WAFAction:       query.WAFAction,
+		Host:            query.Host,
+		Hosts:           query.Hosts,
+		Path:            query.Path,
+		StatusCode:      query.StatusCode,
+		Since:           query.Since,
+		Until:           query.Until,
+		Page:            query.Page,
+		PageSize:        query.PageSize,
+		SortBy:          query.SortBy,
+		SortOrder:       query.SortOrder,
 	}
 }
 
@@ -826,14 +829,24 @@ func toNodeAccessLogFilter(query model.OpenFlareAccessLogQuery) analyticsmodel.N
 func buildNodeAccessLogFilterParts(f analyticsmodel.NodeAccessLogFilter) (string, []any) {
 	var parts []string
 	var args []any
+	if f.ID != 0 {
+		parts = append(parts, "id = ?")
+		args = append(args, f.ID)
+	}
 	if nodeID := strings.TrimSpace(f.NodeID); nodeID != "" {
 		parts = append(parts, "node_id = ?")
 		args = append(args, nodeID)
 	}
 	if remoteAddr := strings.TrimSpace(f.RemoteAddr); remoteAddr != "" {
-		parts = append(parts, `remote_addr LIKE ? ESCAPE '\'`)
-		args = append(args, util.EscapeLike(remoteAddr)+"%")
+		if f.ExactRemoteAddr {
+			parts = append(parts, "remote_addr = ?")
+			args = append(args, remoteAddr)
+		} else {
+			parts = append(parts, `remote_addr LIKE ? ESCAPE '\'`)
+			args = append(args, util.EscapeLike(remoteAddr)+"%")
+		}
 	}
+	parts, args = appendWAFLogFilter(parts, args, f.WAFAction)
 	hosts := normalizeNodeAccessLogHosts(f.Hosts)
 	if len(hosts) > 0 {
 		var hostParts []string
@@ -959,6 +972,8 @@ func toAnalyticsNodeAccessLog(record *model.OpenFlareAccessLog) analyticsmodel.N
 		Host:          record.Host,
 		Path:          record.Path,
 		UserAgent:     record.UserAgent,
+		WAFAction:     record.WAFAction,
+		WAFAudit:      record.WAFAudit,
 		CacheStatus:   record.CacheStatus,
 		StatusCode:    int32(statusCode),
 		BytesSent:     bytesSent,
@@ -993,6 +1008,8 @@ func fromAnalyticsNodeAccessLogs(rows []analyticsmodel.NodeAccessLog) []*model.O
 			Host:          row.Host,
 			Path:          row.Path,
 			UserAgent:     row.UserAgent,
+			WAFAction:     row.WAFAction,
+			WAFAudit:      row.WAFAudit,
 			CacheStatus:   row.CacheStatus,
 			StatusCode:    int(row.StatusCode),
 			BytesSent:     bytesSent,

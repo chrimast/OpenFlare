@@ -30,6 +30,7 @@ import { ErrorInline } from '@/components/layout/error';
 import { LoadingStateWithBorder } from '@/components/layout/loading';
 import type { WAFRule } from '@/lib/services/openflare';
 import { WafService } from '@/lib/services/openflare';
+import { ruleGroupSitesQueryKey } from '@/lib/services/openflare/waf.service';
 
 import { CreateRuleDialog } from './components/create-rule-dialog';
 import { getErrorMessage } from './components/helpers';
@@ -51,12 +52,7 @@ export default function WafPage() {
   });
 
   const invalidate = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ruleGroupsQueryKey }),
-      queryClient.invalidateQueries({
-        queryKey: ['openflare', 'config-versions', 'diff'],
-      }),
-    ]);
+    await queryClient.invalidateQueries({ queryKey: ruleGroupsQueryKey });
   };
 
   const createMutation = useMutation({
@@ -84,7 +80,8 @@ export default function WafPage() {
   });
 
   const handleRefresh = () => {
-    void queryClient.invalidateQueries({ queryKey: ruleGroupsQueryKey });
+    void invalidate();
+    void queryClient.invalidateQueries({ queryKey: ruleGroupSitesQueryKey });
   };
 
   const groups = groupsQuery.data ?? [];

@@ -57,7 +57,7 @@ func TestBuildSnapshotRoutesPages(t *testing.T) {
 	require.NoError(t, repository.CreateProxyRouteRecord(ctx, route))
 	createSnapshotZoneDomains(t, ctx, route, "speedtest.arctel.net")
 
-	bundle, err := buildCurrentConfigBundle(ctx, true)
+	bundle, err := buildCurrentConfigBundle(ctx)
 	require.NoError(t, err)
 	require.Len(t, bundle.SnapshotRoutes, 1)
 
@@ -74,7 +74,7 @@ func TestBuildSnapshotRoutesPages(t *testing.T) {
 
 	var decoded struct {
 		Routes []struct {
-			PagesDeployment *openrestyrender.PagesDeployment `json:"pages_deployment"`
+			PagesDeployment *edgeconfig.PagesDeployment `json:"pages_deployment"`
 		} `json:"routes"`
 	}
 	require.NoError(t, json.Unmarshal([]byte(bundle.SnapshotJSON), &decoded))

@@ -4,8 +4,10 @@
 package agent
 
 import (
+	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"Wavelet/openflare/plugins/server/domain/fleet/websocket"
 	"Wavelet/openflare/plugins/server/domain/pages"
@@ -18,7 +20,7 @@ import (
 
 // RegisterHandler registers or discovers an agent node.
 // @Summary 注册或发现 Agent 节点
-// @Description 使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token
+// @Description 使用节点 access token 重新注册，或使用全局 discovery token 发现新节点；请求头需携带 X-Agent-Token。支持当前配置契约的 Pingora Edge 使用原节点 Token 注册时，可接替已登记的 OpenResty 节点。
 // @Tags openflare-agent
 // @Accept json
 // @Produce json
@@ -34,7 +36,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 	payload := request.NodePayload
-	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
+	payload.IP = resolveReportedNodeIP(payload.IP, requestClientIP(c))
 
 	var (
 		result *protocol.RegisterNodeResponse
@@ -68,7 +70,7 @@ func HeartbeatHandler(c *gin.Context) {
 	if !httpx.BindJSON(c, &payload) {
 		return
 	}
-	payload.IP = resolveReportedNodeIP(payload.IP, c.Request.RemoteAddr)
+	payload.IP = resolveReportedNodeIP(payload.IP, requestClientIP(c))
 
 	authNode, ok := NodeFromContext(c)
 	if !ok {
@@ -149,6 +151,7 @@ func ReportApplyLogHandler(c *gin.Context) {
 	}
 	if authNode, ok := NodeFromContext(c); ok {
 		payload.NodeID = authNode.NodeID
+		payload.Engine = authNode.Engine
 	}
 	log, err := ReportApplyLog(c.Request.Context(), payload)
 	if response.AbortBadRequestOnError(c, err) {
@@ -221,6 +224,7 @@ func DownloadPagesPackageHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=protocol.PagesProjectLatestHashResponse}
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
+// @Failure 403 {object} response.Any "资源不在节点发布范围内"
 // @Router /api/v1/agent/pages/projects/{project_id}/latest/hash [get]
 func GetPagesProjectLatestHashHandler(c *gin.Context) {
 	projectID, ok := pagesUintParam(c, "project_id")
@@ -251,6 +255,7 @@ func GetPagesProjectLatestHashHandler(c *gin.Context) {
 // @Success 200 {file} binary "部署包文件"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
+// @Failure 403 {object} response.Any "资源不在节点发布范围内"
 // @Router /api/v1/agent/pages/projects/{project_id}/latest/package [get]
 func DownloadPagesProjectLatestPackageHandler(c *gin.Context) {
 	projectID, ok := pagesUintParam(c, "project_id")
@@ -267,6 +272,22 @@ func DownloadPagesProjectLatestPackageHandler(c *gin.Context) {
 		c.Header("Content-Type", packageObj.ContentType)
 	}
 	c.DataFromReader(http.StatusOK, packageObj.ContentLength, packageObj.ContentType, packageObj.Body, nil)
+}
+
+func allowPagesProject(ctx context.Context, c *gin.Context, projectID uint) bool {
+	node, ok := NodeFromContext(c)
+	if !ok || node.Engine != enginePingora {
+		return true
+	}
+	allowed, err := pingoraPagesProjectAllowed(ctx, projectID)
+	if httpx.AbortBadRequestOnError(c, err) {
+		return false
+	}
+	if !allowed {
+		response.AbortForbidden(c, errEdgeResourceOutsideRelease)
+		return false
+	}
+	return true
 }
 
 func pagesUintParam(c *gin.Context, name string) (uint, bool) {
@@ -296,5 +317,16 @@ func WebSocketHandler(c *gin.Context) {
 		response.AbortUnauthorized(c, errInvalidAgentToken)
 		return
 	}
-	websocket.ServeAgent(c, authNode.NodeID, HandleWSStatus)
+	if authNode.Engine != enginePingora {
+		response.AbortForbidden(c, errPingoraNodeRequired)
+		return
+	}
+	websocket.ServeAgent(c, authNode.NodeID)
+}
+
+func requestClientIP(c *gin.Context) string {
+	if ip := strings.TrimSpace(c.ClientIP()); ip != "" {
+		return ip
+	}
+	return c.Request.RemoteAddr
 }

@@ -1,7 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package openresty
+package edgeconfig
 
 import (
 	"crypto/sha256"
@@ -9,14 +9,7 @@ import (
 	"strings"
 )
 
-// SW location strings and Lua module paths used by the Service Worker offline fallback.
-const (
-	SWJSLocation      = "location = /sw.js"
-	SWOfflineLocation = "location = /offline.html"
-	SWChallengeLua    = "sw/challenge.lua"
-	SWRuntimeLua      = "sw/runtime.lua"
-	swDirPrefix       = "sw/"
-)
+const swDirPrefix = "sw/"
 
 // DefaultSWOfflineHTML is the built-in contact page shown when the domain is blocked.
 const DefaultSWOfflineHTML = `<!DOCTYPE html>
@@ -93,44 +86,4 @@ func defaultSWJS(offlineHTML string) string {
 	sum := sha256.Sum256([]byte(offlineHTML))
 	version := hex.EncodeToString(sum[:])[:12]
 	return strings.ReplaceAll(swJSTemplate, "__CACHE_NAME__", "openflare-offline-"+version)
-}
-
-// routeSWEnabled returns true when SW offline fallback applies to this route.
-func routeSWEnabled(routeDomains []string, cfg ConfigSnapshot) bool {
-	if !cfg.SWOfflineEnabled || len(cfg.SWOfflineDomains) == 0 {
-		return false
-	}
-	scope := make(map[string]struct{}, len(cfg.SWOfflineDomains))
-	for _, d := range cfg.SWOfflineDomains {
-		scope[d] = struct{}{}
-	}
-	for _, d := range routeDomains {
-		if _, ok := scope[d]; ok {
-			return true
-		}
-	}
-	return false
-}
-
-// renderServiceWorkerChallenger emits SW static locations and the homepage
-// challenge intercept for HTTPS server blocks.
-func renderServiceWorkerChallenger(_ ConfigSnapshot) string {
-	var builder strings.Builder
-	builder.WriteString("\n    location = /sw.js {\n")
-	builder.WriteString("        alias " + SWDirPlaceholder + "/sw.js;\n")
-	builder.WriteString("        default_type application/javascript;\n")
-	builder.WriteString("        add_header Service-Worker-Allowed /;\n")
-	builder.WriteString("        add_header Cache-Control \"no-cache\";\n")
-	builder.WriteString("    }\n\n")
-	builder.WriteString("    location = /offline.html {\n")
-	builder.WriteString("        alias " + SWDirPlaceholder + "/offline.html;\n")
-	builder.WriteString("        default_type text/html;\n")
-	builder.WriteString("        add_header Cache-Control \"no-cache\";\n")
-	builder.WriteString("    }\n\n")
-	builder.WriteString("    location = /__openflare_sw_challenge {\n")
-	builder.WriteString("        internal;\n")
-	builder.WriteString("        # hit when sw.runtime.check() intercepts the homepage in the access phase\n")
-	builder.WriteString("        content_by_lua_file " + SWDirPlaceholder + "/challenge.lua;\n")
-	builder.WriteString("    }\n")
-	return builder.String()
 }

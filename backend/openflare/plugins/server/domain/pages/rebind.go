@@ -192,7 +192,7 @@ func loadActivePagesProject(ctx context.Context, projectID uint, siteName string
 func buildLivePagesDeployment(
 	project *model.PagesProject,
 	active *model.PagesDeployment,
-) (*openrestyrender.PagesDeployment, error) {
+) (*edgeconfig.PagesDeployment, error) {
 	rootDir, err := validateAndNormalizePagesRootDir(project.RootDir)
 	if err != nil {
 		return nil, err
@@ -205,11 +205,11 @@ func buildLivePagesDeployment(
 	if fallbackPath == "" {
 		fallbackPath = defaultPagesFallbackPath
 	}
-	localRoot := openrestyrender.PagesProjectLocalRoot(project.ID)
+	localRoot := edgeconfig.PagesProjectLocalRoot(project.ID)
 	if rootDir != "" {
 		localRoot = path.Join(localRoot, rootDir)
 	}
-	return &openrestyrender.PagesDeployment{
+	return &edgeconfig.PagesDeployment{
 		ProjectID:          project.ID,
 		ProjectSlug:        strings.TrimSpace(project.Slug),
 		DeploymentID:       active.ID,

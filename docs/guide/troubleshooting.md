@@ -1,8 +1,8 @@
 # 故障排查
 
-你会学到：如何按症状排查 OpenFlare Server、数据库、登录、Agent、OpenResty 和配置发布问题。
+你会学到：如何按症状排查 OpenFlare Server、数据库、登录、Pingora Edge 和配置同步问题。
 
-排查时先确认问题发生在哪一层：浏览器、Server、数据库、Agent、OpenResty、源站或 DNS。OpenFlare 的配置不会直接在线写入所有节点，只有激活版本变化后，Agent 才会在 heartbeat 中发现并应用。
+排查时先确认问题发生在哪一层：浏览器、Server、数据库、Pingora Edge、源站或 DNS。节点收到 WebSocket 通知后会重新获取配置清单，也会通过周期心跳重新同步。
 
 ## 快速定位
 
@@ -12,9 +12,9 @@
 | 登录异常 | 默认账号、Session Cookie、Server 日志 |
 | 数据无法保存 | 数据库连接、SQLite 文件权限、PostgreSQL 健康状态 |
 | Agent 离线 | Agent 日志、Token、Server 地址、网络连通性 |
-| 发布后节点未更新 | 激活版本、节点 heartbeat、应用记录 |
-| OpenResty 应用失败 | 应用记录、Agent 日志、证书、上游地址、端口占用 |
-| 访问分析无数据 | OpenResty 容器状态、观测端口、Agent 补报日志 |
+| 保存后节点未更新 | 节点心跳、应用记录、控制端快照编译日志 |
+| Pingora 配置应用失败 | 应用记录、Edge 日志、证书、源站地址、端口占用 |
+| 访问分析无数据 | 节点心跳、Edge 访问日志队列和控制端日志 |
 | 静态资源总不命中缓存 | 全局/站点缓存开关、策略扩展名、配置是否已发布、访问日志 `cache_status`、源站 Set-Cookie / Cache-Control |
 
 ## Server 无法启动
@@ -120,59 +120,23 @@ sed -n '1,160p' /opt/openflare-agent/agent.json
 systemctl restart openflare-agent
 ```
 
-## 发布后节点没有应用新版本
+## 保存后节点未更新
 
-按顺序检查：
+1. 确认站点已启用，且节点的最近心跳时间持续更新。
+2. 查看节点详情的「应用记录」。节点会报告候选配置的错误，并继续使用最后一份健康快照。
+3. 控制端无法编译时，查看控制端日志中的 `refresh live edge snapshot`，修正配置后保存。
+4. 节点环境修复后，可在节点详情执行「强制同步」。节点重启也会清除失败标记并重试最新修订。
 
-1. 版本页面中是否已经激活目标版本。
-2. 节点是否在线，最近心跳时间是否更新。
-3. 应用记录中是否有目标版本的成功、警告或失败记录。
-4. 网站配置是否启用；未启用的网站不会参与发布渲染。
-5. Agent 日志是否出现拉取、校验、reload 或回滚信息。
+## Pingora 配置应用失败
 
-查看 Agent 日志：
+使用 `systemctl status openflare-edge` 查看服务状态，并通过 `journalctl -u openflare-edge` 查看节点拉取、校验、应用和监听日志。节点的 `ready.json` 包含实际加载的站点版本和内容摘要。
 
-```bash
-journalctl -u openflare-agent -f
-```
-
-注意：某个目标 `version + checksum` 一旦应用失败并回退，Agent 会在本地状态中阻断该目标重复应用。修正配置后需要重新发布生成新的 checksum，或激活旧版本回滚。
-
-如果这是 Agent 首次应用配置，且本地没有历史 `nginx.conf` 可回滚，失败目标仍会被阻断，但 Agent 会尝试进入安全兜底运行态。此时应用记录和 Agent 日志会包含 `fallback runtime started`，OpenResty 对外只监听 `80` 端口并统一返回 `503` 与 `OpenFlare: No Valid Configuration`，同时保留本地 `stub_status` 健康检查入口。修正配置并重新发布新版本后，Agent 会覆盖兜底配置并恢复正常代理。
-
-## OpenResty 应用失败
-
-常见原因：
-
-| 原因 | 排查 |
-| --- | --- |
-| 域名或 server 块冲突 | 检查同一域名是否被多个网站配置使用 |
-| 上游地址不合法 | 确认所有上游都是 `http://` 或 `https://` |
-| 多上游格式不符合约束 | 多上游必须是纯 `scheme://host[:port]` |
-| 证书缺失或路径错误 | 检查域名是否绑定证书，以及 Agent 证书目录是否可写 |
-| 端口被占用 | 检查本机 `80`、`443` 端口 |
-
-OpenResty 配置校验：
-
-```bash
-openresty -t -c /path/to/openflare/data/etc/nginx/nginx.conf
-```
-
-OpenResty 运行状态：
-
-```bash
-ps aux | grep openresty
-```
-
-Agent 周期性健康检查通过本地 `http://127.0.0.1:<openresty_observability_port>/openflare/stub_status` 判断 OpenResty 是否存活，不会反复执行 `openresty -t`。如果节点被标记为 unhealthy，优先确认该本地观测端口是否正在监听；如果只在应用配置时出现 `host not found in upstream`，说明失败来自配置校验或 reload，而不是周期性健康探针。
-
-实际二进制路径和主配置路径以 `agent.json` 中的 `openresty_path` 与 `main_config_path` 为准。
 
 ## HTTPS 不生效
 
 1. 确认证书已经上传或托管。
 2. 确认网站配置中对应域名已经绑定证书。
-3. 确认发布并激活了新版本。
+3. 确认站点和证书绑定已保存。
 4. 查看应用记录是否成功。
 5. 用 `curl` 查看证书和状态码：
 
@@ -185,9 +149,9 @@ curl -Iv https://your-domain
 ## 访问分析没有数据
 
 1. 确认节点已经成功应用包含观测 Lua 资源的配置。
-2. 确认 OpenResty 正在运行。
+2. 确认 `openflare-edge` 服务正在运行。
 3. 查看 Agent 日志是否有观测采集或补报失败信息。
-4. 检查 `openresty_observability_port` 是否被占用，默认是 `18081`。
+4. 检查边缘节点的访问日志是否通过心跳提交。
 5. 确认 Server 侧没有因数据库清理策略删除对应时间窗口数据。
 
 ## 边缘缓存命中率异常
@@ -196,9 +160,9 @@ curl -Iv https://your-domain
 
 ### 检查清单
 
-1. **性能设置** 中全局 OpenResty 缓存已开启。  
+1. 节点性能策略中的缓存开关已开启。
 2. 站点 **缓存** 已启用，策略与路径匹配（「标准静态资源」只覆盖内置扩展名，**不含** HTML/JSON；`.js.map` 的扩展名是 `map`，在默认表内）。  
-3. 已 **发布并激活** 配置版本，对应节点应用记录成功（改缓存规则不发布则节点仍用旧旁路逻辑）。  
+3. 对应节点的「应用记录」显示最新配置已成功应用。
 4. 请求方法为 **GET**（非 GET 一律不缓存）。  
 5. 源站未对目标 URL 返回 **`Set-Cookie`**（有则不会写入边缘）。  
 6. 源站未声明 **`Cache-Control: private` / `no-store`**（共享缓存不会存）。  
@@ -208,7 +172,6 @@ curl -Iv https://your-domain
 
 | 现象 | 说明 |
 | --- | --- |
-| 登录后全是「未缓存」且从未发布新版本 | 旧配置曾因会话 Cookie 旁路；升级后须重新发布节点配置 |
 | `static` 下 `/api/foo` 或 `/index.html` 未缓存 | 预期行为（扩展名不在默认可缓存表） |
 | 策略为 `all` 后 HTML 被串用户 | 源站未禁止共享缓存；改回 `static` 或给动态响应加 `private`/`no-store` |
 | 带 `?v=` 的 URL 命中率低 | 默认缓存键含完整 `$request_uri`，query 不同即不同对象 |

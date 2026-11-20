@@ -32,11 +32,12 @@ func setupOriginErrorPageSnapshotDB(t *testing.T) func() {
 	}
 }
 
-func TestBuildOpenRestyConfigSnapshotOriginErrorPageDefaults(t *testing.T) {
+func TestBuildEdgeSettingsSnapshotOriginErrorPageDefaults(t *testing.T) {
 	cleanup := setupOriginErrorPageSnapshotDB(t)
 	defer cleanup()
 
-	snapshot := buildOpenRestyConfigSnapshot(context.Background())
+	snapshot, err := buildEdgeSettingsSnapshot(context.Background())
+	require.NoError(t, err)
 	assert.True(t, snapshot.OriginErrorPageEnabled)
 	assert.Equal(t, []string{"500-599"}, snapshot.OriginErrorPageStatusCodes)
 	assert.Empty(t, snapshot.OriginErrorPageHTML)
@@ -47,7 +48,7 @@ func TestBuildOpenRestyConfigSnapshotOriginErrorPageDefaults(t *testing.T) {
 	assert.Contains(t, string(payload), `"origin_error_page_status_codes":["500-599"]`)
 }
 
-func TestBuildOpenRestyConfigSnapshotOriginErrorPageCustom(t *testing.T) {
+func TestBuildEdgeSettingsSnapshotOriginErrorPageCustom(t *testing.T) {
 	cleanup := setupOriginErrorPageSnapshotDB(t)
 	defer cleanup()
 	ctx := context.Background()
@@ -56,7 +57,8 @@ func TestBuildOpenRestyConfigSnapshotOriginErrorPageCustom(t *testing.T) {
 	require.NoError(t, repository.SaveOrUpdateSystemConfig(ctx, model.ConfigKeyOriginErrorPageStatusCodes, `["522","500-502"]`))
 	require.NoError(t, repository.SaveOrUpdateSystemConfig(ctx, model.ConfigKeyOriginErrorPageHTML, "<h1>{{status}}</h1>"))
 
-	snapshot := buildOpenRestyConfigSnapshot(ctx)
+	snapshot, err := buildEdgeSettingsSnapshot(ctx)
+	require.NoError(t, err)
 	assert.False(t, snapshot.OriginErrorPageEnabled)
 	assert.Equal(t, []string{"522", "500-502"}, snapshot.OriginErrorPageStatusCodes)
 	assert.Equal(t, "<h1>{{status}}</h1>", snapshot.OriginErrorPageHTML)
@@ -69,48 +71,4 @@ func TestParseOriginErrorPageStatusCodesFallback(t *testing.T) {
 	assert.Equal(t, []string{"500-599"}, parseOriginErrorPageStatusCodes("not-json"))
 	assert.Equal(t, []string{"500-599"}, parseOriginErrorPageStatusCodes("[]"))
 	assert.Equal(t, []string{"502"}, parseOriginErrorPageStatusCodes(`["502"]`))
-}
-
-func TestDiffOpenRestyOptionDetailsOriginErrorPage(t *testing.T) {
-	t.Parallel()
-
-	left := openRestyConfigSnapshot{
-		OriginErrorPageEnabled:     true,
-		OriginErrorPageStatusCodes: []string{"500-599"},
-		OriginErrorPageHTML:        "",
-	}
-	right := openRestyConfigSnapshot{
-		OriginErrorPageEnabled:     false,
-		OriginErrorPageStatusCodes: []string{"522"},
-		OriginErrorPageHTML:        "<p>x</p>",
-	}
-	details := diffOpenRestyOptionDetails(left, right)
-	keys := make(map[string]ConfigOptionDiffItem, len(details))
-	for _, item := range details {
-		keys[item.Key] = item
-	}
-	assert.Equal(t, "true", keys["OriginErrorPageEnabled"].PreviousValue)
-	assert.Equal(t, "false", keys["OriginErrorPageEnabled"].CurrentValue)
-	assert.Equal(t, `["500-599"]`, keys["OriginErrorPageStatusCodes"].PreviousValue)
-	assert.Equal(t, `["522"]`, keys["OriginErrorPageStatusCodes"].CurrentValue)
-	assert.Empty(t, keys["OriginErrorPageHTML"].PreviousValue)
-	assert.Equal(t, "<p>x</p>", keys["OriginErrorPageHTML"].CurrentValue)
-}
-
-func TestDiffOpenRestyOptionDetailsSWOfflineDomains(t *testing.T) {
-	t.Parallel()
-
-	left := openRestyConfigSnapshot{
-		SWOfflineDomains: []string{"a.com,b.com"},
-	}
-	right := openRestyConfigSnapshot{
-		SWOfflineDomains: []string{"a.com", "b.com"},
-	}
-	details := diffOpenRestyOptionDetails(left, right)
-	keys := make(map[string]ConfigOptionDiffItem, len(details))
-	for _, item := range details {
-		keys[item.Key] = item
-	}
-	assert.Equal(t, `["a.com,b.com"]`, keys["SWOfflineDomains"].PreviousValue)
-	assert.Equal(t, `["a.com","b.com"]`, keys["SWOfflineDomains"].CurrentValue)
 }

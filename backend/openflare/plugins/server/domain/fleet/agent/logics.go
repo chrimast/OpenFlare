@@ -29,16 +29,51 @@ func RegisterWithAccessToken(ctx context.Context, authNode *model.OpenFlareNode,
 	if err := validateNodePayload(payload); err != nil {
 		return nil, err
 	}
-	applyNodeRuntime(ctx, authNode, payload, true)
-	if err := repository.SaveOpenFlareNode(ctx, authNode); err != nil {
+	record, err := repository.GetOpenFlareNodeByAccessToken(ctx, authNode.AccessToken)
+	if err != nil {
 		return nil, err
 	}
-	RefreshAccessTokenCache(ctx, authNode)
+	if payload.Engine == enginePingora && record.NodeType != nodeTypeEdge {
+		return nil, errors.New(errNodeEngineChanged)
+	}
+	previous := *record
+	migrating := previous.LastSeenAt != nil && previous.Engine != payload.Engine
+	if migrating {
+		if previous.Engine != engineOpenResty || payload.Engine != enginePingora {
+			return nil, errors.New(errNodeEngineChanged)
+		}
+		release, releaseErr := repository.GetActivePingoraConfigVersion(ctx)
+		if releaseErr != nil && !isActiveConfigNotFound(releaseErr) {
+			return nil, releaseErr
+		}
+		if release == nil || release.PayloadChecksum == "" {
+			return nil, errors.New(errPingoraReleaseRequired)
+		}
+	}
+	applyNodeRuntime(ctx, record, payload, true)
+	if err = persistNodeRuntime(ctx, &previous, record); err != nil {
+		return nil, err
+	}
 	return &protocol.RegisterNodeResponse{
-		NodeID:      authNode.NodeID,
-		AccessToken: authNode.AccessToken,
-		Name:        authNode.Name,
+		NodeID:      record.NodeID,
+		AccessToken: record.AccessToken,
+		Name:        record.Name,
 	}, nil
+}
+
+func persistNodeRuntime(ctx context.Context, previous, current *model.OpenFlareNode) error {
+	changes := collectHeartbeatChanges(previous, current)
+	if len(changes) > 0 {
+		err := repository.UpdateOpenFlareNodeRuntime(ctx, current, previous.Engine, changes)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errNodeEngineChanged)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	RefreshAccessTokenCache(ctx, current)
+	return nil
 }
 
 // RegisterWithDiscovery registers a new node using the global discovery token.
@@ -64,15 +99,17 @@ func RegisterWithDiscovery(ctx context.Context, payload protocol.NodePayload, re
 		Name:             nodeName,
 		AccessToken:      accessToken,
 		Status:           nodeStatusOnline,
-		NodeType:         "edge_node",
+		NodeType:         nodeTypeEdge,
 		CapabilitiesJSON: "[]",
 		UpdateChannel:    releaseChannelStable,
+		Engine:           normalizeEngine(payload.Engine),
+		ContractVersion:  payload.ContractVersion,
 	}
 	applyNodeRuntime(ctx, record, payload, false)
 
 	if registrationKey != "" {
 		record, err = repository.CreateOrGetOpenFlareDiscoveryNode(ctx, record)
-		if err == nil && (record.NodeType != "edge_node" || subtle.ConstantTimeCompare([]byte(record.AccessToken), []byte(accessToken)) != 1) {
+		if err == nil && (record.NodeType != nodeTypeEdge || subtle.ConstantTimeCompare([]byte(record.AccessToken), []byte(accessToken)) != 1) {
 			return nil, errors.New(errRegistrationCredentialChanged)
 		}
 	} else {
@@ -116,35 +153,28 @@ func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload p
 		return nil, err
 	}
 
+	// Heartbeats renew the token cache. Load current settings from the database
+	// so admin changes are visible across controller instances.
+	authNode, err := LoadHeartbeatNode(ctx, authNode)
+	if err != nil {
+		return nil, err
+	}
+	if payload.Engine != normalizeEngine(authNode.Engine) {
+		return nil, errors.New(errNodeEngineChanged)
+	}
 	previous := *authNode
-	updateNow := authNode.UpdateRequested
-	restartOpenrestyNow := authNode.RestartOpenrestyRequested
-	updateChannel := strings.TrimSpace(authNode.UpdateChannel)
-	updateTag := strings.TrimSpace(authNode.UpdateTag)
-
+	restartEdgeNow := authNode.RestartOpenrestyRequested
 	applyNodeRuntime(ctx, authNode, payload, true)
-	authNode.UpdateRequested = false
-	authNode.UpdateChannel = releaseChannelStable
-	authNode.UpdateTag = ""
 	authNode.RestartOpenrestyRequested = false
 
-	changes := collectHeartbeatChanges(&previous, authNode)
-	if len(changes) > 0 {
-		fields := make([]string, 0, len(changes))
-		for field := range changes {
-			fields = append(fields, field)
-		}
-		if err := repository.UpdateOpenFlareNodeFields(ctx, authNode, fields...); err != nil {
-			return nil, err
-		}
-		if previous.IP != authNode.IP {
-			if _, dispatchErr := cf.DispatchNodeSync(ctx, authNode.ID, "cloudflare_agent_ip_update"); dispatchErr != nil {
-				logger.ErrorF(ctx, "[Cloudflare] enqueue heartbeat node sync failed: node_id=%d error=%v", authNode.ID, dispatchErr)
-			}
+	if err := persistNodeRuntime(ctx, &previous, authNode); err != nil {
+		return nil, err
+	}
+	if previous.IP != authNode.IP && isPublicNodeIP(authNode.IP) {
+		if _, dispatchErr := cf.DispatchNodeSync(ctx, authNode.ID, "cloudflare_agent_ip_update"); dispatchErr != nil {
+			logger.ErrorF(ctx, "[Cloudflare] enqueue heartbeat node sync failed: node_id=%d error=%v", authNode.ID, dispatchErr)
 		}
 	}
-
-	RefreshAccessTokenCache(ctx, authNode)
 
 	reportedAt := time.Now()
 	if authNode.LastSeenAt != nil {
@@ -152,43 +182,33 @@ func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload p
 	}
 	PersistHeartbeatObservability(ctx, authNode.NodeID, payload, reportedAt)
 
-	activeConfig, err := getActiveConfigMeta(ctx)
-	if err != nil && !isActiveConfigNotFound(err) {
-		return nil, err
-	}
-
-	wafIPGroups, err := ChangedWAFIPGroupsForAgent(ctx, nil, payload.WAFIPGroupChecksums)
-	if err != nil {
-		return nil, err
-	}
-
-	return &HeartbeatResponse{
-		Node:          authNode,
-		AgentSettings: buildAgentSettings(ctx, authNode, updateNow, updateChannel, updateTag, restartOpenrestyNow),
-		ActiveConfig:  activeConfig,
-		WAFIPGroups:   wafIPGroups,
-	}, nil
-}
-
-// GetActiveConfig returns the active configuration for an agent.
-func GetActiveConfig(ctx context.Context, siteAuthSupported bool) (*ConfigResponse, error) {
-	config, err := getActiveConfigForAgent(ctx, siteAuthSupported)
-	if err != nil {
-		if isActiveConfigNotFound(err) {
-			return nil, errors.New(errNoActiveConfig)
+	settings := buildAgentSettings(ctx, restartEdgeNow)
+	updateTag := authNode.UpdateTag
+	hasPendingUpdate := authNode.UpdateRequested && strings.HasPrefix(updateTag, "edge-v")
+	if payload.EdgeUpdateSupported && payload.EdgeUpdateReady && hasPendingUpdate &&
+		updateTag == "edge-v"+strings.TrimPrefix(payload.Version, "edge-v") {
+		if err := repository.AcknowledgeOpenFlareEdgeUpdate(ctx, authNode); err != nil {
+			return nil, err
 		}
-		return nil, err
+		authNode.UpdateRequested = false
+		authNode.UpdateChannel = releaseChannelStable
+		authNode.UpdateTag = ""
+		hasPendingUpdate = false
 	}
-	return config, nil
-}
-
-// SyncWAFIPGroups returns WAF IP groups whose checksums differ from the agent state.
-func SyncWAFIPGroups(ctx context.Context, input protocol.WAFIPGroupSyncRequest) (*protocol.WAFIPGroupSyncResponse, error) {
-	groups, err := ChangedWAFIPGroupsForAgent(ctx, input.IDs, input.Checksums)
-	if err != nil {
-		return nil, err
+	if payload.EdgeUpdateSupported && (authNode.AutoUpdateEnabled || hasPendingUpdate) {
+		settings.EdgeUpdate = &protocol.EdgeUpdateSettings{
+			Repo:       node.AgentUpdateRepo(ctx),
+			AutoUpdate: authNode.AutoUpdateEnabled,
+		}
+		if hasPendingUpdate {
+			settings.EdgeUpdate.Tag = updateTag
+		}
 	}
-	return &protocol.WAFIPGroupSyncResponse{Groups: groups}, nil
+	return &HeartbeatResponse{
+		Config:        configManifest(ctx, authNode, payload.LatestConfigVersion),
+		Node:          authNode,
+		AgentSettings: settings,
+	}, nil
 }
 
 // ReportApplyLog records an agent apply result.
@@ -209,7 +229,8 @@ func ReportApplyLog(ctx context.Context, payload protocol.ApplyLogPayload) (*mod
 	if err != nil {
 		return nil, err
 	}
-	if model.IsRepeatSuccessApplyLog(latest, payload.Version, payload.Checksum, payload.Result) {
+	if payload.Engine != enginePingora && sameEngineApplyLog(latest, payload.Engine) &&
+		model.IsRepeatSuccessApplyLog(latest, payload.Version, payload.Checksum, payload.Result) {
 		if err := repository.UpdateOpenFlareNodeFromApplyResult(ctx, payload.NodeID, payload.Result, payload.Version, payload.Message, now); err != nil {
 			return nil, err
 		}
@@ -225,6 +246,9 @@ func ReportApplyLog(ctx context.Context, payload protocol.ApplyLogPayload) (*mod
 		MainConfigChecksum:  payload.MainConfigChecksum,
 		RouteConfigChecksum: payload.RouteConfigChecksum,
 		SupportFileCount:    payload.SupportFileCount,
+		Engine:              payload.Engine,
+		ReleaseSequence:     payload.ReleaseSequence,
+		PayloadChecksum:     payload.PayloadChecksum,
 		CreatedAt:           now,
 	}
 

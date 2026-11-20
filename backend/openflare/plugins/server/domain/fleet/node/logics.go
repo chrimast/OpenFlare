@@ -25,8 +25,8 @@ const (
 	defaultRelayVhostHTTPPort = 8080
 )
 
-// getAgentUpdateRepo 从 SystemConfig 读取 Agent 更新仓库配置
-func getAgentUpdateRepo(ctx context.Context) string {
+// AgentUpdateRepo returns the configured node release repository.
+func AgentUpdateRepo(ctx context.Context) string {
 	config, err := repository.GetSystemConfigByKey(ctx, model.ConfigKeyAgentUpdateRepo)
 	if err != nil || strings.TrimSpace(config.Value) == "" {
 		return "Rain-kl/OpenFlare" // 默认值
@@ -92,6 +92,7 @@ type View struct {
 	GeoManualOverride         bool       `json:"geo_manual_override"`
 	AccessToken               string     `json:"access_token"`
 	AutoUpdateEnabled         bool       `json:"auto_update_enabled"`
+	EdgeUpdateSupported       bool       `json:"edge_update_supported"`
 	UpdateRequested           bool       `json:"update_requested"`
 	UpdateChannel             string     `json:"update_channel"`
 	UpdateTag                 string     `json:"update_tag"`
@@ -204,6 +205,9 @@ func CreateNode(ctx context.Context, input Input) (*View, error) {
 	if err != nil {
 		return nil, err
 	}
+	if node.NodeType == "edge_node" {
+		node.Engine = enginePingora
+	}
 	if node.NodeType == "tunnel_relay" {
 		node.RelayBindPort = normalizeRelayPort(input.RelayBindPort, defaultRelayBindPort)
 		node.RelayVhostHTTPPort = normalizeRelayPort(input.RelayVhostHTTPPort, defaultRelayVhostHTTPPort)
@@ -248,19 +252,23 @@ func UpdateNode(ctx context.Context, id uint, input Input) (*View, error) {
 	node.GeoLongitude = geoLongitude
 	node.GeoManualOverride = geoManualOverride
 	node.AutoUpdateEnabled = input.AutoUpdateEnabled
+	fields := []string{"name", "ip", "ip_manual_override", "geo_name", "geo_latitude", "geo_longitude", "geo_manual_override", "auto_update_enabled"}
 	if node.NodeType == "tunnel_relay" {
 		node.RelayAgentAccessAddr = strings.TrimSpace(input.RelayAgentAccessAddr)
 		node.RelayClientAccessAddr = strings.TrimSpace(input.RelayClientAccessAddr)
 		node.RelayClientProxyURL = strings.TrimSpace(input.RelayClientProxyURL)
 		node.RelayWebServerEnabled = input.RelayWebServerEnabled
+		fields = append(fields, "relay_agent_access_addr", "relay_client_access_addr", "relay_client_proxy_url", "relay_web_server_enabled")
 		if input.RelayBindPort > 0 {
 			node.RelayBindPort = input.RelayBindPort
+			fields = append(fields, "relay_bind_port")
 		}
 		if input.RelayVhostHTTPPort > 0 {
 			node.RelayVhostHTTPPort = input.RelayVhostHTTPPort
+			fields = append(fields, "relay_vhost_http_port")
 		}
 	}
-	if err = repository.SaveOpenFlareNode(ctx, node); err != nil {
+	if err = repository.UpdateOpenFlareNodeFields(ctx, node, fields...); err != nil {
 		return nil, err
 	}
 	if strings.TrimSpace(previousIP) != strings.TrimSpace(node.IP) {
@@ -306,11 +314,17 @@ func GetAgentRelease(ctx context.Context, id uint, channel string) (*AgentReleas
 	if err != nil {
 		return nil, err
 	}
-	release, err := fetchLatestGitHubRelease(ctx, getAgentUpdateRepo(ctx), normalizeReleaseChannel(channel))
+	normalized := normalizeReleaseChannel(channel)
+	var release *githubReleaseResponse
+	if isPingoraNode(node) {
+		release, err = fetchEdgeRelease(ctx, AgentUpdateRepo(ctx), normalized, "")
+	} else {
+		release, err = fetchLatestGitHubRelease(ctx, AgentUpdateRepo(ctx), normalized)
+	}
 	if err != nil {
 		return nil, err
 	}
-	return buildNodeAgentReleaseView(node, release, normalizeReleaseChannel(channel)), nil
+	return buildNodeAgentReleaseView(node, release, normalized), nil
 }
 
 // RequestAgentUpdate marks a node for manual agent update.
@@ -321,17 +335,13 @@ func RequestAgentUpdate(ctx context.Context, id uint, input AgentUpdateInput) (*
 	}
 	channel := normalizeReleaseChannel(input.Channel)
 	tagName := strings.TrimSpace(input.TagName)
-	if tagName != "" {
-		release, releaseErr := fetchGitHubReleaseByTag(ctx, getAgentUpdateRepo(ctx), tagName)
-		if releaseErr != nil {
-			return nil, releaseErr
-		}
-		if channel == releaseChannelPreview && !release.Prerelease {
-			return nil, errors.New(errAgentPreviewTagInvalid)
-		}
-		if channel == releaseChannelStable && release.Prerelease {
-			return nil, errors.New(errAgentStableTagInvalid)
-		}
+	if isPingoraNode(node) {
+		tagName, err = resolveEdgeUpdateTag(ctx, node, channel, tagName)
+	} else if tagName != "" {
+		err = validateAgentReleaseTag(ctx, channel, tagName)
+	}
+	if err != nil {
+		return nil, err
 	}
 	node.UpdateRequested = true
 	node.UpdateChannel = channel.String()
@@ -342,8 +352,39 @@ func RequestAgentUpdate(ctx context.Context, id uint, input AgentUpdateInput) (*
 	return buildNodeView(node), nil
 }
 
-// RequestOpenrestyRestart marks a node for openresty restart.
-func RequestOpenrestyRestart(ctx context.Context, id uint) (*View, error) {
+func resolveEdgeUpdateTag(ctx context.Context, node *model.OpenFlareNode, channel releaseChannel, tag string) (string, error) {
+	if !node.HasCapability(model.EdgeUpdateCapability) {
+		return "", errors.New(errEdgeUpdateUnsupported)
+	}
+	release, err := fetchEdgeRelease(ctx, AgentUpdateRepo(ctx), channel, tag)
+	if err != nil {
+		return "", err
+	}
+	if release == nil || !isNewerEdgeRelease(node.Version, release.TagName) {
+		return "", errors.New(errEdgeUpdateUnavailable)
+	}
+	return release.TagName, nil
+}
+
+func validateAgentReleaseTag(ctx context.Context, channel releaseChannel, tag string) error {
+	if strings.HasPrefix(tag, "edge-v") {
+		return errors.New(errEdgeUpdateUnsupported)
+	}
+	release, err := fetchGitHubReleaseByTag(ctx, AgentUpdateRepo(ctx), tag)
+	if err != nil {
+		return err
+	}
+	if channel == releaseChannelPreview && !release.Prerelease {
+		return errors.New(errAgentPreviewTagInvalid)
+	}
+	if channel == releaseChannelStable && release.Prerelease {
+		return errors.New(errAgentStableTagInvalid)
+	}
+	return nil
+}
+
+// RequestEdgeRestart marks a node for Pingora restart.
+func RequestEdgeRestart(ctx context.Context, id uint) (*View, error) {
 	node, err := repository.GetOpenFlareNodeByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -355,23 +396,24 @@ func RequestOpenrestyRestart(ctx context.Context, id uint) (*View, error) {
 	return buildNodeView(node), nil
 }
 
-// RequestForceSync pushes force_sync_config to a connected agent websocket.
+// RequestForceSync sends a forced configuration refresh to a connected Edge.
 func RequestForceSync(ctx context.Context, id uint) (*View, error) {
 	node, err := repository.GetOpenFlareNodeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	activeConfig, err := repository.GetActiveConfigVersion(ctx)
+	engine := node.Engine
+	if engine != enginePingora {
+		return nil, errors.New(errNodeForceSyncFailed)
+	}
+	_, err = repository.GetActivePingoraConfigMetadata(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("unable to get the currently active configuration version: %s", errNoActiveConfigVersion)
 		}
 		return nil, fmt.Errorf("unable to get the currently active configuration version: %w", err)
 	}
-	if !ofws.SendForceSyncConfig(node.NodeID, forceSyncConfigPayload{
-		Version:  activeConfig.Version,
-		Checksum: activeConfig.Checksum,
-	}) {
+	if !ofws.SendForceSyncConfig(node.NodeID) {
 		return nil, errors.New(errNodeForceSyncFailed)
 	}
 	return buildNodeView(node), nil
@@ -408,11 +450,6 @@ func ensureGlobalDiscoveryToken(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return token, nil
-}
-
-type forceSyncConfigPayload struct {
-	Version  string `json:"version"`
-	Checksum string `json:"checksum"`
 }
 
 // ValidateDiscoveryToken validates the global discovery token.

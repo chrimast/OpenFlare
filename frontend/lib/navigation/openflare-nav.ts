@@ -2,10 +2,10 @@ import type { LucideIcon } from 'lucide-react';
 import {
   FileText,
   Gauge,
-  GitBranch,
   Globe,
   LayoutDashboard,
   Route,
+  ShieldAlert,
   ScrollText,
   Server,
   ShieldCheck,
@@ -41,8 +41,9 @@ export const openflareSecurityNavGroup: OpenFlareNavGroup = {
   icon: ShieldCheck,
   items: [
     { titleKey: 'waf', url: '/waf' },
+    { titleKey: 'attackProtection', url: '/attack-protection' },
     { titleKey: 'ipGroups', url: '/ip-groups' },
-    { titleKey: 'rateLimits', url: '/rate-limits' },
+    { titleKey: 'securitySettings', url: '/security-settings' },
   ],
 };
 
@@ -104,9 +105,9 @@ export const openflareSidebarNav: OpenFlareSidebarNavEntry[] = [
   },
   {
     kind: 'item',
-    titleKey: 'configVersions',
-    url: '/config-versions',
-    icon: GitBranch,
+    titleKey: 'attackLogs',
+    url: '/attack-logs',
+    icon: ShieldAlert,
   },
   {
     kind: 'item',

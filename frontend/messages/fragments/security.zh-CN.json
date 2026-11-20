@@ -25,6 +25,26 @@
     "custom": "自定义",
     "allSites": "全部网站",
     "siteCount": "{count} 个网站",
+    "sites": {
+      "open": "查看「{name}」的网站绑定（{scope}）",
+      "title": "「{name}」关联的网站",
+      "description": "查看绑定此规则组的网站，或解除所选网站的绑定。",
+      "globalDescription": "全局规则组启用后应用到所有网站。点击网站可查看对应的 WAF 设置。",
+      "search": "按站点名称或域名搜索",
+      "loading": "正在加载网站...",
+      "empty": "应用范围内暂无网站。",
+      "noResults": "没有符合搜索条件的网站。",
+      "unnamed": "网站 #{id}",
+      "selectVisible": "选择当前列表中的网站",
+      "select": "选择网站「{name}」",
+      "selected": "已选择 {count} 个网站",
+      "removeSelected": "解除绑定",
+      "confirmTitle": "解除网站绑定",
+      "confirmDescription": "将从所选的 {count} 个网站移除规则组「{name}」的绑定。",
+      "removing": "正在解除绑定...",
+      "removed": "已解除 {count} 个网站的绑定",
+      "alreadyRemoved": "所选网站已解除绑定"
+    },
     "columns": {
       "name": "名称",
       "type": "类型",
@@ -225,7 +245,7 @@
       "nameRequired": "请输入 IP 组名称",
       "type": "类型",
       "enable": "启用 IP 组",
-      "enableDesc": "关闭后保留配置，但发布时不会展开到 WAF 运行时名单。",
+      "enableDesc": "关闭后，WAF 会停用该 IP 组并保留其配置。",
       "subscriptionUrl": "订阅 URL",
       "subscriptionUrlRequired": "订阅类型需要填写订阅 URL",
       "subscriptionFormat": "订阅格式",
@@ -280,6 +300,13 @@
     },
     "autoConfigMustBeObject": "自动配置必须是 JSON 对象。"
   },
+  "securitySettings": {
+    "title": "全局设置",
+    "subtitle": "配置边缘站点全局默认安全与限流策略。",
+    "loadingAuth": "加载权限信息...",
+    "forbiddenTitle": "权限不足",
+    "forbiddenDesc": "只有管理员可以访问全局安全设置。"
+  },
   "rateLimits": {
     "title": "限流",
     "subtitle": "查看边缘请求压力，并配置站点默认并发与带宽限流。",
@@ -311,9 +338,8 @@
       "saved": "限流参数已保存",
       "saveFailed": "保存失败",
       "loading": "加载限流参数...",
-      "preview": "查看配置预览",
       "title": "全局默认限流",
-      "description": "0 或留空表示默认关闭；站点未单独配置时将继承当前设置。修改后需在版本发布中使其生效。",
+      "description": "填 0 或留空表示默认关闭。站点在未单独设置时继承全局值，保存后自动同步到边缘节点。",
       "save": "保存",
       "connPerServer": "默认并发限制（每站点）",
       "connPerServerHint": "站点最大并发连接数默认值",
@@ -963,7 +989,7 @@
       "heartbeat": "心跳间隔 ({duration})",
       "offline": "离线阈值 ({duration})",
       "wsUpgrade": "开启 WS 连接升级",
-      "wsUpgradeDesc": "HTTP 心跳成功后尝试升级为 WebSocket，配置发布可即时通知。",
+      "wsUpgradeDesc": "通过 WebSocket 通知在线节点立即同步配置变更。",
       "updateRepo": "Agent 更新仓库"
     },
     "geo": {

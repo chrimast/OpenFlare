@@ -13,13 +13,13 @@ import {
   LayoutList,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Terminal,
   UserRound,
   LayoutDashboard,
   Route,
   Server,
   Globe,
-  GitBranch,
   ScrollText,
   Gauge,
 } from 'lucide-react';
@@ -110,16 +110,16 @@ const MENU_GROUPS: MenuGroup[] = [
         icon: Layers,
       },
       {
+        path: '/security-settings',
+        labelKey: 'securitySettings',
+        descKey: 'descSecuritySettings',
+        icon: SlidersHorizontal,
+      },
+      {
         path: '/pages',
         labelKey: 'pages',
         descKey: 'descPages',
         icon: FileText,
-      },
-      {
-        path: '/config-versions',
-        labelKey: 'configVersions',
-        descKey: 'descConfigVersions',
-        icon: GitBranch,
       },
       {
         path: '/access-logs',

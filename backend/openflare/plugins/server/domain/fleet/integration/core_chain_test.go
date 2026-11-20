@@ -6,6 +6,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -114,14 +115,31 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 	engine, seed, cleanup := setupCoreChainTest(t)
 	defer cleanup()
 
+	ctx := context.Background()
+	stop := config_version.StartRefreshLoop(ctx)
+	defer func() {
+		stopCtx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		require.NoError(t, stop(stopCtx))
+	}()
+
+	var initial *model.ConfigVersion
+	require.Eventually(t, func() bool {
+		var err error
+		initial, err = repository.GetActivePingoraConfigVersion(ctx)
+		return err == nil
+	}, time.Second, 10*time.Millisecond)
+	require.Contains(t, initial.SnapshotJSON, `"routes":[]`)
+
 	var (
-		originID       uint
-		proxyRouteID   uint
-		configVersion  string
-		configChecksum string
-		nodeID         uint
-		nodePublicID   string
-		agentToken     string
+		releaseSequence int64
+		originID        uint
+		proxyRouteID    uint
+		configVersion   string
+		configChecksum  string
+		nodeID          uint
+		nodePublicID    string
+		agentToken      string
 	)
 
 	t.Run("create origin", func(t *testing.T) {
@@ -177,29 +195,23 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 		assert.Equal(t, "http://origin.core-chain.internal:8080", data["origin_url"])
 	})
 
-	t.Run("publish config version", func(t *testing.T) {
-		rec := performJSONRequest(t, engine, http.MethodPost, apiPath("/config-versions/publish"), nil, map[string]string{
-			"X-Access-Token": seed.Token,
-		})
-		require.Equal(t, http.StatusOK, rec.Code)
-
-		resp := requireAPIOK(t, rec)
-		data := unmarshalAPIMap(t, resp.Data)
-		configVersion, _ = data["version"].(string)
-		configChecksum, _ = data["checksum"].(string)
+	t.Run("assemble saved configuration", func(t *testing.T) {
+		var active *model.ConfigVersion
+		require.Eventually(t, func() bool {
+			var err error
+			active, err = repository.GetActivePingoraConfigVersion(ctx)
+			return err == nil && active.Version != initial.Version
+		}, time.Second, 10*time.Millisecond)
+		configVersion, configChecksum, releaseSequence = active.Version, active.Checksum, active.ReleaseSequence
 		assert.NotEmpty(t, configVersion)
 		assert.NotEmpty(t, configChecksum)
-		assert.Equal(t, true, data["is_active"])
+		assert.Contains(t, active.SnapshotJSON, "core-chain.example.com")
+		assert.Greater(t, active.ReleaseSequence, initial.ReleaseSequence)
 
-		activeRec := performJSONRequest(t, engine, http.MethodGet, apiPath("/config-versions/active"), nil, map[string]string{
-			"X-Access-Token": seed.Token,
-		})
-		require.Equal(t, http.StatusOK, activeRec.Code)
-		activeResp := requireAPIOK(t, activeRec)
-
-		activeData := unmarshalAPIMap(t, activeResp.Data)
-		assert.Equal(t, configVersion, activeData["version"])
-		assert.Equal(t, configChecksum, activeData["checksum"])
+		require.NoError(t, config_version.RefreshSiteSnapshot(ctx))
+		unchanged, err := repository.GetActivePingoraConfigMetadata(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, configVersion, unchanged.Version)
 	})
 
 	t.Run("create node", func(t *testing.T) {
@@ -222,12 +234,44 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 		assert.Len(t, agentToken, 32)
 	})
 
+	t.Run("fetch the site snapshot selected by the heartbeat", func(t *testing.T) {
+		headers := map[string]string{"X-Agent-Token": agentToken}
+		heartbeat := func(cursor string) protocol.ConfigResource {
+			t.Helper()
+			rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/nodes/heartbeat", protocol.NodePayload{
+				Engine: "pingora", ContractVersion: edgeconfig.ContractVersion, ConfigSyncVersion: protocol.EdgeConfigSyncVersion,
+				LatestConfigVersion: cursor, Version: "test",
+			}, headers)
+			var data struct{ Config protocol.ConfigManifest }
+			unmarshalAPIData(t, requireAPIOK(t, rec).Data, &data)
+			return data.Config.Resources["sites.v1"]
+		}
+		resource := heartbeat(initial.Version)
+		require.NotNil(t, resource.Metadata)
+		assert.Equal(t, configVersion, resource.Revision)
+		assert.Equal(t, configChecksum, resource.SHA256)
+		assert.Empty(t, resource.InlineJSON)
+		known := heartbeat(configVersion)
+		assert.Nil(t, known.Metadata)
+		assert.Equal(t, resource.SHA256, known.SHA256)
+
+		pull := "/api/v1/agent/config/pull?" + url.Values{
+			"key": {"sites.v1"}, "sha256": {known.SHA256},
+		}.Encode()
+		reply := performJSONRequest(t, engine, http.MethodGet, pull, nil, headers)
+		require.Equal(t, http.StatusOK, reply.Code, reply.Body.String())
+		assert.Contains(t, reply.Body.String(), "core-chain.example.com")
+	})
+
 	t.Run("create apply log for node", func(t *testing.T) {
 		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/apply-logs", map[string]any{
 			"version":               configVersion,
 			"result":                "success",
 			"message":               "config applied",
 			"checksum":              configChecksum,
+			"engine":                "pingora",
+			"release_sequence":      releaseSequence,
+			"payload_checksum":      configChecksum,
 			"main_config_checksum":  "main-checksum",
 			"route_config_checksum": "route-checksum",
 			"support_file_count":    2,
@@ -286,4 +330,38 @@ func TestCoreChainMigrationFlow(t *testing.T) {
 		assert.Equal(t, configChecksum, nodeView["latest_apply_checksum"])
 		assert.InDelta(t, float64(2), nodeView["latest_support_file_count"], 1e-9)
 	})
+	t.Run("retain the last snapshot if compilation fails", func(t *testing.T) {
+		var route model.ProxyRoute
+		require.NoError(t, db.DB(ctx).Take(&route, proxyRouteID).Error)
+		require.NoError(t, db.DB(ctx).Model(&model.ProxyRoute{}).Where("id = ?", proxyRouteID).UpdateColumn("upstreams", "invalid JSON").Error)
+		require.Error(t, config_version.RefreshSiteSnapshot(ctx))
+		retained, err := repository.GetActivePingoraConfigMetadata(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, configVersion, retained.Version)
+
+		require.NoError(t, db.DB(ctx).Model(&model.ProxyRoute{}).Where("id = ?", proxyRouteID).UpdateColumn("upstreams", route.Upstreams).Error)
+		require.NoError(t, config_version.RefreshSiteSnapshot(ctx))
+		retained, err = repository.GetActivePingoraConfigMetadata(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, configVersion, retained.Version)
+	})
+
+	t.Run("automatically clear the last route", func(t *testing.T) {
+		require.NoError(t, db.DB(ctx).Model(&model.ProxyRoute{}).Where("id = ?", proxyRouteID).Update("site_name", "updated-site").Error)
+		state, err := repository.GetEdgeSnapshotState(ctx)
+		require.NoError(t, err)
+		require.NoError(t, db.DB(ctx).Model(&model.ProxyRoute{}).Where("id = ?", proxyRouteID).Update("enabled", false).Error)
+		stale, err := repository.StoreEdgeSnapshot(ctx, state.SourceRevision, &model.ConfigVersion{PayloadChecksum: "stale"})
+		require.NoError(t, err)
+		require.False(t, stale)
+
+		var empty *model.ConfigVersion
+		require.Eventually(t, func() bool {
+			var err error
+			empty, err = repository.GetActivePingoraConfigVersion(ctx)
+			return err == nil && empty.Version != configVersion
+		}, 3*time.Second, 20*time.Millisecond)
+		assert.Contains(t, empty.SnapshotJSON, `"routes":[]`)
+	})
+
 }

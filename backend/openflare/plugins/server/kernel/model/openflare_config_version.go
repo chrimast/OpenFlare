@@ -9,32 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// ConfigVersionSummary is the list view for config versions.
-type ConfigVersionSummary struct {
-	ID        string    `json:"id" gorm:"-"`
-	Version   string    `json:"version" gorm:"primaryKey;column:version"`
-	Checksum  string    `json:"checksum"`
-	IsActive  bool      `json:"is_active"`
-	CreatedBy string    `json:"created_by"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-// AfterFind hook for ConfigVersionSummary.
-func (cvs *ConfigVersionSummary) AfterFind(_ *gorm.DB) (err error) {
-	cvs.ID = cvs.Version
-	return
-}
-
-// ConfigVersion stores a published OpenResty configuration snapshot.
+// ConfigVersion stores an internal Edge configuration snapshot.
 type ConfigVersion struct {
 	ID               string    `json:"id" gorm:"-"`
 	Version          string    `json:"version" gorm:"primaryKey;size:32;not null"`
+	SourceVersion    string    `json:"source_version,omitempty" gorm:"size:32;not null;default:'';index"`
 	SnapshotJSON     string    `json:"snapshot_json" gorm:"type:text;not null"`
 	MainConfig       string    `json:"main_config" gorm:"type:text;not null;default:''"`
 	RenderedConfig   string    `json:"rendered_config" gorm:"type:text;not null"`
 	SupportFilesJSON string    `json:"support_files_json" gorm:"type:text;not null;default:'[]'"`
 	Checksum         string    `json:"checksum" gorm:"size:64;not null"`
 	IsActive         bool      `json:"is_active" gorm:"not null;default:false;index"`
+	Engine           string    `json:"engine" gorm:"size:32;not null;default:'pingora';index:idx_of_config_versions_engine_active"`
+	ReleaseSequence  int64     `json:"release_sequence" gorm:"not null;default:0"`
+	PayloadChecksum  string    `json:"payload_checksum" gorm:"size:64;not null;default:''"`
 	CreatedBy        string    `json:"created_by" gorm:"size:64;not null"`
 	CreatedAt        time.Time `json:"created_at" gorm:"autoCreateTime"`
 }

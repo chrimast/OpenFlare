@@ -23,7 +23,7 @@ func ApplyNodeGeoFromIP(ctx context.Context, node *model.OpenFlareNode, rawIP st
 	node.GeoLongitude = nil
 
 	ip := net.ParseIP(strings.TrimSpace(rawIP))
-	if ip == nil {
+	if ip == nil || !iputil.IsPublic(ip) {
 		return
 	}
 

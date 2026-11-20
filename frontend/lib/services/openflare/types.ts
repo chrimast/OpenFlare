@@ -33,6 +33,7 @@ export interface NodeItem {
   geo_manual_override: boolean;
   access_token: string;
   auto_update_enabled: boolean;
+  edge_update_supported?: boolean;
   update_requested: boolean;
   update_channel: ReleaseChannel;
   update_tag: string;
@@ -309,68 +310,6 @@ export interface ProxyRouteMutationPayload {
   tunnel_target_addr?: string;
   tunnel_target_protocol?: string;
   pages_project_id?: number | null;
-}
-
-export interface ConfigVersionSummary {
-  id: string;
-  version: string;
-  checksum: string;
-  is_active: boolean;
-  created_by: string;
-  created_at: string;
-}
-
-export interface ConfigVersionDetail extends ConfigVersionSummary {
-  snapshot_json: string;
-  main_config: string;
-  rendered_config: string;
-  support_files_json: string;
-}
-
-export interface SupportFile {
-  path: string;
-  content: string;
-}
-
-export interface ConfigPreviewResult {
-  snapshot_json: string;
-  main_config: string;
-  route_config: string;
-  rendered_config: string;
-  support_files: SupportFile[];
-  checksum: string;
-  route_count: number;
-  website_count: number;
-}
-
-export interface ConfigOptionDiffItem {
-  key: string;
-  previous_value: string;
-  current_value: string;
-}
-
-export interface ConfigDiffResult {
-  active_version?: string;
-  added_sites: string[];
-  removed_sites: string[];
-  modified_sites: string[];
-  added_domains: string[];
-  removed_domains: string[];
-  modified_domains: string[];
-  main_config_changed: boolean;
-  waf_config_changed: boolean;
-  changed_option_keys: string[];
-  changed_option_details: ConfigOptionDiffItem[];
-  current_website_count: number;
-  active_website_count: number;
-}
-
-export interface ConfigVersionCleanupPayload {
-  keep_count: number;
-}
-
-export interface ConfigVersionCleanupResult {
-  deleted_count: number;
 }
 
 export interface ApplyLogItem {
@@ -931,15 +870,16 @@ export interface UACheckConfig {
 }
 
 export interface SecurityCheckConfig {
-  sql_injection: boolean;
-  path_traversal: boolean;
-  command_injection: boolean;
-  xss: boolean;
-  ssrf: boolean;
-  file_inclusion: boolean;
-  malicious_upload: boolean;
-  xxe: boolean;
-  crlf_injection: boolean;
+  attack_group_id?: number;
+  sql_injection?: boolean;
+  path_traversal?: boolean;
+  command_injection?: boolean;
+  xss?: boolean;
+  ssrf?: boolean;
+  file_inclusion?: boolean;
+  malicious_upload?: boolean;
+  xxe?: boolean;
+  crlf_injection?: boolean;
 }
 
 export type WAFRuleNode =
@@ -1024,6 +964,12 @@ export interface WAFRule {
   applied_site_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface WAFRuleGroupSite {
+  id: number;
+  site_name: string;
+  domains: string[];
 }
 
 /** @deprecated Legacy fixed-chain rule shape retained for untouched binding consumers. */

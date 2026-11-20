@@ -25,6 +25,26 @@
     "custom": "Custom",
     "allSites": "All sites",
     "siteCount": "{count} sites",
+    "sites": {
+      "open": "View website bindings for {name} ({scope})",
+      "title": "Websites in {name}",
+      "description": "View websites bound to this rule group or remove selected bindings.",
+      "globalDescription": "When enabled, the global rule group applies to every website. Select a website to open its WAF settings.",
+      "search": "Search by site name or domain",
+      "loading": "Loading websites...",
+      "empty": "There are no websites in scope.",
+      "noResults": "No websites match your search.",
+      "unnamed": "Website #{id}",
+      "selectVisible": "Select websites in the current list",
+      "select": "Select website {name}",
+      "selected": "{count, plural, one {# website selected} other {# websites selected}}",
+      "removeSelected": "Remove bindings",
+      "confirmTitle": "Remove website bindings",
+      "confirmDescription": "{count, plural, one {Remove the binding to {name} from the selected website?} other {Remove the bindings to {name} from # selected websites?}}",
+      "removing": "Removing bindings...",
+      "removed": "{count, plural, one {Removed the binding from # website} other {Removed the bindings from # websites}}",
+      "alreadyRemoved": "The selected bindings have already been removed"
+    },
     "columns": {
       "name": "Name",
       "type": "Type",
@@ -225,7 +245,7 @@
       "nameRequired": "Enter an IP group name",
       "type": "Type",
       "enable": "Enable IP group",
-      "enableDesc": "When disabled, the configuration is kept but not expanded into the WAF runtime list on publish.",
+      "enableDesc": "Disabling this setting deactivates the IP group in WAF and retains its configuration.",
       "subscriptionUrl": "Subscription URL",
       "subscriptionUrlRequired": "Subscription type requires a URL",
       "subscriptionFormat": "Subscription format",
@@ -280,6 +300,13 @@
     },
     "autoConfigMustBeObject": "Automatic configuration must be a JSON object."
   },
+  "securitySettings": {
+    "title": "Global Settings",
+    "subtitle": "Configure global default security and rate-limit policies for edge sites.",
+    "loadingAuth": "Loading permissions...",
+    "forbiddenTitle": "Insufficient permissions",
+    "forbiddenDesc": "Only administrators can access global security settings."
+  },
   "rateLimits": {
     "title": "Rate limits",
     "subtitle": "Inspect edge request pressure and configure default concurrency and bandwidth limits.",
@@ -311,9 +338,8 @@
       "saved": "Rate-limit settings saved",
       "saveFailed": "Save failed",
       "loading": "Loading rate-limit settings...",
-      "preview": "View config preview",
       "title": "Global default rate limits",
-      "description": "0 or empty means disabled by default. Sites without their own settings inherit these values. Publish a release to apply changes.",
+      "description": "Enter 0 or leave blank to disable the default. Sites without individual limits inherit these settings. Saved changes sync automatically to edge nodes.",
       "save": "Save",
       "connPerServer": "Default concurrency (per site)",
       "connPerServerHint": "Default maximum concurrent connections per site",
@@ -963,7 +989,7 @@
       "heartbeat": "Heartbeat interval ({duration})",
       "offline": "Offline threshold ({duration})",
       "wsUpgrade": "Enable WebSocket upgrade",
-      "wsUpgradeDesc": "After a successful HTTP heartbeat, try upgrading to WebSocket so config publishes can notify immediately.",
+      "wsUpgradeDesc": "Notify online nodes of configuration changes immediately over WebSocket.",
       "updateRepo": "Agent update repository"
     },
     "geo": {

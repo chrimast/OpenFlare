@@ -7,7 +7,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"net"
+	"slices"
 	"strings"
 	"time"
 
@@ -25,7 +28,10 @@ const (
 	maxDatabaseTextLength    = 16000
 
 	defaultAgentHeartbeatInterval = 3000 // 默认心跳间隔 3 秒（毫秒）
-	defaultAgentUpdateRepo        = "Rain-kl/OpenFlare"
+	enginePingora                 = "pingora"
+	engineOpenResty               = "openresty"
+	nodeTypeEdge                  = "edge_node"
+	unspecifiedNodeIP             = "0.0.0.0"
 )
 
 func newRandomToken() (string, error) {
@@ -64,6 +70,10 @@ func normalizeNodePayload(payload protocol.NodePayload) protocol.NodePayload {
 	payload.LastError = truncateForDatabase(payload.LastError, maxDatabaseTextLength)
 	payload.OpenrestyStatus = normalizeOpenrestyStatus(payload.OpenrestyStatus)
 	payload.OpenrestyMessage = truncateForDatabase(payload.OpenrestyMessage, maxDatabaseTextLength)
+	payload.Engine = normalizeEngine(payload.Engine)
+	if payload.ContractVersion < 0 {
+		payload.ContractVersion = 0
+	}
 	// Align L2 edge_health with top-level status/message (PG is latest-state authority).
 	if payload.EdgeHealth != nil {
 		if s := strings.TrimSpace(payload.EdgeHealth.Status); s != "" {
@@ -81,6 +91,15 @@ func normalizeNodePayload(payload protocol.NodePayload) protocol.NodePayload {
 	return payload
 }
 
+func normalizeEngine(engine string) string {
+	switch strings.ToLower(strings.TrimSpace(engine)) {
+	case enginePingora:
+		return enginePingora
+	default:
+		return engineOpenResty
+	}
+}
+
 func validateNodePayload(payload protocol.NodePayload) error {
 	if payload.IP == "" {
 		return errPayload(errIPRequired)
@@ -90,6 +109,12 @@ func validateNodePayload(payload protocol.NodePayload) error {
 	}
 	if payload.Version == "" {
 		return errPayload(errAgentVersionRequired)
+	}
+	if payload.Engine != enginePingora {
+		return errPayload(errPingoraNodeRequired)
+	}
+	if payload.ContractVersion != edgeconfig.ContractVersion || payload.ConfigSyncVersion != protocol.EdgeConfigSyncVersion {
+		return errPayload(errPingoraContractUnsupported)
 	}
 	return nil
 }
@@ -111,6 +136,9 @@ func applyNodeRuntime(ctx context.Context, node *model.OpenFlareNode, payload pr
 	}
 	node.Version = strings.TrimSpace(payload.Version)
 	node.ExtVersion = strings.TrimSpace(payload.ExtVersion)
+	node.Engine = normalizeEngine(payload.Engine)
+	node.ContractVersion = payload.ContractVersion
+	updateEdgeCapability(ctx, node, payload.EdgeUpdateSupported)
 	node.OpenrestyStatus = normalizeOpenrestyStatus(payload.OpenrestyStatus)
 	node.OpenrestyMessage = truncateForDatabase(payload.OpenrestyMessage, maxDatabaseTextLength)
 	node.Status = nodeStatusOnline
@@ -137,16 +165,13 @@ func truncateForDatabase(value string, maxVal int) string {
 func resolveReportedNodeIP(reportedIP string, remoteAddr string) string {
 	reported := normalizeIP(reportedIP)
 	remote := normalizeRemoteAddr(remoteAddr)
-	if reported == "" {
-		return remote
-	}
 	if isPublicNodeIP(reported) {
 		return reported
 	}
 	if isPublicNodeIP(remote) {
 		return remote
 	}
-	return reported
+	return unspecifiedNodeIP
 }
 
 func normalizeIP(raw string) string {
@@ -181,46 +206,39 @@ func normalizeRemoteAddr(remoteAddr string) string {
 }
 
 func isPublicNodeIP(raw string) bool {
-	ip := net.ParseIP(strings.TrimSpace(raw))
-	if ip == nil {
-		return false
-	}
-	if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() {
-		return false
-	}
-	return true
+	return iputil.IsPublicRoutableString(raw)
 }
 
-func buildAgentSettings(ctx context.Context, node *model.OpenFlareNode, updateNow bool, updateChannel string, updateTag string, restartOpenrestyNow bool) *protocol.AgentSettings {
-	autoUpdate := false
-	if node != nil {
-		autoUpdate = node.AutoUpdateEnabled
+func updateEdgeCapability(ctx context.Context, node *model.OpenFlareNode, supported bool) {
+	if node.HasCapability(model.EdgeUpdateCapability) == supported {
+		return
 	}
-	if strings.TrimSpace(updateChannel) == "" {
-		updateChannel = releaseChannelStable
+	var capabilities []string
+	if node.CapabilitiesJSON != "" {
+		if err := json.Unmarshal([]byte(node.CapabilitiesJSON), &capabilities); err != nil {
+			logger.WarnF(ctx, "cannot decode Edge node capabilities: node_id=%s error=%v", node.NodeID, err)
+			capabilities = nil
+		}
 	}
+	if supported {
+		capabilities = append(capabilities, model.EdgeUpdateCapability)
+	} else {
+		capabilities = slices.DeleteFunc(capabilities, func(value string) bool { return value == model.EdgeUpdateCapability })
+	}
+	encoded, err := json.Marshal(capabilities)
+	if err != nil {
+		logger.WarnF(ctx, "cannot encode Edge node capabilities: node_id=%s error=%v", node.NodeID, err)
+		return
+	}
+	node.CapabilitiesJSON = string(encoded)
+}
 
-	// 从 SystemConfig 读取配置，使用默认值作为降级
+func buildAgentSettings(ctx context.Context, restartEdgeNow bool) *protocol.AgentSettings {
 	heartbeatInterval, _ := repository.GetIntByKey(ctx, model.ConfigKeyAgentHeartbeatInterval)
 	if heartbeatInterval <= 0 {
 		heartbeatInterval = defaultAgentHeartbeatInterval
 	}
-	wsUpgradeEnabled, _ := repository.GetBoolByKey(ctx, model.ConfigKeyAgentWebsocketUpgradeEnabled)
-	updateRepo, _ := repository.GetSystemConfigByKey(ctx, model.ConfigKeyAgentUpdateRepo)
-	if strings.TrimSpace(updateRepo.Value) == "" {
-		updateRepo.Value = defaultAgentUpdateRepo
-	}
-
-	return &protocol.AgentSettings{
-		HeartbeatInterval:       heartbeatInterval,
-		WebsocketUpgradeEnabled: wsUpgradeEnabled,
-		AutoUpdate:              autoUpdate,
-		UpdateRepo:              updateRepo.Value,
-		UpdateNow:               updateNow,
-		UpdateChannel:           updateChannel,
-		UpdateTag:               strings.TrimSpace(updateTag),
-		RestartOpenrestyNow:     restartOpenrestyNow,
-	}
+	return &protocol.AgentSettings{HeartbeatInterval: heartbeatInterval, RestartEdgeNow: restartEdgeNow}
 }
 
 func collectHeartbeatChanges(previous *model.OpenFlareNode, current *model.OpenFlareNode) map[string]any {
@@ -238,6 +256,9 @@ func collectHeartbeatChanges(previous *model.OpenFlareNode, current *model.OpenF
 	appendIfChanged("geo_name", previous.GeoName, current.GeoName)
 	appendIfChanged("version", previous.Version, current.Version)
 	appendIfChanged("ext_version", previous.ExtVersion, current.ExtVersion)
+	appendIfChanged("engine", previous.Engine, current.Engine)
+	appendIfChanged("contract_version", previous.ContractVersion, current.ContractVersion)
+	appendIfChanged("capabilities_json", previous.CapabilitiesJSON, current.CapabilitiesJSON)
 	appendIfChanged("openresty_status", previous.OpenrestyStatus, current.OpenrestyStatus)
 	appendIfChanged("openresty_message", previous.OpenrestyMessage, current.OpenrestyMessage)
 	appendIfChanged("status", previous.Status, current.Status)
@@ -281,7 +302,16 @@ func normalizeApplyLogPayload(payload protocol.ApplyLogPayload) protocol.ApplyLo
 	payload.Checksum = strings.TrimSpace(payload.Checksum)
 	payload.MainConfigChecksum = strings.TrimSpace(payload.MainConfigChecksum)
 	payload.RouteConfigChecksum = strings.TrimSpace(payload.RouteConfigChecksum)
+	payload.Engine = normalizeEngine(payload.Engine)
+	payload.PayloadChecksum = strings.TrimSpace(payload.PayloadChecksum)
+	if payload.ReleaseSequence < 0 {
+		payload.ReleaseSequence = 0
+	}
 	return payload
+}
+
+func sameEngineApplyLog(latest *model.OpenFlareApplyLog, engine string) bool {
+	return latest != nil && strings.EqualFold(strings.TrimSpace(latest.Engine), engine)
 }
 
 func isUniqueConstraintError(err error) bool {
@@ -289,6 +319,24 @@ func isUniqueConstraintError(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "unique")
+}
+
+// LoadHeartbeatNode reads current admin settings without renewing stale cached settings.
+func LoadHeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode) (*model.OpenFlareNode, error) {
+	if authNode == nil {
+		return nil, errors.New(errNodeNotFound)
+	}
+	current, err := repository.GetOpenFlareNodeByAccessToken(ctx, authNode.AccessToken)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New(errNodeNotFound)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if current.ID != authNode.ID || current.NodeType != authNode.NodeType {
+		return nil, errors.New(errNodeNotFound)
+	}
+	return current, nil
 }
 
 // RefreshAccessTokenCache updates the in-memory node cache after heartbeat mutations.

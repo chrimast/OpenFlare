@@ -39,6 +39,14 @@ func GetConfigVersionByVersion(ctx context.Context, version string) (*model.Conf
 	return &cv, nil
 }
 
+// GetConfigVersionSource resolves the shared snapshot referenced by a release.
+func GetConfigVersionSource(ctx context.Context, version *model.ConfigVersion) (*model.ConfigVersion, error) {
+	if version.SourceVersion == "" {
+		return version, nil
+	}
+	return GetConfigVersionByVersion(ctx, version.SourceVersion)
+}
+
 // GetActiveConfigVersion returns the currently active config version.
 func GetActiveConfigVersion(ctx context.Context) (*model.ConfigVersion, error) {
 	conn := DB(ctx)
@@ -46,7 +54,10 @@ func GetActiveConfigVersion(ctx context.Context) (*model.ConfigVersion, error) {
 		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	var version model.ConfigVersion
-	if err := conn.Where("is_active = ?", true).Order("version desc").First(&version).Error; err != nil {
+	if err := conn.
+		Where("is_active = ? AND engine = ?", true, engine).
+		Order("release_sequence desc, version desc").
+		First(&version).Error; err != nil {
 		return nil, err
 	}
 	return &version, nil
@@ -56,18 +67,13 @@ func GetActiveConfigVersion(ctx context.Context) (*model.ConfigVersion, error) {
 func GetLatestConfigVersionByPrefix(ctx context.Context, prefix string) (string, error) {
 	conn := DB(ctx)
 	if conn == nil {
-		return "", errors.New(errDatabaseNotInitialized)
+		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	var version model.ConfigVersion
-	err := conn.Model(&model.ConfigVersion{}).
-		Select("version").
-		Where("version LIKE ?", prefix+"-%").
-		Order("version desc").
-		First(&version).Error
-	if err != nil {
-		return "", err
-	}
-	return version.Version, nil
+	err := conn.Select("version", "checksum", "engine", "release_sequence", "payload_checksum").
+		Where("is_active = ? AND engine = ?", true, enginePingora).
+		Order("release_sequence desc, version desc").Take(&version).Error
+	return &version, err
 }
 
 // CreateConfigVersion inserts a new config version record.

@@ -60,7 +60,7 @@ func TestValidateOriginErrorPageStatusCodes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := validateOpenRestyOption(model.ConfigKeyOriginErrorPageStatusCodes, tt.value)
+			err := validateEdgeOption(model.ConfigKeyOriginErrorPageStatusCodes, tt.value)
 			if tt.wantErr == "" {
 				require.NoError(t, err)
 				return
@@ -71,36 +71,36 @@ func TestValidateOriginErrorPageStatusCodes(t *testing.T) {
 	}
 }
 
-func TestValidateOpenRestyTrustedProxyCIDRs(t *testing.T) {
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOpenRestyTrustedProxyCIDRs, `[]`))
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOpenRestyTrustedProxyCIDRs, `["173.245.48.0/20","10.2.0.0/24"]`))
+func TestValidateEdgeTrustedProxyCIDRs(t *testing.T) {
+	require.NoError(t, validateEdgeOption(model.ConfigKeyEdgeTrustedProxyCIDRs, `[]`))
+	require.NoError(t, validateEdgeOption(model.ConfigKeyEdgeTrustedProxyCIDRs, `["173.245.48.0/20","10.2.0.0/24"]`))
 	for _, value := range []string{`null`, `10.2.0.0/24`, `["10.2.0.0/24;return 200"]`, `["]`} {
-		require.Error(t, validateOpenRestyOption(model.ConfigKeyOpenRestyTrustedProxyCIDRs, value), "value %q must be rejected", value)
+		require.Error(t, validateEdgeOption(model.ConfigKeyEdgeTrustedProxyCIDRs, value), "value %q must be rejected", value)
 	}
 }
 
 func TestValidateOriginErrorPageHTML(t *testing.T) {
 	t.Parallel()
 
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOriginErrorPageHTML, ""))
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOriginErrorPageHTML, "<html>ok</html>"))
+	require.NoError(t, validateEdgeOption(model.ConfigKeyOriginErrorPageHTML, ""))
+	require.NoError(t, validateEdgeOption(model.ConfigKeyOriginErrorPageHTML, "<html>ok</html>"))
 
 	oversized := strings.Repeat("a", maxOriginErrorPageHTMLBytes+1)
-	err := validateOpenRestyOption(model.ConfigKeyOriginErrorPageHTML, oversized)
+	err := validateEdgeOption(model.ConfigKeyOriginErrorPageHTML, oversized)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "must not exceed")
 
 	// 恰好上限应通过
 	atLimit := strings.Repeat("b", maxOriginErrorPageHTMLBytes)
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOriginErrorPageHTML, atLimit))
+	require.NoError(t, validateEdgeOption(model.ConfigKeyOriginErrorPageHTML, atLimit))
 }
 
 func TestValidateOriginErrorPageEnabled(t *testing.T) {
 	t.Parallel()
 
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOriginErrorPageEnabled, "true"))
-	require.NoError(t, validateOpenRestyOption(model.ConfigKeyOriginErrorPageEnabled, "false"))
-	err := validateOpenRestyOption(model.ConfigKeyOriginErrorPageEnabled, "yes")
+	require.NoError(t, validateEdgeOption(model.ConfigKeyOriginErrorPageEnabled, "true"))
+	require.NoError(t, validateEdgeOption(model.ConfigKeyOriginErrorPageEnabled, "false"))
+	err := validateEdgeOption(model.ConfigKeyOriginErrorPageEnabled, "yes")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "true or false")
 }

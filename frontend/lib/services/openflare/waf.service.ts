@@ -1,3 +1,12 @@
+import type {
+  AttackGroup,
+  AttackGroupInput,
+  AttackEvent,
+  AttackLog,
+  AttackLogFilter,
+  AttackLogPage,
+  AttackLogRequest,
+} from './attack-types';
 import { OpenFlareBaseService } from './base.service';
 import type {
   WAFIPGroup,
@@ -7,13 +16,59 @@ import type {
   WAFIPGroupSyncResult,
   WAFCreateRulePayload,
   WAFRule,
+  WAFRuleGroupSite,
   WAFSaveRuleGraphPayload,
   WAFSiteRuleGroups,
   WAFUpdateRuleMetaPayload,
 } from './types';
 
+export const attackGroupsQueryKey = [
+  'openflare',
+  'waf',
+  'attack-groups',
+] as const;
+
+export const ruleGroupSitesQueryKey = [
+  'openflare',
+  'waf',
+  'rule-group-sites',
+] as const;
+
 export class WafService extends OpenFlareBaseService {
   protected static override readonly basePath: string = '/api/v1/d/waf';
+
+  static async listAttackGroups(): Promise<AttackGroup[]> {
+    return this.get<AttackGroup[]>('/attack-groups');
+  }
+
+  static async saveAttackGroup(
+    input: AttackGroupInput,
+    id?: number,
+  ): Promise<AttackGroup> {
+    return this.post<AttackGroup>(
+      id ? `/attack-groups/${id}/update` : '/attack-groups',
+      input,
+    );
+  }
+
+  static async listAttackLogs(
+    filter: AttackLogFilter,
+  ): Promise<AttackLogPage<AttackLog>> {
+    return this.get<AttackLogPage<AttackLog>>('/attack-logs', filter);
+  }
+
+  static async getAttackLogRequest(log: AttackLog): Promise<AttackLogRequest> {
+    return this.get<AttackLogRequest>(`/attack-logs/${log.id}/request`, {
+      node_id: log.node_id,
+      logged_at: Math.floor(Date.parse(log.logged_at) / 1000),
+    });
+  }
+
+  static async listAttackEvents(
+    filter: AttackLogFilter,
+  ): Promise<AttackLogPage<AttackEvent>> {
+    return this.get<AttackLogPage<AttackEvent>>('/attack-events', filter);
+  }
 
   static async listRuleGroups(): Promise<WAFRule[]> {
     return this.get<WAFRule[]>('/rule-groups');
@@ -21,6 +76,20 @@ export class WafService extends OpenFlareBaseService {
 
   static async getRule(id: number): Promise<WAFRule> {
     return this.get<WAFRule>(`/rule-groups/${id}`);
+  }
+
+  static async listRuleGroupSites(id: number): Promise<WAFRuleGroupSite[]> {
+    return this.get<WAFRuleGroupSite[]>(`/rule-groups/${id}/sites`);
+  }
+
+  static async removeRuleGroupSites(
+    id: number,
+    routeIds: number[],
+  ): Promise<{ removed_count: number }> {
+    return this.post<{ removed_count: number }>(
+      `/rule-groups/${id}/sites/remove`,
+      { ids: routeIds },
+    );
   }
 
   static async createRule(payload: WAFCreateRulePayload): Promise<WAFRule> {

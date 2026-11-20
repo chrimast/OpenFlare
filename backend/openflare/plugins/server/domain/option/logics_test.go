@@ -86,7 +86,7 @@ func TestUpdateOptionPersistsToSystemConfig(t *testing.T) {
 	assert.Equal(t, "mmdb", config.Value)
 }
 
-func TestUpdateOpenRestyOptionPersistsToSystemConfig(t *testing.T) {
+func TestUpdateRejectsRetiredOpenRestyTuning(t *testing.T) {
 	cleanup := setupOptionTestDB(t)
 	defer cleanup()
 	ctx := context.Background()
@@ -99,14 +99,14 @@ func TestUpdateOpenRestyOptionPersistsToSystemConfig(t *testing.T) {
 	}).Error)
 
 	err := updateOption(ctx, model.OpenFlareOption{
-		Key:   model.ConfigKeyOpenRestyEventsUse,
+		Key:   "openresty_events_use",
 		Value: "kqueue",
 	})
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "OpenResty tuning is retired")
 
-	config, err := repository.GetSystemConfigByKey(ctx, model.ConfigKeyOpenRestyEventsUse)
+	config, err := repository.GetSystemConfigByKey(ctx, "openresty_events_use")
 	require.NoError(t, err)
-	assert.Equal(t, "kqueue", config.Value)
+	assert.Equal(t, "epoll", config.Value)
 }
 
 func TestLookupGeoIPDisabledProvider(t *testing.T) {

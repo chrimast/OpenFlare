@@ -30,11 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
-import type {
-  NodeAgentReleaseInfo,
-  NodeItem,
-  ReleaseChannel,
-} from '@/lib/services/openflare';
+import type { NodeItem } from '@/lib/services/openflare';
 import { NodeService } from '@/lib/services/openflare';
 
 import { AgentUpdateDialog } from './agent-update-dialog';
@@ -69,8 +65,8 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editorOpen, setEditorOpen] = useState(false);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const saveMutation = useMutation({
     mutationFn: (payload: Parameters<typeof NodeService.updateNode>[1]) =>
@@ -93,7 +89,7 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
   });
 
   const restartMutation = useMutation({
-    mutationFn: () => NodeService.requestOpenrestyRestart(node.id),
+    mutationFn: () => NodeService.requestEdgeRestart(node.id),
     onSuccess: async (updated) => {
       toast.success(t('edge.toastRestart', { name: updated.name }));
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
@@ -102,30 +98,11 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: ({
-      release,
-      channel,
-    }: {
-      release: NodeAgentReleaseInfo | null;
-      channel: ReleaseChannel;
-    }) =>
-      NodeService.requestAgentUpdate(node.id, {
-        channel: release?.channel ?? channel,
-        tag_name:
-          release?.channel === 'preview'
-            ? release.tag_name || undefined
-            : undefined,
-      }),
+    mutationFn: (
+      payload: Parameters<typeof NodeService.requestAgentUpdate>[1],
+    ) => NodeService.requestAgentUpdate(node.id, payload),
     onSuccess: async (updated) => {
-      toast.success(
-        t('edge.toastUpgrade', {
-          name: updated.name,
-          channel:
-            updated.update_channel === 'preview'
-              ? t('channel.preview')
-              : t('channel.stable'),
-        }),
-      );
+      toast.success(t('edge.toastUpgrade', { tag: updated.update_tag }));
       setUpgradeOpen(false);
       await queryClient.invalidateQueries({ queryKey: nodesQueryKey });
     },
@@ -184,21 +161,19 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
         variant='outline'
         size='sm'
         className='h-8'
+        onClick={() => setUpgradeOpen(true)}
+      >
+        <Upload data-icon='inline-start' />
+        {t('edge.upgrade')}
+      </Button>
+      <Button
+        variant='outline'
+        size='sm'
+        className='h-8'
         disabled={restartMutation.isPending}
         onClick={() => restartMutation.mutate()}
       >
-        {restartMutation.isPending
-          ? t('dispatching')
-          : t('edge.restartOpenresty')}
-      </Button>
-      <Button
-        variant='secondary'
-        size='sm'
-        className='h-8'
-        onClick={() => setUpgradeOpen(true)}
-      >
-        <Upload className='size-3.5 mr-1.5' />
-        {node.update_requested ? t('viewUpgrade') : t('edge.upgrade')}
+        {restartMutation.isPending ? t('dispatching') : t('edge.restartEdge')}
       </Button>
       <Button
         variant='outline'
@@ -287,6 +262,11 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
             <NodeInfoRow label={t('edge.autoUpdate')}>
               {node.auto_update_enabled ? t('enabled') : t('manual')}
             </NodeInfoRow>
+            {node.update_requested && node.update_tag ? (
+              <NodeInfoRow label={t('update.targetVersion')}>
+                <NodeStatusBadge label={node.update_tag} tone='warning' />
+              </NodeInfoRow>
+            ) : null}
           </div>
         </NodeSectionCard>
       </div>
@@ -381,8 +361,13 @@ export function EdgeNodeDetail({ node }: { node: NodeItem }) {
         node={node}
         submitting={upgradeMutation.isPending}
         onClose={() => setUpgradeOpen(false)}
-        onConfirm={async (release, channel) => {
-          await upgradeMutation.mutateAsync({ release, channel });
+        onConfirm={(release, channel) => {
+          if (release?.tag_name) {
+            upgradeMutation.mutate({
+              channel,
+              tag_name: release.tag_name,
+            });
+          }
         }}
       />
 

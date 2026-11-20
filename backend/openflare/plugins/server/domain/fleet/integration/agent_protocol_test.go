@@ -5,7 +5,10 @@ package integration
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"Wavelet/openflare/plugins/server/kernel/repository"
@@ -68,9 +71,12 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		assert.Equal(t, "edge_node", edge.NodeType)
 
 		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/nodes/heartbeat", map[string]any{
-			"name":    "edge-1",
-			"ip":      "203.0.113.10",
-			"version": "0.1.0",
+			"name":                "edge-1",
+			"ip":                  "203.0.113.10",
+			"version":             "0.1.0",
+			"engine":              "pingora",
+			"contract_version":    edgeconfig.ContractVersion,
+			"config_sync_version": protocol.EdgeConfigSyncVersion,
 		}, map[string]string{
 			"X-Agent-Token": edge.AccessToken,
 		})
@@ -79,6 +85,7 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		resp := requireAPIOK(t, rec)
 		data := unmarshalAPIMap(t, resp.Data)
 		assert.NotNil(t, data["agent_settings"])
+		assert.NotNil(t, data["config"])
 	})
 
 	t.Run("create tunnel_relay node and relay heartbeat", func(t *testing.T) {
@@ -145,9 +152,12 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NotEmpty(t, bootstrap.DiscoveryToken)
 
 		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/nodes/register", map[string]any{
-			"name":    "discovered-edge",
-			"ip":      "203.0.113.30",
-			"version": "0.2.0",
+			"name":                "discovered-edge",
+			"ip":                  "203.0.113.30",
+			"version":             "0.2.0",
+			"engine":              "pingora",
+			"contract_version":    edgeconfig.ContractVersion,
+			"config_sync_version": protocol.EdgeConfigSyncVersion,
 		}, map[string]string{
 			"X-Agent-Token": bootstrap.DiscoveryToken,
 		})
@@ -173,10 +183,18 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		require.NoError(t, db.DB(ctx).Create(&model.ConfigVersion{
+			Version: "20260618-001", Engine: "pingora", ReleaseSequence: 1, IsActive: true,
+			PayloadChecksum: "digest-fixture",
+		}).Error)
+
 		rec := performJSONRequest(t, engine, http.MethodPost, "/api/v1/agent/apply-logs", map[string]any{
-			"version": "20260618-001",
-			"result":  "success",
-			"message": "apply ok",
+			"version":          "20260618-001",
+			"result":           "success",
+			"message":          "apply ok",
+			"engine":           "pingora",
+			"release_sequence": 1,
+			"payload_checksum": "digest-fixture",
 		}, map[string]string{
 			"X-Agent-Token": edge.AccessToken,
 		})
@@ -193,5 +211,49 @@ func TestAgentRelayFlaredProtocol(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "online", stored.Status)
 		assert.Equal(t, "20260618-001", stored.CurrentVersion)
+	})
+
+	t.Run("GET /api/geoip returns requester IP behind proxy and directly", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/geoip", nil)
+		req.RemoteAddr = "172.27.0.1:54321"
+		req.Header.Set("X-Forwarded-For", "82.22.26.203")
+		rec := httptest.NewRecorder()
+		engine.ServeHTTP(rec, req)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+		resp := requireAPIOK(t, rec)
+		data := unmarshalAPIMap(t, resp.Data)
+		assert.Equal(t, "82.22.26.203", data["ip"])
+	})
+
+	t.Run("agent heartbeat never stores internal IP and falls back to 0.0.0.0", func(t *testing.T) {
+		edge, err := ofnode.CreateNode(ctx, ofnode.Input{
+			Name: "edge-internal-guard",
+		})
+		require.NoError(t, err)
+
+		payloadBytes, err := json.Marshal(map[string]any{
+			"name":                "edge-internal-guard",
+			"ip":                  "172.27.0.1",
+			"version":             "0.1.2",
+			"engine":              "pingora",
+			"contract_version":    edgeconfig.ContractVersion,
+			"config_sync_version": protocol.EdgeConfigSyncVersion,
+		})
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/agent/nodes/heartbeat", strings.NewReader(string(payloadBytes)))
+		req.RemoteAddr = "172.27.0.1:54321"
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Agent-Token", edge.AccessToken)
+		rec := httptest.NewRecorder()
+		engine.ServeHTTP(rec, req)
+
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		requireAPIOK(t, rec)
+
+		stored, err := repository.GetOpenFlareNodeByNodeID(ctx, edge.NodeID)
+		require.NoError(t, err)
+		assert.Equal(t, "0.0.0.0", stored.IP)
 	})
 }
