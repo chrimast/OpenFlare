@@ -1,0 +1,17 @@
+{
+  "title": "安装部署",
+  "root": true,
+  "pages": [
+    "index",
+    "deployment",
+    "---组件部署---",
+    "server",
+    "agent",
+    "openflare-edge",
+    "---隧道基础设施---",
+    "relay",
+    "openflared",
+    "---升级维护---",
+    "upgrade"
+  ]
+}

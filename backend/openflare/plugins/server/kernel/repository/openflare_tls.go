@@ -41,6 +41,15 @@ func GetTLSCertificateByID(ctx context.Context, id uint) (*model.TLSCertificate,
 	return &certificate, nil
 }
 
+// GetTLSCertificateByIDTx reads a certificate within an existing transaction.
+func GetTLSCertificateByIDTx(tx *gorm.DB, id uint) (*model.TLSCertificate, error) {
+	var certificate model.TLSCertificate
+	if err := tx.First(&certificate, id).Error; err != nil {
+		return nil, err
+	}
+	return &certificate, nil
+}
+
 // CreateTLSCertificateRecord 创建证书记录。
 func CreateTLSCertificateRecord(ctx context.Context, certificate *model.TLSCertificate) error {
 	conn := DB(ctx)

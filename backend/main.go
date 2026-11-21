@@ -17,6 +17,10 @@ import "Wavelet/cmd"
 // @securityDefinitions.apikey SessionCookie
 // @in cookie
 // @name session
+// @securityDefinitions.apikey AutomationBearer
+// @in header
+// @name Authorization
+// @description OAuth access token for the OpenFlare automation API. Use the Bearer scheme.
 func main() {
 	cli.Execute()
 }

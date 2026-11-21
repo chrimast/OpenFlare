@@ -1,6 +1,11 @@
 <div align="center">
 
-# OpenFlare
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/brand/openflare-horizontal-white.svg">
+    <img src="./docs/assets/brand/openflare-horizontal-black.svg" alt="OpenFlare" width="320">
+  </picture>
+</h1>
 
 **Next-Gen Distributed Reverse Proxy & Edge Security Gateway for Pingora**
 
@@ -26,10 +31,10 @@
 
 **OpenFlare** is a modern, open-source **distributed reverse proxy and edge security gateway platform** designed for multi-server infrastructures and edge clusters.
 
-Rather than a simple single-host admin panel, OpenFlare provides Pingora edge nodes with **centralized cluster orchestration, dynamic zero-reload sync, line-rate edge WAF defense, and secure in-network tunneling**:
+Rather than a simple single-host admin panel, OpenFlare provides Pingora edge nodes with **centralized cluster orchestration, dynamic zero-reload sync, edge WAF protection, and secure in-network tunneling**:
 
 * ⚡ **Zero-Reload Dynamic Orchestration**: Centralized control plane manages any number of edge nodes. Synchronize rule diffs in milliseconds with zero Nginx reload disruptions.
-* 🛡️ **Built-in Edge Security & Anti-CC (Turnstile Alternative)**: Comprehensive WAF rule engine, MaxMind GeoIP regional ACLs, and **client-side cryptographic Proof of Work (PoW) challenges** to eliminate botnets and CC attacks at line rate.
+* 🛡️ **Built-in Edge Security & Anti-CC (Turnstile Alternative)**: A WAF rule engine, MaxMind GeoIP regional ACLs, and **client-side cryptographic Proof of Work (PoW) challenges** help mitigate abusive traffic at the edge.
 * 🚇 **Zero-Trust Tunnels (Cloudflare Tunnel Alternative)**: Securely publish private homelab and internal web services to edge proxies via lightweight `openflared` clients without public IPs or open inbound ports.
 * 📦 **Pages Edge Hosting**: Host static sites and SPAs pulled directly from GitHub Releases or uploaded bundles, distributed across edge nodes with instant rollbacks and fallback routing.
 * 🔒 **Automated Certificates & SSO**: Automatic multi-domain Let's Encrypt certificates via ACME and enterprise single sign-on with GitHub OAuth and standard OIDC.
@@ -108,6 +113,22 @@ flowchart TD
     Client <-->|Encrypted Tunnel| Edge1
     NAS --- Client
 ```
+
+---
+
+## Pingora Performance Benchmarks
+
+**November 20, 2026 · OpenFlare Edge `0.1.8` · Load generator: US-A**
+
+| Measured metric | JP-B | US-C |
+| --- | ---: | ---: |
+| HTTP/2 throughput, full WAF, 16 connections × 24 streams | **1,158 requests/s** (3 workers) | **718 requests/s** (1 worker) |
+| HTTP/2 throughput, WAF off, 16 connections × 24 streams | **2,990 requests/s** (3 workers) | **2,169 requests/s** (1 worker) |
+| Peak retest, WAF off, 22-second sample | **3,948 requests/s** (6 workers, 32 × 24) | **2,273 requests/s** (2 workers, 16 × 24) |
+
+US-A connected directly to the isolated Edge IPs without Cloudflare. The tests served a 923 B Pages file with rate limiting disabled and stored access logs on the in-memory filesystem `tmpfs`. The new asynchronous log writer has not been benchmarked on these nodes.
+
+[Benchmark report: test configuration, WAF comparison, and thread scaling.](./docs/en/reference/pingora-benchmark.md)
 
 ---
 
@@ -197,18 +218,19 @@ volumes:
 
 ### 2. Connect Edge Agent Node
 
-Run the Agent container on any edge server (ensure ports 80/443 are open):
+Install OpenFlare Edge on a Linux `amd64` or `arm64` edge server with systemd. Allow inbound TCP ports `80` and `443`. In the dashboard, copy the Discovery Token from **System Settings → OpenFlare → Discovery Token & Deployment**. Replace the server URL and token in this command:
 
 ```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443/tcp -p 443:443/udp \
-  -v openflare-agent-pages:/data/var/lib/openflare/pages \
-  -e OPENFLARE_SERVER_URL=http://<YOUR_SERVER_IP>:3000 \
-  -e OPENFLARE_AGENT_TOKEN=<YOUR_AGENT_TOKEN> \
-  ghcr.io/rain-kl/openflare-agent:latest
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-openflare-edge.sh | sudo bash -s -- --server-url 'https://openflare.example.com' --token-type discovery --token '<DISCOVERY_TOKEN>'
 ```
-*(Copy the node token directly from Node Management in the dashboard)*
+
+The installer downloads the latest stable Edge release and starts the `openflare-edge` systemd service. To attach an existing node, use its node token and set `--token-type node`.
+
+Update an installed Edge node to the latest stable release:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/update-openflare-edge.sh | sudo bash
+```
 
 ## Cordis / Wavelet upstream
 

@@ -144,6 +144,11 @@ func DeleteUnlinkedZoneDomain(ctx context.Context, zoneID, id uint) (bool, error
 
 // ListZoneDomainsByRouteID returns the domains bound to a proxy route.
 func ListZoneDomainsByRouteID(ctx context.Context, routeID uint) ([]model.ZoneDomain, error) {
+	return ListZoneDomainsByRouteIDTx(db.DB(ctx), routeID)
+}
+
+// ListZoneDomainsByRouteIDTx reads route bindings within an existing transaction.
+func ListZoneDomainsByRouteIDTx(tx *gorm.DB, routeID uint) ([]model.ZoneDomain, error) {
 	var domains []model.ZoneDomain
 	if err := DB(ctx).Where("proxy_route_id = ?", routeID).Order("id asc").Find(&domains).Error; err != nil {
 		return nil, err

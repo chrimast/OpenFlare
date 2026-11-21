@@ -269,6 +269,7 @@ func buildNodeView(node *model.OpenFlareNode) *View {
 		Status:                    status,
 		CurrentVersion:            node.CurrentVersion,
 		LastSeenAt:                nodeViewLastSeenAt(node),
+		LastHeartbeatAt:           node.LastSeenAt,
 		LastError:                 node.LastError,
 		CreatedAt:                 node.CreatedAt,
 		UpdatedAt:                 node.UpdatedAt,

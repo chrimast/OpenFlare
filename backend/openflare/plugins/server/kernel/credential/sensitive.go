@@ -47,6 +47,10 @@ func Seal(plaintext string) (string, error) {
 	if key == "" {
 		return plaintext, nil
 	}
+	return sealWithKey(key, plaintext)
+}
+
+func sealWithKey(key, plaintext string) (string, error) {
 	encrypted, err := util.Encrypt(key, plaintext)
 	if err != nil {
 		return "", err

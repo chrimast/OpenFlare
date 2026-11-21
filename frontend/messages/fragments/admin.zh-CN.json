@@ -483,6 +483,11 @@
       "noUpgradeNeeded": "当前版本无需升级。"
     },
     "operation": {
+      "automationTitle": "CLI 与 MCP",
+      "automationDescription": "设置客户端可访问的 HTTP 或 HTTPS 地址。留空并保存可停用自动化访问。",
+      "automationAddress": "连接地址",
+      "automationSaved": "自动化设置已保存",
+      "automationSaveError": "保存自动化设置失败。请输入不含路径的 HTTPS 地址。",
       "whitelistUpdated": "文件访问白名单已更新",
       "updateWhitelistFailed": "更新白名单失败",
       "fileAccessControl": "文件访问权限控制",
@@ -813,6 +818,7 @@
       "cronHint": "使用标准 5 位 Cron 字段格式（分钟、小时、日期、月份、星期几）。",
       "scheduleActive": "启用状态",
       "scheduleActiveDesc": "决定此定时任务是否会定时触发执行。",
+      "hideSuccessLog": "隐藏任务成功日志",
       "noParamsRequired": "所选任务类型无需配置运行参数。",
       "payloadConfig": "运行参数配置 (Payload)",
       "paramOn": "开启",
@@ -1271,6 +1277,7 @@
     "settings": {
       "pageTitle": "系统设置",
       "tabs": {
+        "mcp": "MCP",
         "security": "安全设置",
         "operation": "业务设置",
         "system": "系统设置",

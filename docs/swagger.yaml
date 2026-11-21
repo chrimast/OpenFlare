@@ -1953,6 +1953,8 @@ definitions:
         type: string
       cron:
         type: string
+      hide_success_log:
+        type: boolean
       id:
         example: "0"
         type: string
@@ -4011,6 +4013,59 @@ paths:
       summary: 切换认证源启用状态
       tags:
       - admin
+  /api/v1/admin/automation/grants:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Revoke the current administrator's OAuth automation grants
+      tags:
+      - admin-automation
+  /api/v1/admin/automation/mcp:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_automation.mcpSettingsResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      summary: Get MCP connection settings
+      tags:
+      - admin-automation
   /api/v1/admin/cache/clear:
     post:
       description: 清除系统磁盘缓存目录中的所有临时文件，并重置缓存容量和 Key 追踪数据
@@ -5514,7 +5569,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 修改一个定时任务的配置（名称、Cron 表达式、异步任务参数和是否启用等），并触发调度器热加载，需要管理员权限
+      description: 修改定时任务配置并触发调度器热加载，需要管理员权限。省略 hide_success_log 时保留原值。
       parameters:
       - description: 定时任务 ID
         in: path
@@ -10925,7 +10980,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/apps_openflare_waf.attackGroupInput'
+          $ref: '#/definitions/apps_openflare_waf.AttackGroupInput'
       responses:
         "200":
           description: OK
@@ -10971,7 +11026,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/apps_openflare_waf.attackGroupInput'
+          $ref: '#/definitions/apps_openflare_waf.AttackGroupInput'
       responses:
         "200":
           description: OK
@@ -13279,7 +13334,7 @@ paths:
             - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/apps_openflare_performance.policyList'
+                  $ref: '#/definitions/apps_openflare_performance.PolicyList'
               type: object
         "401":
           description: Unauthorized
@@ -13312,7 +13367,7 @@ paths:
             - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/apps_openflare_performance.policyView'
+                  $ref: '#/definitions/apps_openflare_performance.PolicyView'
               type: object
         "400":
           description: Bad Request
@@ -13433,7 +13488,7 @@ paths:
             - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/apps_openflare_performance.policyView'
+                  $ref: '#/definitions/apps_openflare_performance.PolicyView'
               type: object
         "400":
           description: Bad Request
@@ -13507,6 +13562,12 @@ paths:
       tags:
       - config
 securityDefinitions:
+  AutomationBearer:
+    description: OAuth access token for the OpenFlare automation API. Use the Bearer
+      scheme.
+    in: header
+    name: Authorization
+    type: apiKey
   SessionCookie:
     in: cookie
     name: session

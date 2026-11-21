@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.26.0
 ARG NODE_VERSION=22
 ARG ALPINE_VERSION=3.23
 
@@ -28,10 +27,12 @@ COPY frontend/ ./
 # Assert index.html so a silent export failure cannot ship an API-only binary.
 RUN pnpm build:embed && test -f out/index.html
 
-FROM golang:${GO_VERSION}-alpine AS backend-builder
+FROM golang:alpine AS backend-builder
 
 ARG VERSION=dev
 ARG BUILD_DATE=""
+
+ENV GOTOOLCHAIN=""
 
 RUN apk add --no-cache ca-certificates git
 

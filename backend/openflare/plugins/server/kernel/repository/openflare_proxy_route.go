@@ -35,6 +35,15 @@ func ListProxyRoutes(ctx context.Context) ([]*model.ProxyRoute, error) {
 	return routes, nil
 }
 
+// ListProxyRoutesWithDomains reads site configuration and its bindings in bulk.
+func ListProxyRoutesWithDomains(ctx context.Context) ([]*model.ProxyRoute, error) {
+	var routes []*model.ProxyRoute
+	err := db.DB(ctx).Order("id desc").Preload("ZoneDomains", func(query *gorm.DB) *gorm.DB {
+		return query.Order("id asc")
+	}).Find(&routes).Error
+	return routes, err
+}
+
 // GetProxyRouteByID 按 ID 查询代理规则。
 func GetProxyRouteByID(ctx context.Context, id uint) (*model.ProxyRoute, error) {
 	var route model.ProxyRoute
@@ -42,6 +51,37 @@ func GetProxyRouteByID(ctx context.Context, id uint) (*model.ProxyRoute, error) 
 		return nil, err
 	}
 	return &route, nil
+}
+
+// LockProxyRouteTx loads a route with its row lock held for the transaction.
+func LockProxyRouteTx(tx *gorm.DB, id uint) (*model.ProxyRoute, error) {
+	var route model.ProxyRoute
+	if err := tx.Clauses(clause.Locking{Strength: clause.LockingStrengthUpdate}).First(&route, id).Error; err != nil {
+		return nil, err
+	}
+	return &route, nil
+}
+
+// LockZoneDomainTx loads the hostname and binding under a row lock.
+func LockZoneDomainTx(tx *gorm.DB, id uint) (*model.ZoneDomain, error) {
+	var domain model.ZoneDomain
+	if err := tx.Clauses(clause.Locking{Strength: clause.LockingStrengthUpdate}).First(&domain, id).Error; err != nil {
+		return nil, err
+	}
+	return &domain, nil
+}
+
+// BindZoneDomainTx associates a locked hostname without replacing other bindings.
+func BindZoneDomainTx(tx *gorm.DB, domain *model.ZoneDomain, routeID uint) error {
+	if domain.ProxyRouteID != nil && *domain.ProxyRouteID != routeID {
+		return ErrZoneDomainBoundToAnotherRoute
+	}
+	return tx.Model(domain).Update("proxy_route_id", routeID).Error
+}
+
+// UpdateDirectRouteUpstreamsTx persists the upstream fields of a locked route.
+func UpdateDirectRouteUpstreamsTx(tx *gorm.DB, route *model.ProxyRoute) error {
+	return tx.Model(route).Select("OriginID", "OriginURL", "OriginHost", "Upstreams", "UpdatedAt").Updates(route).Error
 }
 
 // CreateProxyRouteRecord 创建代理规则。
@@ -62,6 +102,11 @@ func UpdateProxyRouteRecord(ctx context.Context, route *model.ProxyRoute) error 
 // UpdateProxyRouteRecordTx updates a proxy route within an existing transaction.
 func UpdateProxyRouteRecordTx(tx *gorm.DB, route *model.ProxyRoute) error {
 	return tx.Model(&model.ProxyRoute{}).Where("id = ?", route.ID).Updates(proxyRouteUpdateMap(route)).Error
+}
+
+// UpdateProxyRouteFieldsTx writes only the selected fields of a locked route.
+func UpdateProxyRouteFieldsTx(tx *gorm.DB, route *model.ProxyRoute, fields []string) error {
+	return tx.Model(route).Select(fields).Updates(route).Error
 }
 
 func proxyRouteUpdateMap(route *model.ProxyRoute) map[string]any {
@@ -115,7 +160,7 @@ func ClearZoneDomainProxyRouteBindingsTx(tx *gorm.DB, routeID uint) error {
 func ReplaceZoneDomainRouteBindingsTx(tx *gorm.DB, routeID uint, domainIDs []uint) error {
 	var requested []model.ZoneDomain
 	if len(domainIDs) > 0 {
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		if err := tx.Clauses(clause.Locking{Strength: clause.LockingStrengthUpdate}).
 			Where("id IN ?", domainIDs).
 			Find(&requested).Error; err != nil {
 			return err
@@ -147,6 +192,9 @@ func ReplaceZoneDomainRouteBindingsTx(tx *gorm.DB, routeID uint, domainIDs []uin
 // DeleteProxyRouteAndUnbind clears domain bindings then deletes the proxy route in one transaction.
 func DeleteProxyRouteAndUnbind(ctx context.Context, id uint) error {
 	return WithProxyRouteTx(ctx, func(tx *gorm.DB) error {
+		if _, err := LockProxyRouteTx(tx, id); err != nil {
+			return err
+		}
 		if err := ClearZoneDomainProxyRouteBindingsTx(tx, id); err != nil {
 			return err
 		}

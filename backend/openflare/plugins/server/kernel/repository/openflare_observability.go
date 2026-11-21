@@ -190,7 +190,11 @@ func ListOpenFlareActiveHealthEvents(ctx context.Context) ([]*model.OpenFlareHea
 		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	var rows []*model.OpenFlareHealthEvent
-	if err := conn.Where("status = ?", "active").Order("last_triggered_at desc").Find(&rows).Error; err != nil {
+	query := conn.Where("status = ?", "active")
+	if len(nodeIDs) != 0 {
+		query = query.Where("node_id IN ?", nodeIDs)
+	}
+	if err := query.Order("last_triggered_at desc").Find(&rows).Error; err != nil {
 		if isMissingTableError(err) {
 			return []*model.OpenFlareHealthEvent{}, nil
 		}

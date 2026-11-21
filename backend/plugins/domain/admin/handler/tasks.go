@@ -246,7 +246,7 @@ func CreateSchedule(c *gin.Context) {
 
 // UpdateSchedule 修改定时任务
 // @Summary 修改定时任务
-// @Description 修改一个定时任务的配置（名称、Cron 表达式、异步任务参数和是否启用等），并触发调度器热加载，需要管理员权限
+// @Description 修改定时任务配置并触发调度器热加载，需要管理员权限。省略 hide_success_log 时保留原值。
 // @Tags admin
 // @Accept json
 // @Produce json

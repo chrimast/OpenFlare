@@ -6,6 +6,7 @@ MODULE := $(shell cd backend && go list -m)
 
 swagger:
 	scripts/swagger.sh
+	go run ./scripts/generate-automation-catalog
 
 license:
 	scripts/update_go_license.sh

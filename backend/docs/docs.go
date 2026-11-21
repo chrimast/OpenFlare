@@ -322,6 +322,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/automation/grants": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-automation"
+                ],
+                "summary": "Revoke the current administrator's OAuth automation grants",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/automation/mcp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-automation"
+                ],
+                "summary": "Get MCP connection settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/apps_openflare_automation.mcpSettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/cache/clear": {
             "post": {
                 "security": [
@@ -2778,7 +2864,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "修改一个定时任务的配置（名称、Cron 表达式、异步任务参数和是否启用等），并触发调度器热加载，需要管理员权限",
+                "description": "修改定时任务配置并触发调度器热加载，需要管理员权限。省略 hide_success_log 时保留原值。",
                 "consumes": [
                     "application/json"
                 ],
@@ -11807,7 +11893,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apps_openflare_waf.attackGroupInput"
+                            "$ref": "#/definitions/apps_openflare_waf.AttackGroupInput"
                         }
                     }
                 ],
@@ -11883,7 +11969,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apps_openflare_waf.attackGroupInput"
+                            "$ref": "#/definitions/apps_openflare_waf.AttackGroupInput"
                         }
                     }
                 ],
@@ -15706,7 +15792,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/apps_openflare_performance.policyList"
+                                            "$ref": "#/definitions/apps_openflare_performance.PolicyList"
                                         }
                                     }
                                 }
@@ -15761,7 +15847,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/apps_openflare_performance.policyView"
+                                            "$ref": "#/definitions/apps_openflare_performance.PolicyView"
                                         }
                                     }
                                 }
@@ -15950,7 +16036,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/apps_openflare_performance.policyView"
+                                            "$ref": "#/definitions/apps_openflare_performance.PolicyView"
                                         }
                                     }
                                 }
@@ -19093,6 +19179,9 @@ const docTemplate = `{
                 "cron": {
                     "type": "string"
                 },
+                "hide_success_log": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string",
                     "example": "0"
@@ -21889,6 +21978,12 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
+        "AutomationBearer": {
+            "description": "OAuth access token for the OpenFlare automation API. Use the Bearer scheme.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
         "SessionCookie": {
             "type": "apiKey",
             "name": "session",

@@ -1,0 +1,17 @@
+{
+  "title": "Deployment",
+  "root": true,
+  "pages": [
+    "index",
+    "deployment",
+    "---Components---",
+    "server",
+    "agent",
+    "openflare-edge",
+    "---Tunnel Infrastructure---",
+    "relay",
+    "openflared",
+    "---Upgrades & Maintenance---",
+    "upgrade"
+  ]
+}

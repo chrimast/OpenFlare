@@ -429,6 +429,7 @@ API 业务字节字段使用 `bytes_provided` / `bytes_received`（访问日志�
 * 「系统信息」逐项列出主机名、操作系统、内核与架构、在线时长、CPU 型号与核心数、上报时间。
 * 「实时资源」逐项显示 CPU 使用率、内存与存储的已用量和总量，以及当前连接数。
 * 宽屏下并排展示「24 小时请求趋势」与「24 小时容量趋势」，绘图区上下对齐。「请求结构分布」与「健康事件时间线」各占一行。
+* 「请求结构分布」仅聚合统计窗口内当前节点的访问日志；没有访问日志时，状态码和域名排行均为空。
 * 业务吞吐：该节点 `sum(bytes_sent)` 等。  
 * OpenResty：健康 + 当前连接。  
 * 网卡：明确「宿主机」。
@@ -532,9 +533,8 @@ bytes_sent (= $body_bytes_sent), request_length
 
 | 区域 | 主要路径 |
 | --- | --- |
-| 协议 | `internal/openflare/protocol/agent.go` |
-| Agent 采集 | `internal/edge/agent/observability/`、`internal/edge/agent/heartbeat/` |
-| OpenResty 日志与 Lua | `internal/openflare/openresty/`、`internal/edge/agent/nginx/observability_assets.go` |
+| 协议定义 | `internal/openflare/protocol/agent.go` |
+| 节点采集与日志缓冲 | `edge/pingora/src/telemetry/`、`edge/pingora/src/control/` |
 | Server 入库 | `internal/apps/openflare/agent/observability.go` |
 | 日志聚合 | `internal/repository/logstore/ch_node_access_log*.go`、`internal/repository/logstore/postgres_store.go`、`internal/apps/openflare/zone/stats.go` |
 | 看板 | `internal/apps/openflare/dashboard/`、`internal/apps/openflare/observability/analytics.go` |

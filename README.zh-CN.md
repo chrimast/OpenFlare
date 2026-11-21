@@ -1,6 +1,11 @@
 <div align="center">
 
-# OpenFlare
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/brand/openflare-horizontal-white.svg">
+    <img src="./docs/assets/brand/openflare-horizontal-black.svg" alt="OpenFlare" width="320">
+  </picture>
+</h1>
 
 **新一代分布式反向代理与边缘安全网关**  
 *Next-Gen Distributed Reverse Proxy & Edge Gateway for Pingora*
@@ -112,6 +117,22 @@ flowchart TD
 
 ---
 
+## Pingora 性能实测
+
+**2026 年 11 月 20 日 · OpenFlare Edge `0.1.8` · 压测客户端：US-A**
+
+| 实测指标 | JP-B | US-C |
+| --- | ---: | ---: |
+| HTTP/2 吞吐：完整 WAF，16 连接 × 24 流 | **1,158 请求/秒**（3 线程） | **718 请求/秒**（1 线程） |
+| HTTP/2 吞吐：关闭 WAF，16 连接 × 24 流 | **2,990 请求/秒**（3 线程） | **2,169 请求/秒**（1 线程） |
+| 峰值复测：关闭 WAF，采样 22 秒 | **3,948 请求/秒**（6 线程，32 × 24） | **2,273 请求/秒**（2 线程，16 × 24） |
+
+US-A 直连隔离实例 IP，不经 Cloudflare。测试使用 923 B 的 Pages 文件，关闭限流，访问日志写入内存文件系统 `tmpfs`。新版异步落盘尚未在这两台节点上复测。
+
+[完整报告：测试配置、WAF 对照与线程扩展。](./docs/reference/pingora-benchmark.md)
+
+---
+
 ## 🖥️ 界面预览
 
 ### 仪表盘与实时观测
@@ -198,18 +219,19 @@ volumes:
 
 ### 2. 部署边缘 Agent 节点
 
-在任意作为边缘代理的服务器上执行（需开放 80/443 端口）：
+在支持 systemd 的 Linux `amd64` 或 `arm64` 边缘服务器上安装 OpenFlare Edge，并开放 TCP 入站端口 `80` 和 `443`。在控制台「系统设置 → OpenFlare → Discovery Token 与部署」中复制 Discovery Token，然后替换命令中的控制端地址和令牌：
 
 ```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443/tcp -p 443:443/udp \
-  -v openflare-agent-pages:/data/var/lib/openflare/pages \
-  -e OPENFLARE_SERVER_URL=http://<YOUR_SERVER_IP>:3000 \
-  -e OPENFLARE_AGENT_TOKEN=<YOUR_AGENT_TOKEN> \
-  ghcr.io/rain-kl/openflare-agent:latest
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-openflare-edge.sh | sudo bash -s -- --server-url 'https://openflare.example.com' --token-type discovery --token '<Discovery Token>'
 ```
-*(Token 可在管理后台的「节点管理 -> 详情 -> 节点信息」中直接一键生成与复制)*
+
+安装脚本会下载最新正式版 Edge 并启动 `openflare-edge` systemd 服务。若要接管已有节点，请使用该节点的专属令牌，并将 `--token-type` 设为 `node`。
+
+将已部署的 Edge 节点更新到最新正式版：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/update-openflare-edge.sh | sudo bash
+```
 
 ## Cordis / Wavelet 上游
 

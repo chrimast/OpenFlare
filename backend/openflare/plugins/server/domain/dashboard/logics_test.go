@@ -14,6 +14,7 @@ import (
 	"Wavelet/openflare/plugins/server/kernel/model"
 
 	"github.com/glebarez/sqlite"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ func setupDashboardTestDB(t *testing.T) func() {
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	require.NoError(t, err)
-	require.NoError(t, sqliteDB.AutoMigrate(&model.OpenFlareNode{}))
+	require.NoError(t, sqliteDB.AutoMigrate(&model.OpenFlareNode{}, &model.OpenFlareNodeSystemProfile{}, &model.OpenFlareHealthEvent{}))
 
 	repository.SetDBForTest(sqliteDB)
 	testhelper.SetupLogStoresForTest(t)
@@ -215,4 +216,36 @@ func TestOverviewTrafficCountsUseSameWindow(t *testing.T) {
 	if got.RequestCount != 6 || got.UniqueVisitors != 2 || got.Status4xxCount != 2 || got.ErrorCount != 2 {
 		t.Errorf("buildOverviewView(mixed status/window logs).Traffic = %+v, want requests=6, unique IPs=2, 4xx=2, 5xx=2", got)
 	}
+}
+
+func TestTrafficDistributionsRespectNodeScope(t *testing.T) {
+	t.Cleanup(setupDashboardTestDB(t))
+	ctx := t.Context()
+	activeNode := &model.OpenFlareNode{NodeID: uuid.NewString(), Name: "Active edge"}
+	otherNode := &model.OpenFlareNode{NodeID: uuid.NewString(), Name: "Other edge"}
+	newNode := &model.OpenFlareNode{NodeID: uuid.NewString(), Name: "New edge"}
+	for _, node := range []*model.OpenFlareNode{activeNode, otherNode, newNode} {
+		require.NoError(t, repository.CreateOpenFlareNode(ctx, node))
+	}
+	loggedAt := time.Now().Add(-time.Minute)
+	require.NoError(t, repository.InsertOpenFlareAccessLogsBatch(ctx, []*model.OpenFlareAccessLog{
+		{NodeID: activeNode.NodeID, LoggedAt: loggedAt, Host: "app.example.com", StatusCode: 200},
+		{NodeID: otherNode.NodeID, LoggedAt: loggedAt, Host: "app.example.com", StatusCode: 200},
+		{NodeID: otherNode.NodeID, LoggedAt: loggedAt, Host: "other.example.com", StatusCode: 404},
+	}))
+
+	activeView, err := observability.GetNodeObservability(ctx, activeNode.ID, observability.NodeQuery{})
+	require.NoError(t, err)
+	assert.Equal(t, []observability.DistributionItem{{Key: "200", Value: 1}}, activeView.Analytics.Distributions.StatusCodes)
+	assert.Equal(t, []observability.DistributionItem{{Key: "app.example.com", Value: 1}}, activeView.Analytics.Distributions.TopDomains)
+
+	newView, err := observability.GetNodeObservability(ctx, newNode.ID, observability.NodeQuery{})
+	require.NoError(t, err)
+	assert.Empty(t, newView.Analytics.Distributions.StatusCodes)
+	assert.Empty(t, newView.Analytics.Distributions.TopDomains)
+
+	overview, err := buildOverviewView(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, []observability.DistributionItem{{Key: "200", Value: 2}, {Key: "404", Value: 1}}, overview.Distributions.StatusCodes)
+	assert.Equal(t, []observability.DistributionItem{{Key: "app.example.com", Value: 2}, {Key: "other.example.com", Value: 1}}, overview.Distributions.TopDomains)
 }

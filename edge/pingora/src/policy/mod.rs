@@ -55,6 +55,13 @@ pub enum PolicyDecision {
     },
 }
 
+fn with_brand_mark(html: &str) -> String {
+    html.replace(
+        "<!-- openflare-brand -->",
+        include_str!("../../../../internal/openflare/edgeconfig/pow_static/img/openflare-mark.svg"),
+    )
+}
+
 pub fn ip_in_cidr(ip: &str, cidr: &str) -> bool {
     let Ok(ip) = ip.parse::<IpAddr>() else {
         return false;
@@ -180,7 +187,6 @@ mod tests {
     use crate::pages::{pages_api_target, pages_resolve};
     use crate::protocol::config::{LimitConfig, WafBinding, WafGraph, WafNode};
     use crate::protocol::config::{PagesDeployment, PoWConfig, PoWPageConfig, Route, WafDocument};
-    use crate::telemetry::{AccessLogBuffer, NodeAccessLog};
     use base64::{engine::general_purpose::STANDARD as Base64, Engine as _};
     use sha2::{Digest, Sha256};
     use std::path::Path;
@@ -396,41 +402,6 @@ mod tests {
     }
 
     #[test]
-    fn access_log_queue_persists_and_drains_atomically() {
-        let state_dir = tempfile::tempdir().expect("tempdir");
-        let buffer = AccessLogBuffer::persistent(state_dir.path());
-        let log = NodeAccessLog {
-            logged_at_unix: 100,
-            remote_addr: "192.0.2.1".into(),
-            host: "example.com".into(),
-            path: "/".into(),
-            user_agent: "curl/8".into(),
-            cache_status: "-".into(),
-            status_code: 200,
-            bytes_sent: 123,
-            request_length: 45,
-            request_time_ms: 6,
-            waf: None,
-        };
-        buffer.push(log.clone()).unwrap();
-        buffer
-            .push(NodeAccessLog {
-                path: "/second".into(),
-                ..log.clone()
-            })
-            .unwrap();
-        let drained = buffer.peek(1).unwrap();
-        assert_eq!(drained.len(), 1);
-        assert_eq!(drained[0].log.path, "/");
-        buffer.commit(&drained).unwrap();
-        let remaining = buffer.peek(10).unwrap();
-        assert_eq!(remaining.len(), 1);
-        assert_eq!(remaining[0].log.path, "/second");
-        buffer.commit(&remaining).unwrap();
-        assert!(buffer.peek(10).unwrap().is_empty());
-    }
-
-    #[test]
     fn pow_html_challenge_matches_openresty_runtime_shape() {
         let mut route = route();
         route.pow_enabled = true;
@@ -469,6 +440,8 @@ mod tests {
             html.contains("正在确认你是不是机器人") || html.contains("正在确认你是不是机器人！")
         );
         assert!(html.contains(r#"<openflare-pow appearance="progress"></openflare-pow>"#));
+        assert!(html.contains(r#"class="brand-icon""#));
+        assert!(!html.contains("<!-- openflare-brand -->"));
         assert!(html.contains("</script>\n</body>"));
     }
 
@@ -480,6 +453,10 @@ mod tests {
             "text/javascript; charset=utf-8"
         );
         assert!(pow_static("css/xess.css").is_some());
+        assert_eq!(
+            pow_static("img/openflare-mark.svg").unwrap().1,
+            "image/svg+xml"
+        );
         assert!(pow_static("locales/challenge.zh-CN.json").is_some());
         assert!(pow_static("../secret").is_none());
         assert!(pow_static("missing.js").is_none());

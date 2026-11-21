@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1.7
 ARG VERSION=dev
 
-FROM golang:1.26.0-alpine AS builder
+FROM golang:alpine AS builder
 
 ARG VERSION
+
+ENV GOTOOLCHAIN=""
 
 WORKDIR /build
 COPY backend/go.mod backend/go.sum ./

@@ -19,7 +19,6 @@
 #   make cross-build VERSION=v1.2.3
 #   make cross-build GOOS=linux GOARCH=arm64
 
-ARG GO_VERSION=1.26.0
 ARG NODE_VERSION=22
 ARG ALPINE_VERSION=3.23
 
@@ -50,13 +49,15 @@ COPY frontend/ ./
 RUN pnpm build:embed && test -f out/index.html
 
 # ── Stage 2: Cross-compile Go backend ──────────────────────────────────────
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+FROM golang:alpine${ALPINE_VERSION} AS builder
 
 ARG VERSION=dev
 ARG BUILD_DATE=""
 # Empty string means "build all"; set to a specific value to filter.
 ARG TARGET_OS=
 ARG TARGET_ARCH=
+
+ENV GOTOOLCHAIN=""
 
 # git  — needed by go mod download for VCS-stamped modules
 # ca-certificates — needed for HTTPS during module download
