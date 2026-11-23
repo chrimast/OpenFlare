@@ -27,6 +27,7 @@ const (
 	nodeStatusOnline         = "online"
 	nodeStatusOffline        = "offline"
 	nodeStatusPending        = "pending"
+	nodeStatusQuarantined    = "quarantined"
 	openrestyStatusHealthy   = "healthy"
 	openrestyStatusUnhealthy = "unhealthy"
 	openrestyStatusUnknown   = "unknown"
@@ -208,6 +209,9 @@ func computeNodeStatusAt(node *model.OpenFlareNode, now time.Time) string {
 	if node == nil {
 		return nodeStatusOffline
 	}
+	if node.IsQuarantined() {
+		return nodeStatusQuarantined
+	}
 	if node.LastSeenAt == nil || node.LastSeenAt.IsZero() {
 		return nodeStatusPending
 	}
@@ -284,6 +288,12 @@ func buildNodeView(node *model.OpenFlareNode) *View {
 		RelayClientProxyURL:       node.RelayClientProxyURL,
 		RelayStatus:               node.RelayStatus,
 		RelayWebServerEnabled:     node.RelayWebServerEnabled,
+		QuarantinedAt:             node.QuarantinedAt,
+		QuarantineReason:          strings.TrimSpace(node.QuarantineReason),
+		IsQuarantined:             node.IsQuarantined(),
+	}
+	if view.IsQuarantined {
+		view.AccessToken = ""
 	}
 	if view.UpdateChannel == "" {
 		view.UpdateChannel = releaseChannelStable.String()

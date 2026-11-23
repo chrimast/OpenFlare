@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Rain-kl/Wavelet/internal/openflare/protocol"
 	"github.com/gin-gonic/gin"
 
 	"Wavelet/pkg/util"
@@ -20,6 +21,7 @@ const (
 	AgentWSConnectedLastSeenValue = "__OPENFLARE_WS_CONNECTED__"
 
 	agentMessageTypeConfigChanged = "config_changed"
+	quarantineCloseDelay          = 150 * time.Millisecond
 )
 
 type agentClient struct {
@@ -110,6 +112,29 @@ func SendForceSyncConfig(nodeID string) bool {
 	return sendAgentMessage(nodeID, Message{Type: agentMessageTypeConfigChanged, Payload: struct {
 		Force bool `json:"force"`
 	}{Force: true}})
+}
+
+func disconnectLocalAgent(nodeID, reason string) bool {
+	defaultAgentHub.mu.Lock()
+	client := defaultAgentHub.clients[nodeID]
+	if client != nil {
+		delete(defaultAgentHub.clients, nodeID)
+	}
+	defaultAgentHub.mu.Unlock()
+	if client == nil {
+		return false
+	}
+	if client.enqueue(Message{
+		Type: protocol.WSMessageTypeQuarantined,
+		Payload: struct {
+			Reason string `json:"reason,omitempty"`
+		}{Reason: reason},
+	}) {
+		time.AfterFunc(quarantineCloseDelay, client.close)
+	} else {
+		client.close()
+	}
+	return true
 }
 
 func sendAgentMessage(nodeID string, message Message) bool {

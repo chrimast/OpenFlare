@@ -22,6 +22,7 @@ func registerAgentRoutes(apiV1Router core.RouterExtension) {
 		{
 			authorizedRoute.GET("/ws", agent.WebSocketHandler)
 			authorizedRoute.GET("/config/pull", agent.PullConfigHandler)
+			authorizedRoute.POST("/tls/keys", agent.FetchTLSKeysHandler)
 			authorizedRoute.POST("/nodes/heartbeat", agent.HeartbeatHandler)
 			authorizedRoute.GET("/pages/projects/:project_id/latest/hash", agent.GetPagesProjectLatestHashHandler)
 			authorizedRoute.GET("/pages/projects/:project_id/latest/package", agent.DownloadPagesProjectLatestPackageHandler)

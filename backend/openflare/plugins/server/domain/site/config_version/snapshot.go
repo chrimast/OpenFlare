@@ -5,6 +5,7 @@ package config_version
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,7 +25,7 @@ import (
 )
 
 const (
-	supportFilesPerCertificate  = 2
+	supportFilesPerCertificate  = 1
 	wafIPGroupChecksumHexLength = 64
 )
 
@@ -86,9 +87,10 @@ type snapshotWAFBinding struct {
 }
 
 type snapshotWAFDocument struct {
-	RuleGroups []snapshotWAFRuleGroup `json:"rule_groups"`
-	IPGroups   []snapshotWAFIPGroup   `json:"ip_groups,omitempty"`
-	Bindings   []snapshotWAFBinding   `json:"bindings"`
+	RuleGroups       []snapshotWAFRuleGroup         `json:"rule_groups"`
+	IPGroups         []snapshotWAFIPGroup           `json:"ip_groups,omitempty"`
+	Bindings         []snapshotWAFBinding           `json:"bindings"`
+	RequestWhitelist []edgeconfig.WAFWhitelistEntry `json:"request_whitelist,omitempty"`
 }
 
 type edgeSettingsSnapshot = edgeconfig.ConfigSnapshot
@@ -347,7 +349,11 @@ func buildSnapshotWAFDocument(ctx context.Context, routes []snapshotRoute) (snap
 		}
 		return bindings[i].SiteName < bindings[j].SiteName
 	})
-	return snapshotWAFDocument{RuleGroups: ruleGroups, IPGroups: ipGroups, Bindings: bindings}, nil
+	whitelist, err := waf.SnapshotWAFWhitelist(ctx)
+	if err != nil {
+		return snapshotWAFDocument{}, err
+	}
+	return snapshotWAFDocument{RuleGroups: ruleGroups, IPGroups: ipGroups, Bindings: bindings, RequestWhitelist: whitelist}, nil
 }
 
 func nonNilUintSlice(values []uint) []uint {
@@ -574,9 +580,12 @@ func buildCertificateSupportFiles(ctx context.Context, routes []snapshotRoute) (
 		if strings.TrimSpace(keyPEM) == "" {
 			return nil, fmt.Errorf("certificate %d has no private key", certificate.ID)
 		}
+		certPEM := normalizePEM(certificate.CertPEM)
+		if _, err := tls.X509KeyPair([]byte(certPEM), []byte(normalizePEM(keyPEM))); err != nil {
+			return nil, fmt.Errorf("certificate %d key pair mismatch: %w", certificate.ID, err)
+		}
 		files = append(files,
-			SupportFile{Path: certificateCertFileName(certificate.ID), Content: normalizePEM(certificate.CertPEM)},
-			SupportFile{Path: certificateKeyFileName(certificate.ID), Content: normalizePEM(keyPEM)},
+			SupportFile{Path: certificateCertFileName(certificate.ID), Content: certPEM},
 		)
 	}
 	return dedupeSupportFiles(files), nil

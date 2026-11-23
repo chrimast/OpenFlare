@@ -29,6 +29,7 @@ import (
 // @Success 200 {object} response.Any{data=agent.RegistrationResponseDocs} "注册成功"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
+// @Failure 403 {object} response.Any "节点已隔离"
 // @Router /api/v1/agent/nodes/register [post]
 func RegisterHandler(c *gin.Context) {
 	var request protocol.RegisterNodeRequest
@@ -64,6 +65,7 @@ func RegisterHandler(c *gin.Context) {
 // @Success 200 {object} response.Any{data=agent.HeartbeatResponse} "心跳成功"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "Token 无效"
+// @Failure 403 {object} response.Any "节点已隔离"
 // @Router /api/v1/agent/nodes/heartbeat [post]
 func HeartbeatHandler(c *gin.Context) {
 	var payload protocol.NodePayload
