@@ -183,7 +183,7 @@ func GetAgentReleaseHandler(c *gin.Context) {
 
 // RequestAgentUpdateHandler requests agent self-update on a node.
 // @Summary 请求更新节点
-// @Description 为指定节点登记更新请求，Pingora 节点的请求固定到目标版本，需要管理员权限
+// @Description 为指定节点登记更新请求，边缘节点的请求固定到目标版本，需要管理员权限
 // @Tags openflare-node
 // @Accept json
 // @Produce json
@@ -215,7 +215,7 @@ func RequestAgentUpdateHandler(c *gin.Context) {
 }
 
 // RequestEdgeRestartHandler requests openresty restart on a node.
-// @Summary 请求重启 Pingora
+// @Summary 请求重启 OpenFlare Edge
 // @Description 向指定节点下发 OpenResty 重启指令，需要管理员权限
 // @Tags openflare-node
 // @Produce json
@@ -334,7 +334,7 @@ func bindOptionalJSON(body io.Reader, target any) error {
 // @Param page_size query int false "每页数量（默认 20，最大 100）"
 // @Param search query string false "名称、节点标识或 IP 的字面子串（最多 256 字节）"
 // @Param status query string false "pending、online、offline 或 quarantined"
-// @Param node_type query string false "edge_node、tunnel_relay 或 tunnel_client"
+// @Param node_type query string false "节点类型（edge_node）"
 // @Success 200 {object} response.Any{data=node.ListResult} "节点分页"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"

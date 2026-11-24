@@ -1,4 +1,4 @@
-.PHONY: swagger license license-check format build-embedded build-test cross-build code-check build-backend build-frontend build-edge build-relay build-flared build-all
+.PHONY: swagger license license-check format build-embedded build-test cross-build code-check build-backend build-frontend build-edge build-relay build-flared test-tunnel build-all
 
 VERSION ?= dev
 BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
