@@ -105,10 +105,10 @@ openflare-edge attack-rule-catalog
 ```bash
 # Compile OpenFlare Edge release binary
 make build-edge
-# Output located at: edge/pingora/target/release/openflare-edge
+# Output located at: edge/target/release/openflare-edge
 
 # Run Rust test suite
-cargo test --manifest-path edge/pingora/Cargo.toml --locked
+cargo test --manifest-path edge/Cargo.toml --locked
 ```
 
 ---
@@ -211,7 +211,7 @@ Whenever API doc annotations are modified, regenerate OpenAPI / Swagger specific
 
 ```bash
 make swagger
-# Output files: docs/swagger.json, docs/swagger.yaml
+# Output files: api/swagger/swagger.json, api/swagger/swagger.yaml
 ```
 
 Access the interactive UI in non-production environments at: `http://localhost:3000/api/swagger/index.html`.

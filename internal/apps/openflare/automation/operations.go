@@ -115,6 +115,15 @@ func bindings() []binding {
 		"openflare_ip_group_list":       listIPGroups,
 		"openflare_ip_group_get":        getIPGroup,
 		"openflare_node_health":         nodeHealth,
+		"openflare_ping_task_list":      listPingTasks,
+		"openflare_ping_task_create":    createPingTask,
+		"openflare_ping_task_update":    updatePingTask,
+		"openflare_ping_task_delete":    deletePingTask,
+		"openflare_ping_task_reorder":   reorderPingTasks,
+		"openflare_node_ping_metrics":   nodePingMetrics,
+		"openflare_exec_run":            runRemoteExec,
+		"openflare_exec_list":           listRemoteExecTasks,
+		"openflare_exec_get":            getRemoteExecTask,
 	}
 	var result []binding
 	for _, operation := range automationcontract.Operations() {
@@ -256,7 +265,7 @@ func connectionInfo(ctx context.Context, actor identity, _ map[string]string) (a
 // @Security AutomationBearer
 // @Param page query integer false "Page number, starting at 1" minimum(1) default(1)
 // @Param page_size query integer false "Number of records per page" minimum(1) maximum(100) default(20)
-// @Param search query string false "Literal substring of the node name, registration identifier or IP address, at most 256 bytes" maxlength(256)
+// @Param search query string false "Literal substring of the node name, registration identifier, IP address, region or operating system, at most 256 bytes" maxlength(256)
 // @Param status query string false "Filter by current health. Omit for all statuses." Enums(pending,online,offline,quarantined)
 // @Param node_type query string false "Filter by node type. Omit for all types." Enums(edge_node)
 // @Success 200 {object} OperationResponse{data=NodePage}

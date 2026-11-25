@@ -125,6 +125,7 @@ func RegisterWithDiscovery(ctx context.Context, payload protocol.NodePayload, re
 		return nil, err
 	}
 	RefreshAccessTokenCache(ctx, record)
+	ping.AttachNewNode(ctx, record.NodeID)
 	return &protocol.RegisterNodeResponse{
 		NodeID:      record.NodeID,
 		AccessToken: record.AccessToken,

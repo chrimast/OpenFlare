@@ -10,16 +10,16 @@ OpenFlare 后端基于 [Swaggo](https://github.com/swaggo/swag) 根据源码注�
 
 ### 1. 静态规范定义文件
 
-规范文件位于仓库的 `docs/` 目录下，可直接导入 Postman、Apifox、Insomnia 等 API 协作工具或用于自动化客户端生成：
+规范文件位于仓库的 `api/swagger/` 目录下，可直接导入 Postman、Apifox、Insomnia 等 API 协作工具或用于自动化客户端生成：
 
-- **JSON 格式**：`docs/swagger.json`
-- **YAML 格式**：`docs/swagger.yaml`
+- **JSON 格式**：`api/swagger/swagger.json`
+- **YAML 格式**：`api/swagger/swagger.yaml`
 
 每次在业务代码中修改 Handler 注释、结构体或路由后，通过根目录 Makefile 重新生成规范：
 
 ```bash
 make swagger
-# 等价于执行 scripts/swagger.sh
+# 等价于执行 tools/codegen/swagger.sh
 ```
 
 ### 2. 在线 Swagger UI
@@ -221,10 +221,20 @@ curl -fsSL -X GET "https://panel.example.com/api/v1/d/dashboard/overview" \
 ### 2. 分页查询边缘节点列表
 
 ```bash
-curl -fsSL -X GET "https://panel.example.com/api/v1/d/nodes?page=1&page_size=10" \
+curl -fsSL -X GET "https://panel.example.com/api/v1/d/nodes/page?page=1&page_size=50&include_monitoring=true" \
   -H "Authorization: Bearer of_pat_9a8b7c6d5e4f3a2b1c" \
   -H "Accept: application/json"
 ```
+
+控制台的节点列表和卡片视图均使用 50 条分页。`search` 匹配名称、节点标识、IP、地区或操作系统名称。延迟摘要使用绿色表示 0–120 ms，橙色表示超过 120 ms 至 250 ms，红色表示超过 250 ms 或探测失败。点击延迟摘要可打开该节点的延迟与丢包图表，通过任务名称筛选曲线，并查看 1 小时至 30 天的记录。
+
+`include_monitoring=true` 为当前页的节点返回 `monitoring`。其中 `system` 为操作系统名称，`metric` 为在线节点最近 5 分钟内的最新资源快照，`net_in` 和 `net_out` 分别以字节每秒表示下载和上传速率。`ping` 按任务顺序返回最多 3 个已绑定任务，每个任务最多包含 12 条按时间升序排列的样本。延迟值以毫秒计，负值表示探测失败。部分监控数据暂时无法读取时，响应仍返回节点列表，并标记 `monitoring_unavailable`。
+
+#### 实时运行日志
+
+`GET /api/v1/d/nodes/{id}/runtime-logs` 需要管理员权限。连接建立后返回 `text/event-stream`，发送 `ready` 事件。后续的 `logs` 事件携带 `lines` 字符串数组，若节点跳过积压日志，则同批返回 `dropped` 数量。订阅结束时发送 `closed` 事件。节点离线、版本不支持或无法建立订阅时返回 HTTP 503。
+
+SSE 仅包含连接后产生的 OpenFlare Edge 运行日志。响应禁止缓存，主控不持久化日志。使用反向代理部署主控时，需允许该路径持续传输 SSE。
 
 ### 3. 创建反向代理路由规则
 

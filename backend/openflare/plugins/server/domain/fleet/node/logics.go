@@ -70,50 +70,52 @@ type BootstrapView struct {
 
 // View is the admin-facing node representation.
 type View struct {
-	ID                        uint       `json:"id"`
-	NodeID                    string     `json:"node_id"`
-	Name                      string     `json:"name"`
-	IP                        string     `json:"ip"`
-	IPManualOverride          bool       `json:"ip_manual_override"`
-	GeoName                   string     `json:"geo_name"`
-	GeoLatitude               *float64   `json:"geo_latitude"`
-	GeoLongitude              *float64   `json:"geo_longitude"`
-	GeoManualOverride         bool       `json:"geo_manual_override"`
-	AccessToken               string     `json:"access_token"`
-	AutoUpdateEnabled         bool       `json:"auto_update_enabled"`
-	EdgeUpdateSupported       bool       `json:"edge_update_supported"`
-	UpdateRequested           bool       `json:"update_requested"`
-	UpdateChannel             string     `json:"update_channel"`
-	UpdateTag                 string     `json:"update_tag"`
-	RestartOpenrestyRequested bool       `json:"restart_openresty_requested"`
-	Version                   string     `json:"version"`
-	ExtVersion                string     `json:"ext_version"`
-	OpenrestyStatus           string     `json:"openresty_status"`
-	OpenrestyMessage          string     `json:"openresty_message"`
-	Status                    string     `json:"status"`
-	CurrentVersion            string     `json:"current_version"`
-	LastSeenAt                any        `json:"last_seen_at"`
-	LastHeartbeatAt           *time.Time `json:"-"`
-	LastError                 string     `json:"last_error"`
-	LatestApplyResult         string     `json:"latest_apply_result"`
-	LatestApplyMessage        string     `json:"latest_apply_message"`
-	LatestApplyChecksum       string     `json:"latest_apply_checksum"`
-	LatestMainConfigChecksum  string     `json:"latest_main_config_checksum"`
-	LatestRouteConfigChecksum string     `json:"latest_route_config_checksum"`
-	LatestSupportFileCount    int        `json:"latest_support_file_count"`
-	LatestApplyAt             *time.Time `json:"latest_apply_at"`
-	CreatedAt                 time.Time  `json:"created_at"`
-	UpdatedAt                 time.Time  `json:"updated_at"`
-	NodeType                  string     `json:"node_type"`
-	QuarantinedAt             *time.Time `json:"quarantined_at"`
-	QuarantineReason          string     `json:"quarantine_reason"`
-	IsQuarantined             bool       `json:"is_quarantined"`
+	ID                        uint            `json:"id"`
+	NodeID                    string          `json:"node_id"`
+	Name                      string          `json:"name"`
+	IP                        string          `json:"ip"`
+	IPManualOverride          bool            `json:"ip_manual_override"`
+	GeoName                   string          `json:"geo_name"`
+	GeoLatitude               *float64        `json:"geo_latitude"`
+	GeoLongitude              *float64        `json:"geo_longitude"`
+	GeoManualOverride         bool            `json:"geo_manual_override"`
+	AccessToken               string          `json:"access_token"`
+	AutoUpdateEnabled         bool            `json:"auto_update_enabled"`
+	EdgeUpdateSupported       bool            `json:"edge_update_supported"`
+	UpdateRequested           bool            `json:"update_requested"`
+	UpdateChannel             string          `json:"update_channel"`
+	UpdateTag                 string          `json:"update_tag"`
+	RestartOpenrestyRequested bool            `json:"restart_openresty_requested"`
+	Version                   string          `json:"version"`
+	ExtVersion                string          `json:"ext_version"`
+	OpenrestyStatus           string          `json:"openresty_status"`
+	OpenrestyMessage          string          `json:"openresty_message"`
+	Status                    string          `json:"status"`
+	CurrentVersion            string          `json:"current_version"`
+	LastSeenAt                any             `json:"last_seen_at"`
+	LastHeartbeatAt           *time.Time      `json:"-"`
+	LastError                 string          `json:"last_error"`
+	LatestApplyResult         string          `json:"latest_apply_result"`
+	LatestApplyMessage        string          `json:"latest_apply_message"`
+	LatestApplyChecksum       string          `json:"latest_apply_checksum"`
+	LatestMainConfigChecksum  string          `json:"latest_main_config_checksum"`
+	LatestRouteConfigChecksum string          `json:"latest_route_config_checksum"`
+	LatestSupportFileCount    int             `json:"latest_support_file_count"`
+	LatestApplyAt             *time.Time      `json:"latest_apply_at"`
+	CreatedAt                 time.Time       `json:"created_at"`
+	UpdatedAt                 time.Time       `json:"updated_at"`
+	NodeType                  string          `json:"node_type"`
+	QuarantinedAt             *time.Time      `json:"quarantined_at"`
+	QuarantineReason          string          `json:"quarantine_reason"`
+	IsQuarantined             bool            `json:"is_quarantined"`
+	Monitoring                *MonitoringView `json:"monitoring,omitempty"`
 }
 
 // ObservabilityQuery filters node observability data.
 type ObservabilityQuery struct {
-	Hours int `json:"hours"`
-	Limit int `json:"limit"`
+	Hours    int  `form:"hours" json:"hours"`
+	Limit    int  `form:"limit" json:"limit"`
+	Realtime bool `form:"realtime" json:"realtime"`
 }
 
 // ObservabilityView is the node observability API response.
@@ -200,6 +202,7 @@ func CreateNode(ctx context.Context, input Input) (*View, error) {
 		}
 		return nil, err
 	}
+	ping.AttachNewNode(ctx, node.NodeID)
 	return buildNodeView(node), nil
 }
 
@@ -240,10 +243,15 @@ func UpdateNode(ctx context.Context, id uint, input Input) (*View, error) {
 
 // DeleteNode removes a node by id.
 func DeleteNode(ctx context.Context, id uint) error {
-	if _, err := repository.GetOpenFlareNodeByID(ctx, id); err != nil {
+	target, err := repository.GetOpenFlareNodeByID(ctx, id)
+	if err != nil {
 		return err
 	}
-	return repository.DeleteOpenFlareNode(ctx, id)
+	if err := repository.DeleteOpenFlareNode(ctx, id); err != nil {
+		return err
+	}
+	ping.DetachDeletedNode(ctx, target.NodeID)
+	return nil
 }
 
 // GetBootstrapToken returns the global discovery token, creating one if missing.
@@ -390,8 +398,9 @@ func RequestForceSync(ctx context.Context, id uint) (*View, error) {
 // GetObservability returns observability details for a node.
 func GetObservability(ctx context.Context, id uint, query ObservabilityQuery) (*ObservabilityView, error) {
 	return observability.GetNodeObservability(ctx, id, observability.NodeQuery{
-		Hours: query.Hours,
-		Limit: query.Limit,
+		Hours:    query.Hours,
+		Limit:    query.Limit,
+		Realtime: query.Realtime,
 	})
 }
 

@@ -27,6 +27,8 @@ func registerAgentRoutes(apiV1Router core.RouterExtension) {
 			authorizedRoute.GET("/pages/projects/:project_id/latest/hash", agent.GetPagesProjectLatestHashHandler)
 			authorizedRoute.GET("/pages/projects/:project_id/latest/package", agent.DownloadPagesProjectLatestPackageHandler)
 			authorizedRoute.POST("/apply-logs", agent.ReportApplyLogHandler)
+			authorizedRoute.POST("/ping/result", agent.ReportPingResultHandler)
+			authorizedRoute.POST("/exec/result", agent.ReportExecResultHandler)
 		}
 	}
 }

@@ -58,11 +58,12 @@ type AccessLogStore interface {
 	DropExpiredPartitions(ctx context.Context, cutoff time.Time) error
 }
 
-// ObservabilityStore 可观测 2 表（metric snapshots / edge health）。
+// ObservabilityStore 可观测 3 表（metric snapshots / edge health / ping records）。
 type ObservabilityStore interface {
 	InsertMetricSnapshot(ctx context.Context, record *model.OpenFlareMetricSnapshot) error
 	ListMetricSnapshots(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareMetricSnapshot, error)
 	ListLatestMetricSnapshots(ctx context.Context, nodeID string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error)
+	ListLatestMetricSnapshotsByNodeIDs(ctx context.Context, nodeIDs []string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error)
 	DeleteAllMetricSnapshots(ctx context.Context) (int64, error)
 	DeleteMetricSnapshotsBefore(ctx context.Context, cutoff time.Time) (int64, error)
 	BatchInsertNodeMetricSnapshots(ctx context.Context, rows []analyticsmodel.NodeMetricSnapshot) error
@@ -81,9 +82,18 @@ type ObservabilityStore interface {
 	DeleteEdgeHealthBefore(ctx context.Context, cutoff time.Time) (int64, error)
 	BatchInsertNodeEdgeHealth(ctx context.Context, rows []analyticsmodel.NodeEdgeHealth) error
 
+	InsertPingRecord(ctx context.Context, record *model.OpenFlarePingRecord) error
+	ListPingRecords(ctx context.Context, nodeID string, taskID uint, since time.Time, limit int) ([]*model.OpenFlarePingRecord, error)
+	ListRecentPingRecordsByTask(ctx context.Context, tasks map[uint]analyticsmodel.PingTaskWindow, limit int) ([]*model.OpenFlarePingRecord, error)
+	DeleteAllPingRecords(ctx context.Context) (int64, error)
+	DeletePingRecordsBefore(ctx context.Context, cutoff time.Time) (int64, error)
+	DeletePingRecordsByTaskIDs(ctx context.Context, taskIDs []uint) (int64, error)
+	BatchInsertNodePingRecords(ctx context.Context, rows []analyticsmodel.NodePingRecord) error
+
 	// 迁移复制用：按 id 升序分页读取。
 	ListMetricSnapshotsForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodeMetricSnapshot, error)
 	ListEdgeHealthForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodeEdgeHealth, error)
+	ListPingRecordsForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodePingRecord, error)
 }
 
 // UserAccessLogStore 用户访问日志（w_user_access_logs）。

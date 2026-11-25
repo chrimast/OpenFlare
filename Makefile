@@ -5,14 +5,14 @@ BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 MODULE := $(shell cd backend && go list -m)
 
 swagger:
-	scripts/swagger.sh
-	go run ./scripts/generate-automation-catalog
+	tools/codegen/swagger.sh
+	go run ./tools/codegen/generate-automation-catalog
 
 license:
-	scripts/update_go_license.sh
+	tools/lint/update_go_license.sh
 
 license-check:
-	scripts/update_go_license.sh --check
+	tools/lint/update_go_license.sh --check
 
 format:
 	@echo "==> Formatting backend Go source and removing unused imports..."

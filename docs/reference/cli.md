@@ -105,10 +105,10 @@ openflare-edge attack-rule-catalog
 ```bash
 # 编译 OpenFlare Edge Release 生产二进制
 make build-edge
-# 产物位于：edge/pingora/target/release/openflare-edge
+# 产物位于：edge/target/release/openflare-edge
 
 # 运行 Rust 测试套件
-cargo test --manifest-path edge/pingora/Cargo.toml --locked
+cargo test --manifest-path edge/Cargo.toml --locked
 ```
 
 ---
@@ -211,7 +211,7 @@ make code-check
 
 ```bash
 make swagger
-# 生成产物：docs/swagger.json, docs/swagger.yaml
+# 生成产物：api/swagger/swagger.json, api/swagger/swagger.yaml
 ```
 
 在线控制台请在非生产环境下访问：`http://localhost:3000/api/swagger/index.html`。

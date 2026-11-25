@@ -38,6 +38,7 @@ func newLogDBSwitchDB(t *testing.T) *gorm.DB {
 		&analyticsmodel.NodeAccessLog{},
 		&analyticsmodel.NodeMetricSnapshot{},
 		&analyticsmodel.NodeEdgeHealth{},
+		&analyticsmodel.NodePingRecord{},
 		&analyticsmodel.UserAccessLog{},
 	))
 	return gdb

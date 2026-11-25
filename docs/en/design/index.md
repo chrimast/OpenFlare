@@ -118,7 +118,7 @@ When contributing code, strictly follow this physical layering and directory div
 
 ### 2. OpenFlare Edge node
 
-The node runtime is located at `edge/pingora/`. The control plane distributes sites, WAF IP groups, and performance policies via configuration manifests. Nodes validate and apply updates to their local data plane. See [OpenFlare Edge node Design](./pingora-edge-design.md).
+The node runtime is located at `edge/`. The control plane distributes sites, WAF IP groups, and performance policies via configuration manifests. Nodes validate and apply updates to their local data plane. See [OpenFlare Edge node Design](./pingora-edge-design.md).
 
 ### 3. Frontend Layering (`frontend/`)
 

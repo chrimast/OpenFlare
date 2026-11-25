@@ -88,6 +88,15 @@ func ListOpenFlareLatestMetricSnapshotsSince(ctx context.Context, nodeID string,
 	return s.Observability.ListLatestMetricSnapshots(ctx, nodeID, since)
 }
 
+// ListOpenFlareLatestMetricSnapshotsByNodeIDs returns one recent snapshot per requested node.
+func ListOpenFlareLatestMetricSnapshotsByNodeIDs(ctx context.Context, nodeIDs []string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error) {
+	s, err := logstore.Active(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.Observability.ListLatestMetricSnapshotsByNodeIDs(ctx, nodeIDs, since)
+}
+
 // ListOpenFlareTrafficHourlySince returns hourly traffic rollup rows since the given time.
 // CH 读 of_access_log_hourly rollup；PG/SQLite 经 logstore 从 of_node_access_logs 实时聚合。
 func ListOpenFlareTrafficHourlySince(ctx context.Context, nodeID string, since time.Time) ([]*model.OpenFlareTrafficHourly, error) {
@@ -260,6 +269,23 @@ func DeleteOpenFlareHealthEventsByNodeID(ctx context.Context, nodeID string) (in
 	return result.RowsAffected, nil
 }
 
+// ListOpenFlareNodeOperatingSystems returns OS names for the requested nodes.
+func ListOpenFlareNodeOperatingSystems(ctx context.Context, nodeIDs []string) (map[string]string, error) {
+	conn := db.DB(ctx)
+	if conn == nil {
+		return nil, errors.New(errDatabaseNotInitialized)
+	}
+	var profiles []model.OpenFlareNodeSystemProfile
+	if err := conn.Select("node_id", "os_name").Where("node_id IN ?", nodeIDs).Find(&profiles).Error; err != nil {
+		return nil, err
+	}
+	names := make(map[string]string, len(profiles))
+	for _, profile := range profiles {
+		names[profile.NodeID] = profile.OSName
+	}
+	return names, nil
+}
+
 // GetOpenFlareNodeSystemProfile returns the system profile for a node.
 func GetOpenFlareNodeSystemProfile(ctx context.Context, nodeID string) (*model.OpenFlareNodeSystemProfile, error) {
 	conn := DB(ctx)
@@ -299,8 +325,15 @@ func upsertOpenFlareNodeSystemProfileTx(tx *gorm.DB, record *model.OpenFlareNode
 			"architecture",
 			"cpu_model",
 			"cpu_cores",
+			"cpu_physical_cores",
+			"virtualization",
+			"gpu_name",
 			"total_memory_bytes",
+			"swap_total_bytes",
 			"total_disk_bytes",
+			"ipv4",
+			"ipv6",
+			"probe_version",
 			"uptime_seconds",
 			"reported_at",
 			"updated_at",

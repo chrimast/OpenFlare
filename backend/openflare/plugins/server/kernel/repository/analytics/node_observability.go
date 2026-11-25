@@ -67,12 +67,23 @@ func (s *clickhouseLogStore) ListMetricSnapshots(ctx context.Context, nodeID str
 
 // ListLatestMetricSnapshots uses ClickHouse LIMIT 1 BY node_id so dashboard health does not depend on a global raw LIMIT.
 func (s *clickhouseLogStore) ListLatestMetricSnapshots(ctx context.Context, nodeID string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error) {
+	return listCHLatestMetricSnapshots(ctx, analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since})
+}
+
+func (s *clickhouseLogStore) ListLatestMetricSnapshotsByNodeIDs(ctx context.Context, nodeIDs []string, since time.Time) ([]*model.OpenFlareMetricSnapshot, error) {
+	if len(nodeIDs) == 0 {
+		return nil, nil
+	}
+	return listCHLatestMetricSnapshots(ctx, analyticsmodel.NodeObservabilityFilter{NodeIDs: nodeIDs, Since: since})
+}
+
+func listCHLatestMetricSnapshots(ctx context.Context, filter analyticsmodel.NodeObservabilityFilter) ([]*model.OpenFlareMetricSnapshot, error) {
 	return listCHNodeObservability(
 		ctx,
 		chNodeMetricSnapshotTableName(),
 		chNodeMetricSnapshotSelectColumns,
 		"list latest node metric snapshots",
-		analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since},
+		filter,
 		clickHouseLimit1ByNodeIDClause,
 		scanNodeMetricSnapshotRows,
 		fromAnalyticsNodeMetricSnapshots,
@@ -130,14 +141,27 @@ func scanNodeMetricSnapshotRows(rows driver.Rows) ([]analyticsmodel.NodeMetricSn
 			&item.NodeID,
 			&item.CapturedAt,
 			&item.CPUUsagePercent,
+			&item.GPUUsagePercent,
 			&item.MemoryUsedBytes,
 			&item.MemoryTotalBytes,
+			&item.SwapUsedBytes,
+			&item.SwapTotalBytes,
+			&item.Load1,
+			&item.Load5,
+			&item.Load15,
+			&item.Temp,
 			&item.StorageUsedBytes,
 			&item.StorageTotalBytes,
 			&item.DiskReadBytes,
 			&item.DiskWriteBytes,
-			&item.NetworkRxBytes,
+			&item.NetIn,
+			&item.NetOut,
 			&item.NetworkTxBytes,
+			&item.NetworkRxBytes,
+			&item.ProcessCount,
+			&item.TCPConnections,
+			&item.UDPConnections,
+			&item.UptimeSeconds,
 			&item.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan node metric snapshot row: %w", err)
@@ -147,6 +171,71 @@ func scanNodeMetricSnapshotRows(rows driver.Rows) ([]analyticsmodel.NodeMetricSn
 		result = append(result, item)
 	}
 	return result, nil
+}
+
+func (s *clickhouseLogStore) ListPingRecords(ctx context.Context, nodeID string, taskID uint, since time.Time, limit int) ([]*model.OpenFlarePingRecord, error) {
+	clause, args := buildCHNodeObservabilityFilterClause(analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since}, "recorded_at")
+	if taskID > 0 {
+		clause += " AND task_id = ?"
+		args = append(args, uint64(taskID))
+	}
+	suffix := ""
+	if limit > 0 {
+		suffix = clickHouseLimitClause
+		args = append(args, limit)
+	}
+	return listCHPingRecords(ctx, clause, suffix, args)
+}
+
+func (s *clickhouseLogStore) ListRecentPingRecordsByTask(ctx context.Context, tasks map[uint]analyticsmodel.PingTaskWindow, limit int) ([]*model.OpenFlarePingRecord, error) {
+	clause, args := pingTaskNodesFilter(tasks)
+	if clause == "" || limit <= 0 {
+		return nil, nil
+	}
+	return listCHPingRecords(ctx, clause, " LIMIT ? BY node_id, task_id", append(args, limit))
+}
+
+func listCHPingRecords(ctx context.Context, clause, suffix string, args []any) ([]*model.OpenFlarePingRecord, error) {
+	conn, err := chConn()
+	if err != nil {
+		return nil, err
+	}
+	sql := fmt.Sprintf(`
+SELECT id, node_id, task_id, recorded_at, value, created_at
+FROM %s
+WHERE %s
+ORDER BY recorded_at DESC, id DESC%s`, chNodePingRecordTableName(), clause, suffix)
+	rows, err := conn.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list node ping records: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	scanned, err := scanNodePingRecordRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	return fromAnalyticsNodePingRecords(scanned), nil
+}
+
+func scanNodePingRecordRows(rows driver.Rows) ([]analyticsmodel.NodePingRecord, error) {
+	var result []analyticsmodel.NodePingRecord
+	for rows.Next() {
+		var item analyticsmodel.NodePingRecord
+		if err := rows.Scan(
+			&item.ID,
+			&item.NodeID,
+			&item.TaskID,
+			&item.RecordedAt,
+			&item.Value,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan node ping record row: %w", err)
+		}
+		item.RecordedAt = item.RecordedAt.UTC()
+		item.CreatedAt = item.CreatedAt.UTC()
+		result = append(result, item)
+	}
+	return result, rows.Err()
 }
 
 // ListTrafficHourly 读 of_access_log_hourly rollup（M5 口径，UV 恒 0）。
@@ -341,13 +430,13 @@ FROM (
 	SELECT
 		node_id,
 		toStartOfHour(captured_at) AS hour,
-		cpu_usage_percent,
-		if(memory_total_bytes > 0, (memory_used_bytes * 100.0) / memory_total_bytes, 0) AS memory_usage_percent,
-		network_rx_bytes - lagInFrame(network_rx_bytes, 1, network_rx_bytes) OVER (
+		cpu AS cpu_usage_percent,
+		if(ram_total > 0, (ram * 100.0) / ram_total, 0) AS memory_usage_percent,
+		net_total_down - lagInFrame(net_total_down, 1, net_total_down) OVER (
 			PARTITION BY node_id ORDER BY captured_at, id
 			ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 		) AS network_rx_delta,
-		network_tx_bytes - lagInFrame(network_tx_bytes, 1, network_tx_bytes) OVER (
+		net_total_up - lagInFrame(net_total_up, 1, net_total_up) OVER (
 			PARTITION BY node_id ORDER BY captured_at, id
 			ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 		) AS network_tx_delta,

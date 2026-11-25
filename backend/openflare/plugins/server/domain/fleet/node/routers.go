@@ -269,8 +269,9 @@ func RequestForceSyncHandler(c *gin.Context) {
 // @Produce json
 // @Security SessionCookie
 // @Param id path int true "节点 ID"
-// @Param hours query int false "统计时间范围（小时）"
+// @Param hours query int false "统计时间范围（小时，最大 720）"
 // @Param limit query int false "返回记录数量上限"
+// @Param realtime query bool false "实时模式（近 30 分钟高分辨率快照）"
 // @Success 200 {object} response.Any{data=node.ObservabilityView} "可观测性数据"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"
@@ -332,9 +333,10 @@ func bindOptionalJSON(body io.Reader, target any) error {
 // @Security SessionCookie
 // @Param page query int false "页码（默认 1）"
 // @Param page_size query int false "每页数量（默认 20，最大 100）"
-// @Param search query string false "名称、节点标识或 IP 的字面子串（最多 256 字节）"
+// @Param search query string false "名称、节点标识、IP、地区或操作系统名称的字面子串（最多 256 字节）"
 // @Param status query string false "pending、online、offline 或 quarantined"
 // @Param node_type query string false "节点类型（edge_node）"
+// @Param include_monitoring query bool false "包含系统名称、最新资源快照及近期延迟样本"
 // @Success 200 {object} response.Any{data=node.ListResult} "节点分页"
 // @Failure 400 {object} response.Any "参数错误"
 // @Failure 401 {object} response.Any "未登录"

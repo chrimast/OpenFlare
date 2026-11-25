@@ -9,11 +9,13 @@ import ReactECharts from 'echarts-for-react';
 import { cn } from '@/lib/utils';
 import { calculateNiceAxisMax, formatCompactNumber } from '@/lib/utils/metrics';
 
+import { resolveChartColor } from './chart-theme';
+
 type TrendChartSeries = {
   label: string;
   color: string;
   fillColor?: string;
-  values: number[];
+  values: (number | null)[];
   variant?: 'line' | 'area';
   valueFormatter?: (value: number) => string;
 };
@@ -68,7 +70,7 @@ export function TrendChart({
   const option = useMemo<EChartsOption>(() => {
     const axisFormatter = yAxisValueFormatter ?? defaultFormatter;
     const maxValue = calculateNiceAxisMax(
-      series.flatMap((item) => item.values),
+      series.flatMap((item) => item.values.filter((value) => value !== null)),
     );
 
     return {
@@ -114,7 +116,7 @@ export function TrendChart({
               '<span style="display:inline-flex;align-items:center;gap:8px;">',
               `<span style="display:inline-block;width:8px;height:8px;border-radius:9999px;background:${item.color ?? '#94a3b8'};"></span>`,
               `<span>${item.seriesName ?? ''}</span>`,
-              `<strong style="margin-left:8px;">${formatter(numericValue)}</strong>`,
+              `<strong style="margin-left:8px;">${rawValue == null || !Number.isFinite(numericValue) ? '—' : formatter(numericValue)}</strong>`,
               '</span>',
             ].join('');
           });
@@ -158,32 +160,38 @@ export function TrendChart({
           },
         },
       },
-      series: series.map((item) => ({
-        name: item.label,
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: {
-          color: item.color,
-          width: 3,
-        },
-        itemStyle: {
-          color: item.color,
-        },
-        areaStyle:
-          item.variant === 'area'
-            ? {
-                color: item.fillColor ?? `${item.color}33`,
-              }
-            : undefined,
-        emphasis: {
-          focus: 'series',
-          scale: true,
-        },
-        data: item.values,
-      })),
+      series: series.map((item) => {
+        const strokeColor = resolveChartColor(item.color, '#4f46e5');
+        const areaColor = item.fillColor
+          ? resolveChartColor(item.fillColor, `${strokeColor}33`)
+          : `${strokeColor}33`;
+        return {
+          name: item.label,
+          type: 'line',
+          smooth: true,
+          showSymbol: item.values.length === 1 || item.values.includes(null),
+          symbol: 'circle',
+          symbolSize: 8,
+          lineStyle: {
+            color: strokeColor,
+            width: 3,
+          },
+          itemStyle: {
+            color: strokeColor,
+          },
+          areaStyle:
+            item.variant === 'area'
+              ? {
+                  color: areaColor,
+                }
+              : undefined,
+          emphasis: {
+            focus: 'series',
+            scale: true,
+          },
+          data: item.values,
+        };
+      }),
     };
   }, [labels, series, yAxisValueFormatter]);
 
@@ -218,7 +226,10 @@ export function TrendChart({
           )}
         >
           {series.map((item) => {
-            const summaryValue = resolveSummaryValue(item.values, summaryScope);
+            const summaryValue = resolveSummaryValue(
+              item.values.filter((value) => value !== null),
+              summaryScope,
+            );
             const formatter = item.valueFormatter ?? defaultFormatter;
             return (
               <div

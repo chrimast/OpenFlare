@@ -19,12 +19,13 @@ import (
 	analyticsmodel "Wavelet/openflare/plugins/server/kernel/model/analytics"
 )
 
-// cleanupTestModels 清理涉及的 3 张日志/可观测表。
+// cleanupTestModels 清理涉及的 4 张日志/可观测表。
 func cleanupTestModels() []any {
 	return []any{
 		&analyticsmodel.NodeAccessLog{},
 		&analyticsmodel.NodeMetricSnapshot{},
 		&analyticsmodel.NodeEdgeHealth{},
+		&analyticsmodel.NodePingRecord{},
 	}
 }
 
@@ -103,8 +104,8 @@ func TestCleanupExpiredSQLite(t *testing.T) {
 	if summary.Deleted != 3 {
 		t.Fatalf("Deleted = %d, want 3", summary.Deleted)
 	}
-	if len(summary.Tables) != 3 {
-		t.Fatalf("Tables = %v, want 3 tables", summary.Tables)
+	if len(summary.Tables) != 4 {
+		t.Fatalf("Tables = %v, want 4 tables", summary.Tables)
 	}
 
 	assertCount := func(m any, want int64, label string) {

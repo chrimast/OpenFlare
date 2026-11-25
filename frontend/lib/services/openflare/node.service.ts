@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from '@/lib/services/core/config';
 import { OpenFlareBaseService } from './base.service';
 import type {
   NodeCertificateDelivery,
@@ -13,6 +14,7 @@ import type {
   NodeListResult,
   NodeMutationPayload,
   NodeObservability,
+  NodePingRecords,
   ReleaseChannel,
 } from './types';
 
@@ -27,6 +29,13 @@ export class NodeService extends OpenFlareBaseService {
     query: NodeListQuery = {},
   ): Promise<NodeListResult> {
     return this.get<NodeListResult>('/page', { ...query });
+  }
+
+  static openRuntimeLogs(id: number): EventSource {
+    const origin = getApiBaseUrl().replace(/\/$/, '');
+    return new EventSource(`${origin}${this.basePath}/${id}/runtime-logs`, {
+      withCredentials: true,
+    });
   }
 
   static async getNode(id: number): Promise<NodeItem> {
@@ -80,11 +89,23 @@ export class NodeService extends OpenFlareBaseService {
 
   static async getObservability(
     id: number,
-    options?: { hours?: number; limit?: number },
+    options?: { hours?: number; limit?: number; realtime?: boolean },
   ): Promise<NodeObservability> {
     return this.get<NodeObservability>(`/${id}/observability`, {
       hours: options?.hours,
       limit: options?.limit,
+      realtime: options?.realtime ? 'true' : undefined,
+    });
+  }
+
+  static async getPingRecords(
+    id: number,
+    options?: { task_id?: number; hours?: number; max_points?: number },
+  ): Promise<NodePingRecords> {
+    return this.get<NodePingRecords>(`/${id}/ping-records`, {
+      task_id: options?.task_id,
+      hours: options?.hours,
+      max_points: options?.max_points,
     });
   }
 

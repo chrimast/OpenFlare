@@ -29,11 +29,13 @@ import { formatDateTime } from '@/lib/utils';
 import type { NodeHealthEvent, NodeItem } from '@/lib/services/openflare';
 import { NodeService } from '@/lib/services/openflare';
 
-import { CapacityTrendChart } from '../../components/dashboard/capacity-trend-chart';
 import { TrafficTrendChart } from '../../components/dashboard/traffic-trend-chart';
 import { DiskIOTrendChart } from './disk-io-trend-chart';
 import { DistributionList } from './distribution-list';
 import { NetworkTrendChart } from './network-trend-chart';
+import { NodeHardwareOverview } from './node-hardware-overview';
+import { NodeLoadDashboard } from './node-load-dashboard';
+import { NodePingPanel } from './node-ping-panel';
 import {
   NodeResourceSnapshot,
   NodeSystemDetails,
@@ -47,10 +49,6 @@ import {
   getErrorMessage,
   getHealthEventLabel,
   getHealthEventTone,
-  getNodeStatusLabel,
-  getNodeStatusTone,
-  getOpenrestyStatusLabel,
-  getOpenrestyStatusTone,
   isMeaningfulTime,
 } from './node-utils';
 
@@ -198,16 +196,27 @@ function HealthEventTimeline({
   );
 }
 
+export function useNodeObservabilityQuery(nodeId: number) {
+  return useQuery({
+    queryKey: ['openflare', 'node-observability', nodeId],
+    queryFn: () =>
+      NodeService.getObservability(nodeId, { hours: 24, limit: 48 }),
+    refetchInterval: 30000,
+  });
+}
+
 export function NodeObservability({
   nodeId,
   node,
   variant = 'edge',
   connectionHint,
+  showSummaryStats = true,
 }: {
   nodeId: number;
   node?: NodeItem;
   variant?: NodeObservabilityVariant;
   connectionHint?: string;
+  showSummaryStats?: boolean;
 }) {
   const t = useTranslations('nodes');
   const tc = useTranslations('common');
@@ -217,12 +226,7 @@ export function NodeObservability({
     useState<HealthEventFilter>('all');
   const [cleanupOpen, setCleanupOpen] = useState(false);
 
-  const observabilityQuery = useQuery({
-    queryKey: ['openflare', 'node-observability', nodeId],
-    queryFn: () =>
-      NodeService.getObservability(nodeId, { hours: 24, limit: 48 }),
-    refetchInterval: 30000,
-  });
+  const observabilityQuery = useNodeObservabilityQuery(nodeId);
 
   const cleanupMutation = useMutation({
     mutationFn: () => NodeService.cleanupHealthEvents(nodeId),
@@ -247,7 +251,12 @@ export function NodeObservability({
 
   const observability = observabilityQuery.data ?? null;
   const profile = observability?.profile ?? null;
-  const latestMetric = observability?.metric_snapshots?.[0] ?? null;
+  const latestMetric =
+    observability?.metric_snapshots && observability.metric_snapshots.length > 0
+      ? observability.metric_snapshots[
+          observability.metric_snapshots.length - 1
+        ]
+      : null;
   const activeHealthEvents = useMemo(
     () =>
       observability?.health_events.filter(
@@ -444,194 +453,72 @@ export function NodeObservability({
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
-        <SummaryStat
-          label={t('obs.diag')}
-          value={
-            activeHealthEvents.length
-              ? t('obs.activeIssues', { count: activeHealthEvents.length })
-              : t('obs.stable')
-          }
-          hint={
-            latestHealthEvent
-              ? getHealthEventLabel(latestHealthEvent)
-              : t('obs.noActiveEvents')
-          }
-        />
-        <SummaryStat
-          label={t('obs.windowRequests')}
-          value={formatMetricCount(trafficSummary?.request_count)}
-          hint={
-            trafficSummary
-              ? t('obs.windowVisitorsHint', {
-                  visitors: formatMetricCount(
-                    trafficSummary.unique_visitor_count,
-                  ),
-                  rate: trafficSummary.error_rate_percent.toFixed(1),
-                })
-              : t('obs.noWindowSummary')
-          }
-        />
-        <SummaryStat
-          label={t('obs.capacityPressure')}
-          value={
-            healthSummary?.has_capacity_risk
-              ? t('obs.needsAttention')
-              : t('obs.normalRange')
-          }
-          hint={
-            latestMetric
-              ? t('obs.cpuStorage', {
-                  cpu: formatPercent(latestMetric.cpu_usage_percent),
-                  storage: formatPercent(storageUsageRatio),
-                })
-              : t('obs.noResourceSnapshot')
-          }
-        />
-        <SummaryStat
-          label={t('obs.sourceSignal')}
-          value={topSourceCountry?.key ?? '—'}
-          hint={
-            topSourceCountry
-              ? t('obs.requestTimes', {
-                  count: topSourceCountry.value.toLocaleString(
-                    getFormattingLocale(),
-                  ),
-                })
-              : t('obs.noSourceDist')
-          }
-        />
-      </div>
+      {showSummaryStats ? (
+        <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
+          <SummaryStat
+            label={t('obs.diag')}
+            value={
+              activeHealthEvents.length
+                ? t('obs.activeIssues', { count: activeHealthEvents.length })
+                : t('obs.stable')
+            }
+            hint={
+              latestHealthEvent
+                ? getHealthEventLabel(latestHealthEvent)
+                : t('obs.noActiveEvents')
+            }
+          />
+          <SummaryStat
+            label={t('obs.windowRequests')}
+            value={formatMetricCount(trafficSummary?.request_count)}
+            hint={
+              trafficSummary
+                ? t('obs.windowVisitorsHint', {
+                    visitors: formatMetricCount(
+                      trafficSummary.unique_visitor_count,
+                    ),
+                    rate: trafficSummary.error_rate_percent.toFixed(1),
+                  })
+                : t('obs.noWindowSummary')
+            }
+          />
+          <SummaryStat
+            label={t('obs.capacityPressure')}
+            value={
+              healthSummary?.has_capacity_risk
+                ? t('obs.needsAttention')
+                : t('obs.normalRange')
+            }
+            hint={
+              latestMetric
+                ? t('obs.cpuStorage', {
+                    cpu: formatPercent(latestMetric.cpu_usage_percent),
+                    storage: formatPercent(storageUsageRatio),
+                  })
+                : t('obs.noResourceSnapshot')
+            }
+          />
+          <SummaryStat
+            label={t('obs.sourceSignal')}
+            value={topSourceCountry?.key ?? '—'}
+            hint={
+              topSourceCountry
+                ? t('obs.requestTimes', {
+                    count: topSourceCountry.value.toLocaleString(
+                      getFormattingLocale(),
+                    ),
+                  })
+                : t('obs.noSourceDist')
+            }
+          />
+        </div>
+      ) : null}
 
-      <div className='grid gap-6 xl:grid-cols-3'>
-        <Card className='border-dashed shadow-none'>
-          <CardHeader>
-            <CardTitle className='text-base font-semibold'>
-              {t('obs.systemInfo')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {profile ? (
-              <NodeSystemDetails profile={profile} nodeName={nodeName} />
-            ) : (
-              <p className='text-sm text-muted-foreground'>
-                {t('obs.noProfileLong')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      <NodeHardwareOverview profile={profile} latestMetric={latestMetric} />
 
-        <Card className='border-dashed shadow-none'>
-          <CardHeader>
-            <CardTitle className='text-base font-semibold'>
-              {t('obs.realtimeResources')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {latestMetric ? (
-              <NodeResourceSnapshot
-                metric={latestMetric}
-                connectionHint={resolvedConnectionHint}
-              />
-            ) : (
-              <p className='text-sm text-muted-foreground'>
-                {t('obs.noSnapshotLong')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      <NodeLoadDashboard nodeId={nodeId} profile={profile} />
 
-        <Card className='border-dashed shadow-none'>
-          <CardHeader>
-            <CardTitle className='text-base font-semibold'>
-              {t('obs.networkTraffic')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            {latestMetric ? (
-              <>
-                {node ? (
-                  <div className='flex flex-wrap gap-2'>
-                    <NodeStatusBadge
-                      label={getNodeStatusLabel(node.status, t)}
-                      tone={getNodeStatusTone(node.status)}
-                    />
-                    <NodeStatusBadge
-                      label={getOpenrestyStatusLabel(node.openresty_status, t)}
-                      tone={getOpenrestyStatusTone(node.openresty_status)}
-                    />
-                    <NodeStatusBadge
-                      label={
-                        activeHealthEvents.length
-                          ? t('obs.activeIssues', {
-                              count: activeHealthEvents.length,
-                            })
-                          : t('obs.noActiveIssue')
-                      }
-                      tone={activeHealthEvents.length ? 'warning' : 'success'}
-                    />
-                  </div>
-                ) : null}
-
-                <div className='grid gap-3 sm:grid-cols-2'>
-                  <div className='rounded-lg border px-3 py-3 sm:col-span-2'>
-                    <p className='text-xs text-muted-foreground uppercase tracking-wide'>
-                      {t('obs.openrestyConn')}
-                    </p>
-                    <div className='mt-3 space-y-2 text-sm text-muted-foreground'>
-                      <p>
-                        {t('obs.currentConn')}
-                        {latestMetric.openresty_connections ?? 0}
-                      </p>
-                      <p className='text-xs'>{t('obs.throughputHint')}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className='grid gap-3 sm:grid-cols-2'>
-                  <div className='rounded-lg border px-3 py-3'>
-                    <p className='text-xs text-muted-foreground uppercase tracking-wide'>
-                      {t('obs.windowVisitors')}
-                    </p>
-                    <p className='mt-3 text-2xl font-semibold'>
-                      {formatMetricCount(trafficSummary?.unique_visitor_count)}
-                    </p>
-                    <p className='mt-2 text-sm text-muted-foreground'>
-                      {trafficSummary
-                        ? t('obs.reqQps', {
-                            requests: formatMetricCount(
-                              trafficSummary.request_count,
-                            ),
-                            qps: trafficSummary.estimated_qps.toFixed(2),
-                          })
-                        : t('obs.noTrafficSummary')}
-                    </p>
-                  </div>
-                  <div className='rounded-lg border px-3 py-3'>
-                    <p className='text-xs text-muted-foreground uppercase tracking-wide'>
-                      {t('obs.windowErrors')}
-                    </p>
-                    <p className='mt-3 text-2xl font-semibold'>
-                      {formatMetricCount(trafficSummary?.error_count)}
-                    </p>
-                    <p className='mt-2 text-sm text-muted-foreground'>
-                      {trafficSummary
-                        ? t('obs.errorRate', {
-                            rate: trafficSummary.error_rate_percent.toFixed(1),
-                          })
-                        : t('obs.noErrorSummary')}
-                    </p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className='text-sm text-muted-foreground'>
-                {t('obs.noNetworkSnapshot')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <NodePingPanel nodeId={nodeId} />
 
       <div className='grid gap-6 xl:grid-cols-2'>
         <TrafficTrendChart
@@ -639,16 +526,10 @@ export function NodeObservability({
           description={t('obs.trafficTrendDesc')}
           compactSummary
         />
-        <CapacityTrendChart
-          points={trends?.capacity_24h ?? []}
-          description={t('obs.capacityTrendDesc')}
-        />
+        <NetworkTrendChart points={trends?.network_24h ?? []} />
       </div>
 
-      <div className='grid gap-6 xl:grid-cols-2'>
-        <NetworkTrendChart points={trends?.network_24h ?? []} />
-        <DiskIOTrendChart points={trends?.disk_io_24h ?? []} />
-      </div>
+      <DiskIOTrendChart points={trends?.disk_io_24h ?? []} />
 
       <Card className='border-dashed shadow-none'>
         <CardHeader>
