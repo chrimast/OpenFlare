@@ -11152,6 +11152,10 @@ paths:
           description: 未登录
           schema:
             $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "403":
+          description: 启动配置未启用远程执行
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
         "404":
           description: 无权限
           schema:
@@ -11295,7 +11299,7 @@ paths:
       - openflare-option
   /api/v1/d/tls-certificates:
     get:
-      description: 返回全部 TLS 证书（不含 PEM），需要管理员权限
+      description: 返回全部 TLS 证书及已签发证书中的 DNS 名称（不含 PEM），需要管理员权限
       produces:
       - application/json
       responses:
@@ -11307,7 +11311,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.TLSCertificate'
+                    $ref: '#/definitions/apps_openflare_tls.CertificateListItem'
                   type: array
               type: object
         "400":

@@ -11859,6 +11859,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
                         }
                     },
+                    "403": {
+                        "description": "启动配置未启用远程执行",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any"
+                        }
+                    },
                     "404": {
                         "description": "无权限",
                         "schema": {
@@ -12095,7 +12101,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回全部 TLS 证书（不含 PEM），需要管理员权限",
+                "description": "返回全部 TLS 证书及已签发证书中的 DNS 名称（不含 PEM），需要管理员权限",
                 "produces": [
                     "application/json"
                 ],
@@ -12117,7 +12123,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.TLSCertificate"
+                                                "$ref": "#/definitions/apps_openflare_tls.CertificateListItem"
                                             }
                                         }
                                     }
