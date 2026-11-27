@@ -7,6 +7,7 @@ import * as echarts from 'echarts/core';
 import { ScatterChart } from 'echarts/charts';
 import { GeoComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { Globe, Map as MapIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DottedGlobe } from './dotted-globe';
 import { buildCountryHeat, type CountryHeat } from './country-heat';
 import { useMapPalette } from './use-map-palette';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/layout/empty';
 import type {
   DashboardNodeHealth,
@@ -27,7 +28,7 @@ import {
   getOpenrestyStatusLabel,
 } from '../../nodes/components/node-utils';
 import countryCentroidsJson from './data/country-centroids.json';
-import worldGeoJson from './data/world-geo.json';
+import { ensureWorldMapRegistered } from './world-map-registry';
 
 echarts.use([GeoComponent, TooltipComponent, ScatterChart, CanvasRenderer]);
 
@@ -45,21 +46,6 @@ const fallbackCoordinates = [
 ] as const;
 
 type Tone = 'healthy' | 'warning' | 'danger';
-
-type WorldGeoJson = {
-  type: string;
-  features?: WorldFeature[];
-};
-
-type WorldFeature = {
-  properties?: {
-    name?: string;
-  };
-  geometry?: {
-    type?: 'Polygon' | 'MultiPolygon';
-    coordinates?: number[][][] | number[][][][];
-  };
-};
 
 type MapNodeDatum = {
   id: number;
@@ -85,9 +71,6 @@ type MapNodeDatum = {
     };
   };
 };
-
-let worldMapRegistrationAttempted = false;
-let worldMapRegistrationSucceeded = false;
 
 function buildNodeDetailHref(id?: number | null) {
   if (!id) {
@@ -205,49 +188,6 @@ function getNodeCoordinates(node: DashboardNodeHealth, index: number) {
     ] as [number, number],
     derivedFromGeo: false,
   };
-}
-
-function ensureWorldMapRegistered() {
-  if (worldMapRegistrationSucceeded || echarts.getMap('world')) {
-    worldMapRegistrationSucceeded = true;
-    return true;
-  }
-
-  if (worldMapRegistrationAttempted) {
-    return false;
-  }
-
-  worldMapRegistrationAttempted = true;
-
-  try {
-    const geoJson = worldGeoJson as WorldGeoJson;
-
-    if (
-      geoJson.type !== 'FeatureCollection' ||
-      !Array.isArray(geoJson.features)
-    ) {
-      throw new Error('invalid world geojson payload');
-    }
-
-    echarts.registerMap(
-      'world',
-      geoJson as unknown as Parameters<typeof echarts.registerMap>[1],
-    );
-
-    if (!echarts.getMap('world')) {
-      throw new Error('world map registration failed');
-    }
-
-    worldMapRegistrationSucceeded = true;
-    return true;
-  } catch (error) {
-    const registrationError =
-      error instanceof Error
-        ? error
-        : new Error('unknown world map registration error');
-    console.error('Failed to register ECharts world map', registrationError);
-    return false;
-  }
 }
 
 function FlatWorldMap({
@@ -627,19 +567,21 @@ export function WorldStageMap(props: {
     <div className='flex h-full min-h-0 flex-col gap-3'>
       <div className='flex items-center justify-between gap-2'>
         <span className='text-sm font-medium'>{t('geolocation')}</span>
-        <ToggleGroup
-          type='single'
-          variant='outline'
-          size='sm'
-          value={mode}
-          onValueChange={(value) => {
-            if (value) setMode(value);
-          }}
-          aria-label={t('viewMode')}
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon-sm'
+          className='size-7 shrink-0 text-muted-foreground hover:bg-transparent hover:text-foreground'
+          onClick={() => setMode((prev) => (prev === '3d' ? '2d' : '3d'))}
+          aria-label={t(mode === '3d' ? 'switchTo2d' : 'switchTo3d')}
+          title={t(mode === '3d' ? 'switchTo2d' : 'switchTo3d')}
         >
-          <ToggleGroupItem value='3d'>3D</ToggleGroupItem>
-          <ToggleGroupItem value='2d'>2D</ToggleGroupItem>
-        </ToggleGroup>
+          {mode === '3d' ? (
+            <MapIcon className='size-4' />
+          ) : (
+            <Globe className='size-4' />
+          )}
+        </Button>
       </div>
       <div className='relative min-h-0 flex-1'>
         {mode === '3d' ? (

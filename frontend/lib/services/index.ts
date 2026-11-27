@@ -33,8 +33,11 @@ import {
   DashboardService,
   DnsAccountService,
   ExecService,
+  NetworkToolsService,
   NodeService,
+  NodeTagService,
   PingService,
+  SmartDNSService,
   TunnelService,
   OptionService,
   OriginService,
@@ -66,6 +69,7 @@ const services = {
   dbManage: DbManageService,
   push: PushService,
   openflareNode: NodeService,
+  openflareNetworkTools: NetworkToolsService,
   openflarePing: PingService,
   openflareExec: ExecService,
   openflareTunnel: TunnelService,
@@ -83,6 +87,8 @@ const services = {
   openflareOption: OptionService,
   openflareUptimeKuma: UptimeKumaService,
   openflareStatus: StatusService,
+  openflareNodeTag: NodeTagService,
+  openflareSmartDns: SmartDNSService,
 } as const;
 
 export default services;
@@ -222,7 +228,9 @@ export type {
 export {
   OpenFlareBaseService,
   NodeService,
+  NodeTagService,
   PingService,
+  SmartDNSService,
   ExecService,
   ProxyRouteService,
   ApplyLogService,
@@ -240,6 +248,13 @@ export {
 
 export type {
   NodeItem,
+  NodeTagItem,
+  NodeTagSummary,
+  SmartDNSInstance,
+  SmartDNSPolicy,
+  SmartDNSOverview,
+  SmartDNSSettings,
+  SmartDNSSimulateResult,
   ProxyRouteItem,
   ProxyRouteZoneDomain,
   ProxyRouteConfigSection,

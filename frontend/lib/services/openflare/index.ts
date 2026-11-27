@@ -1,6 +1,9 @@
 export { OpenFlareBaseService } from './base.service';
 
 export { NodeService } from './node.service';
+export { NodeTagService, nodeTagQueryKey } from './node-tag.service';
+export { SmartDNSService, smartdnsQueryKey } from './smartdns.service';
+export { NetworkToolsService } from './network-tools.service';
 export { PingService } from './ping.service';
 export { ExecService } from './exec.service';
 export { TunnelService, tunnelQueryKey } from './tunnel.service';
@@ -67,6 +70,8 @@ export type {
   ProxyRoutePoWConfig,
   ProxyRouteZoneDomain,
   ReleaseChannel,
+  CompactDashboardCountryLatency,
+  DashboardCountryLatency,
   DashboardOverview,
   DashboardNodeHealth,
   DashboardSummary,
@@ -192,13 +197,99 @@ export type {
   TunnelTopologyView,
   TunnelTransport,
   TunnelView,
+  NetToolsASNDetailResponse,
+  NetToolsASNInfo,
+  NetToolsASNeighbor,
+  NetToolsASPathHopNode,
+  NetToolsASPathInput,
+  NetToolsASPathResponse,
+  NetToolsASNPrefixesResponse,
+  NetToolsASNUpstreamGraphResponse,
+  NetToolsASUpstreamEdge,
+  NetToolsASUpstreamNode,
+  NetToolsDatasetStatus,
+  NetToolsDirectDNSResult,
+  NetToolsDNSQueryPayload,
+  NetToolsDNSQueryResponse,
+  NetToolsDNSRecord,
+  NetToolsEdgeDNSResult,
+  NetToolsIPLookupResponse,
+  NetToolsIPLookupResult,
+  NetToolsNetIntelStatusResponse,
+  NetToolsNodeASPathComparison,
+  NetToolsNodeQualityPrediction,
+  NetToolsNodeResultStatus,
+  NetToolsPingBatchResult,
+  NetToolsPingPayload,
+  NetToolsPingProtocol,
+  NetToolsPingSample,
+  NetToolsPrefixRecord,
+  NetToolsProbeNodeResult,
+  NetToolsProbeTarget,
+  NetToolsProbeTargetInput,
+  NetToolsProbeTargetNodeState,
+  NetToolsProbeTargetPage,
+  NetToolsProbeTargetQuery,
+  NetToolsProbeTargetUpdateInput,
+  NetToolsProbeTaskState,
+  NetToolsQualityMatrixItem,
+  NetToolsQualityMatrixPage,
+  NetToolsQualityMatrixQuery,
+  NetToolsQualityPredictInput,
+  NetToolsQualityPredictResponse,
+  NetToolsTaskStatus,
+  NetToolsTracerouteHistoryItem,
+  NetToolsTracerouteHistoryPage,
+  NetToolsTracerouteHistoryQuery,
+  NetToolsTracerouteHop,
+  NetToolsTraceroutePayload,
+  NetToolsTracerouteProbe,
+  NetToolsTracerouteProtocol,
+  NetToolsTracerouteResult,
+  NetToolsTriggerSyncResponse,
+  NodeTagBindingInput,
+  NodeTagColor,
+  NodeTagInput,
+  NodeTagItem,
+  NodeTagSummary,
+  SmartDNSCandidateTrace,
+  SmartDNSDelegationVerifyResult,
+  SmartDNSDiscoveryToken,
+  SmartDNSFlowEdge,
+  SmartDNSFlowGraph,
+  SmartDNSFlowNode,
+  SmartDNSFlowNodeData,
+  SmartDNSFlowSwitchCase,
+  SmartDNSInstance,
+  SmartDNSInstanceInput,
+  SmartDNSOverview,
+  SmartDNSOverviewSeriesPoint,
+  SmartDNSOverviewWindow,
+  SmartDNSPolicy,
+  SmartDNSPolicyConfig,
+  SmartDNSPolicyFilters,
+  SmartDNSPolicyInput,
+  SmartDNSPolicyValidateInput,
+  SmartDNSPolicyValidateResult,
+  SmartDNSPolicyWeights,
+  SmartDNSQuarantineInput,
+  SmartDNSSelectedAnswer,
+  SmartDNSSelectionResult,
+  SmartDNSSettings,
+  SmartDNSSettingsInput,
+  SmartDNSSimulateInput,
+  SmartDNSSimulateResult,
+  SmartDNSSimulatorClientContext,
 } from './types';
 
 import { AccessLogService } from './access-log.service';
 import { ApplyLogService } from './apply-log.service';
 import { DashboardService } from './dashboard.service';
 import { DnsAccountService } from './dns-account.service';
+import { NetworkToolsService } from './network-tools.service';
 import { NodeService } from './node.service';
+import { NodeTagService } from './node-tag.service';
+import { SmartDNSService } from './smartdns.service';
 import { PingService } from './ping.service';
 import { ExecService } from './exec.service';
 import { TunnelService } from './tunnel.service';
@@ -215,6 +306,7 @@ import { CloudflareService } from './cloudflare.service';
 
 export const openflareServices = {
   node: NodeService,
+  networkTools: NetworkToolsService,
   ping: PingService,
   exec: ExecService,
   tunnel: TunnelService,
@@ -233,6 +325,8 @@ export const openflareServices = {
   uptimeKuma: UptimeKumaService,
   status: StatusService,
   cloudflare: CloudflareService,
+  nodeTag: NodeTagService,
+  smartDns: SmartDNSService,
 } as const;
 
 export * from './performance';

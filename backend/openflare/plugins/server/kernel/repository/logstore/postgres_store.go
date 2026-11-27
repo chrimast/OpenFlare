@@ -38,7 +38,17 @@ const (
 	sortColumnRemoteAddr = "remote_addr"
 	sortColumnHost       = "host"
 	sortColumnPath       = "path"
+
+	latencyRoundScale    = 100.0  // 延迟均值保留两位小数
+	microsecondsPerMilli = 1000.0 // tcp_rtt_us (µs) 换算为 ms
 )
+
+func sanitizeNonNegativeFloat(v float64) float64 {
+	if math.IsNaN(v) || math.IsInf(v, 0) || v <= 0 {
+		return 0
+	}
+	return math.Round(v*latencyRoundScale) / latencyRoundScale
+}
 
 // gormLogStore 是 PG/SQLite 共用的 GORM 日志存储实现。
 type gormLogStore struct {
@@ -284,24 +294,31 @@ func (s *gormLogStore) NodeAggregates(ctx context.Context, query model.OpenFlare
 
 func (s *gormLogStore) RegionCounts(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareAccessLogRegionCount, error) {
 	type row struct {
-		Region string
-		Count  int64
+		Region           string  `gorm:"column:trimmed_region"`
+		Count            int64   `gorm:"column:count"`
+		AvgRequestTimeMs float64 `gorm:"column:avg_request_time_ms"`
+		AvgTCPRTTUs      float64 `gorm:"column:avg_tcp_rtt_us"`
 	}
 	var rows []row
 	q := s.db.WithContext(ctx).Model(&analyticsmodel.NodeAccessLog{}).
-		Select("region, COUNT(*) AS count").
+		Select("trim(region) AS trimmed_region, COUNT(*) AS count, COALESCE(AVG(CASE WHEN request_time_ms > 0 THEN request_time_ms END), 0) AS avg_request_time_ms, COALESCE(AVG(CASE WHEN tcp_rtt_us > 0 THEN tcp_rtt_us END), 0) AS avg_tcp_rtt_us").
 		Where("trim(region) <> '' AND logged_at >= ?", since)
 	// 空 nodeID 表示全节点聚合（对齐 CH 语义），仅非空时追加 node_id 过滤，
 	// 避免 `node_id = ''` 恒空导致首页来源分布无数据。
 	if nodeID = strings.TrimSpace(nodeID); nodeID != "" {
 		q = q.Where("node_id = ?", nodeID)
 	}
-	if err := q.Group("region").Order("count DESC").Limit(limitOr(limit, defaultTopN)).Scan(&rows).Error; err != nil {
+	if err := q.Group("trim(region)").Order("count DESC, trimmed_region ASC").Limit(limitOr(limit, defaultTopN)).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	out := make([]*model.OpenFlareAccessLogRegionCount, len(rows))
 	for i, r := range rows {
-		out[i] = &model.OpenFlareAccessLogRegionCount{Region: r.Region, Count: r.Count}
+		out[i] = &model.OpenFlareAccessLogRegionCount{
+			Region:           r.Region,
+			Count:            r.Count,
+			AvgRequestTimeMs: sanitizeNonNegativeFloat(r.AvgRequestTimeMs),
+			AvgTCPRTTMs:      sanitizeNonNegativeFloat(r.AvgTCPRTTUs / microsecondsPerMilli),
+		}
 	}
 	return out, nil
 }
@@ -979,6 +996,8 @@ func toAnalyticsNodeAccessLog(record *model.OpenFlareAccessLog) analyticsmodel.N
 		BytesSent:     bytesSent,
 		RequestLength: requestLength,
 		RequestTimeMs: requestTimeMs,
+		ClientASN:     record.ClientASN,
+		TCPRTTUs:      record.TCPRTTUs,
 		CreatedAt:     record.CreatedAt,
 	}
 }
@@ -1015,6 +1034,8 @@ func fromAnalyticsNodeAccessLogs(rows []analyticsmodel.NodeAccessLog) []*model.O
 			BytesSent:     bytesSent,
 			RequestLength: requestLength,
 			RequestTimeMs: int64(row.RequestTimeMs),
+			ClientASN:     row.ClientASN,
+			TCPRTTUs:      row.TCPRTTUs,
 			CreatedAt:     row.CreatedAt,
 		}
 	}
@@ -1266,78 +1287,10 @@ ORDER BY hour_epoch ASC`
 	return out, nil
 }
 
-// InsertEdgeHealth 写入入口：冻结检查 + 经 hook 入队（异步），不直接落库。
-func (s *gormLogStore) InsertEdgeHealth(ctx context.Context, record *model.OpenFlareEdgeHealth) error {
-	if record == nil {
-		return nil
-	}
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	if h := currentObservabilityHooks().QueueEdgeHealth; h != nil {
-		h(toAnalyticsNodeEdgeHealth(record))
-	}
-	return nil
-}
-
-func (s *gormLogStore) ListEdgeHealth(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareEdgeHealth, error) {
-	var rows []analyticsmodel.NodeEdgeHealth
-	if err := nodeIDScope(s.db.WithContext(ctx), nodeID).Where("captured_at >= ?", since).
-		Order("captured_at DESC, id DESC").Limit(limitOr(limit, migrationPageSize)).Find(&rows).Error; err != nil {
-		return nil, err
-	}
-	return fromAnalyticsNodeEdgeHealths(rows), nil
-}
-
-func (s *gormLogStore) DeleteAllEdgeHealth(ctx context.Context) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	res := s.db.WithContext(ctx).Where("1 = 1").Delete(&analyticsmodel.NodeEdgeHealth{})
-	return res.RowsAffected, res.Error
-}
-
-func (s *gormLogStore) DeleteEdgeHealthBefore(ctx context.Context, cutoff time.Time) (int64, error) {
-	if err := s.ensureWritable(ctx); err != nil {
-		return 0, err
-	}
-	res := s.db.WithContext(ctx).Where("captured_at < ?", cutoff).Delete(&analyticsmodel.NodeEdgeHealth{})
-	return res.RowsAffected, res.Error
-}
-
-// BatchInsertNodeEdgeHealth 是 batchwriter flush 目标：GORM 分批落库。
-func (s *gormLogStore) BatchInsertNodeEdgeHealth(ctx context.Context, rows []analyticsmodel.NodeEdgeHealth) error {
-	if len(rows) == 0 {
-		return nil
-	}
-	if err := s.ensureWritable(ctx); err != nil {
-		return err
-	}
-	for i := range rows {
-		if rows[i].ID == 0 {
-			rows[i].ID = idgen.NextUint64ID()
-		}
-	}
-	return s.db.WithContext(ctx).CreateInBatches(rows, insertBatchSize).Error
-}
-
 // ListMetricSnapshotsForMigration 按 id 升序分页读取（迁移复制用）。
 func (s *gormLogStore) ListMetricSnapshotsForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodeMetricSnapshot, error) {
 	var rows []analyticsmodel.NodeMetricSnapshot
 	q := s.db.WithContext(ctx).Model(&analyticsmodel.NodeMetricSnapshot{}).
-		Where("id > ?", afterID).
-		Order("id ASC").
-		Limit(limitOr(limit, migrationPageSize))
-	if err := q.Find(&rows).Error; err != nil {
-		return nil, err
-	}
-	return rows, nil
-}
-
-// ListEdgeHealthForMigration 按 id 升序分页读取（迁移复制用）。
-func (s *gormLogStore) ListEdgeHealthForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NodeEdgeHealth, error) {
-	var rows []analyticsmodel.NodeEdgeHealth
-	q := s.db.WithContext(ctx).Model(&analyticsmodel.NodeEdgeHealth{}).
 		Where("id > ?", afterID).
 		Order("id ASC").
 		Limit(limitOr(limit, migrationPageSize))
@@ -1424,8 +1377,7 @@ func (s *gormLogStore) DeletePingRecordsByTaskIDs(ctx context.Context, taskIDs [
 	return res.RowsAffected, res.Error
 }
 
-// BatchInsertNodePingRecords 是 batchwriter flush 目标：GORM 分批落库。
-func (s *gormLogStore) BatchInsertNodePingRecords(ctx context.Context, rows []analyticsmodel.NodePingRecord) error {
+func batchInsertAnalyticsRows[T any](ctx context.Context, s *gormLogStore, rows []T, prepare func(row *T, now time.Time)) error {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -1434,17 +1386,24 @@ func (s *gormLogStore) BatchInsertNodePingRecords(ctx context.Context, rows []an
 	}
 	now := time.Now().UTC()
 	for i := range rows {
-		if rows[i].ID == 0 {
-			rows[i].ID = idgen.NextUint64ID()
-		}
-		if rows[i].RecordedAt.IsZero() {
-			rows[i].RecordedAt = now
-		}
-		if rows[i].CreatedAt.IsZero() {
-			rows[i].CreatedAt = now
-		}
+		prepare(&rows[i], now)
 	}
 	return s.db.WithContext(ctx).CreateInBatches(rows, insertBatchSize).Error
+}
+
+// BatchInsertNodePingRecords 是 batchwriter flush 目标：GORM 分批落库。
+func (s *gormLogStore) BatchInsertNodePingRecords(ctx context.Context, rows []analyticsmodel.NodePingRecord) error {
+	return batchInsertAnalyticsRows(ctx, s, rows, func(row *analyticsmodel.NodePingRecord, now time.Time) {
+		if row.ID == 0 {
+			row.ID = idgen.NextUint64ID()
+		}
+		if row.RecordedAt.IsZero() {
+			row.RecordedAt = now
+		}
+		if row.CreatedAt.IsZero() {
+			row.CreatedAt = now
+		}
+	})
 }
 
 // ListPingRecordsForMigration 按 id 升序分页读取（迁移复制用）。
@@ -1458,6 +1417,155 @@ func (s *gormLogStore) ListPingRecordsForMigration(ctx context.Context, afterID 
 		return nil, err
 	}
 	return rows, nil
+}
+
+// InsertNetworkQualitySample 写入入口：冻结检查 + 经 hook 入队（异步），不直接落库。
+func (s *gormLogStore) InsertNetworkQualitySample(ctx context.Context, record *model.OpenFlareNetworkQualitySample) error {
+	if record == nil {
+		return nil
+	}
+	if err := s.ensureWritable(ctx); err != nil {
+		return err
+	}
+	if h := currentObservabilityHooks().QueueNetworkQualitySample; h != nil {
+		h(toAnalyticsNetworkQualitySample(record))
+	}
+	return nil
+}
+
+// BatchInsertNetworkQualitySamples 是 batchwriter flush 目标：GORM 分批落库。
+func (s *gormLogStore) BatchInsertNetworkQualitySamples(ctx context.Context, rows []analyticsmodel.NetworkQualitySample) error {
+	return batchInsertAnalyticsRows(ctx, s, rows, func(row *analyticsmodel.NetworkQualitySample, now time.Time) {
+		if row.ID == 0 {
+			row.ID = idgen.NextUint64ID()
+		}
+		if row.CapturedAt.IsZero() {
+			row.CapturedAt = now
+		}
+		if row.CreatedAt.IsZero() {
+			row.CreatedAt = now
+		}
+	})
+}
+
+func (s *gormLogStore) ListNetworkQualitySamplesSince(ctx context.Context, since time.Time, limit int) ([]analyticsmodel.NetworkQualitySample, error) {
+	var rows []analyticsmodel.NetworkQualitySample
+	q := s.db.WithContext(ctx).Model(&analyticsmodel.NetworkQualitySample{})
+	if !since.IsZero() {
+		q = q.Where("captured_at >= ?", since.UTC())
+	}
+	q = q.Order("captured_at DESC, id DESC")
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	if err := q.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (s *gormLogStore) ListNetworkQualitySamplesForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.NetworkQualitySample, error) {
+	var rows []analyticsmodel.NetworkQualitySample
+	q := s.db.WithContext(ctx).Model(&analyticsmodel.NetworkQualitySample{}).
+		Where("id > ?", afterID).
+		Order("id ASC").
+		Limit(limitOr(limit, migrationPageSize))
+	if err := q.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (s *gormLogStore) DeleteAllNetworkQualitySamples(ctx context.Context) (int64, error) {
+	if err := s.ensureWritable(ctx); err != nil {
+		return 0, err
+	}
+	res := s.db.WithContext(ctx).Where("1 = 1").Delete(&analyticsmodel.NetworkQualitySample{})
+	return res.RowsAffected, res.Error
+}
+
+func (s *gormLogStore) DeleteNetworkQualitySamplesBefore(ctx context.Context, cutoff time.Time) (int64, error) {
+	if err := s.ensureWritable(ctx); err != nil {
+		return 0, err
+	}
+	res := s.db.WithContext(ctx).Where("captured_at < ?", cutoff.UTC()).Delete(&analyticsmodel.NetworkQualitySample{})
+	return res.RowsAffected, res.Error
+}
+
+// InsertDNSMetricSnapshot 写入入口：冻结检查 + 经 hook 入队（异步），不直接落库。
+func (s *gormLogStore) InsertDNSMetricSnapshot(ctx context.Context, record *model.OpenFlareDNSMetricSnapshot) error {
+	if record == nil {
+		return nil
+	}
+	if err := s.ensureWritable(ctx); err != nil {
+		return err
+	}
+	if h := currentObservabilityHooks().QueueDNSMetricSnapshot; h != nil {
+		h(toAnalyticsDNSMetricSnapshot(record))
+	}
+	return nil
+}
+
+// BatchInsertDNSMetricSnapshots 是 batchwriter flush 目标：GORM 分批落库。
+func (s *gormLogStore) BatchInsertDNSMetricSnapshots(ctx context.Context, rows []analyticsmodel.DNSMetricSnapshot) error {
+	return batchInsertAnalyticsRows(ctx, s, rows, func(row *analyticsmodel.DNSMetricSnapshot, now time.Time) {
+		if row.ID == 0 {
+			row.ID = idgen.NextUint64ID()
+		}
+		if row.CapturedAt.IsZero() {
+			row.CapturedAt = now
+		}
+		if row.CreatedAt.IsZero() {
+			row.CreatedAt = now
+		}
+	})
+}
+
+func (s *gormLogStore) ListDNSMetricSnapshots(ctx context.Context, instanceID string, since time.Time, limit int) ([]analyticsmodel.DNSMetricSnapshot, error) {
+	var rows []analyticsmodel.DNSMetricSnapshot
+	q := s.db.WithContext(ctx).Model(&analyticsmodel.DNSMetricSnapshot{})
+	if trimmed := strings.TrimSpace(instanceID); trimmed != "" {
+		q = q.Where("instance_id = ?", trimmed)
+	}
+	if !since.IsZero() {
+		q = q.Where("captured_at >= ?", since.UTC())
+	}
+	q = q.Order("captured_at DESC, id DESC")
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	if err := q.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (s *gormLogStore) ListDNSMetricSnapshotsForMigration(ctx context.Context, afterID uint64, limit int) ([]analyticsmodel.DNSMetricSnapshot, error) {
+	var rows []analyticsmodel.DNSMetricSnapshot
+	q := s.db.WithContext(ctx).Model(&analyticsmodel.DNSMetricSnapshot{}).
+		Where("id > ?", afterID).
+		Order("id ASC").
+		Limit(limitOr(limit, migrationPageSize))
+	if err := q.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (s *gormLogStore) DeleteAllDNSMetricSnapshots(ctx context.Context) (int64, error) {
+	if err := s.ensureWritable(ctx); err != nil {
+		return 0, err
+	}
+	res := s.db.WithContext(ctx).Where("1 = 1").Delete(&analyticsmodel.DNSMetricSnapshot{})
+	return res.RowsAffected, res.Error
+}
+
+func (s *gormLogStore) DeleteDNSMetricSnapshotsBefore(ctx context.Context, cutoff time.Time) (int64, error) {
+	if err := s.ensureWritable(ctx); err != nil {
+		return 0, err
+	}
+	res := s.db.WithContext(ctx).Where("captured_at < ?", cutoff.UTC()).Delete(&analyticsmodel.DNSMetricSnapshot{})
+	return res.RowsAffected, res.Error
 }
 
 // ---- UserAccessLogStore ----
@@ -1663,16 +1771,6 @@ func (s *userAccessLogGormStore) GetTopActiveUsers(ctx context.Context, startTim
 
 // ---- ObservabilityStore 转换辅助（从旧 openflare_observability_store.go 复制） ----
 
-const edgeHealthStatusUnknown = "unknown"
-
-func normalizeEdgeHealthStatus(status string) string {
-	status = strings.TrimSpace(status)
-	if status == "" {
-		return edgeHealthStatusUnknown
-	}
-	return status
-}
-
 func toAnalyticsNodeMetricSnapshot(record *model.OpenFlareMetricSnapshot) analyticsmodel.NodeMetricSnapshot {
 	return analyticsmodel.NodeMetricSnapshot{
 		ID:                uint64(record.ID),
@@ -1775,28 +1873,62 @@ func clampInt32(v int) int32 {
 	return int32(v)
 }
 
-func toAnalyticsNodeEdgeHealth(record *model.OpenFlareEdgeHealth) analyticsmodel.NodeEdgeHealth {
-	return analyticsmodel.NodeEdgeHealth{
-		ID:          uint64(record.ID),
-		NodeID:      record.NodeID,
-		CapturedAt:  record.CapturedAt,
-		Status:      normalizeEdgeHealthStatus(record.Status),
-		Connections: record.Connections,
-		CreatedAt:   record.CreatedAt,
+func toAnalyticsNetworkQualitySample(record *model.OpenFlareNetworkQualitySample) analyticsmodel.NetworkQualitySample {
+	ipFamily := strings.ToLower(strings.TrimSpace(record.IPFamily))
+	if ipFamily == "" {
+		ipFamily = "unknown"
+	}
+	statsVersion := int32(record.StatsVersion) //nolint:gosec // small schema version integer
+	if statsVersion <= 0 {
+		statsVersion = int32(model.NetworkQualityStatsVersionLegacy)
+	}
+	return analyticsmodel.NetworkQualitySample{
+		ID:                  record.ID,
+		NodeID:              strings.TrimSpace(record.NodeID),
+		NodeASN:             record.NodeASN,
+		ClientASN:           record.ClientASN,
+		ClientCountry:       strings.TrimSpace(record.ClientCountry),
+		ClientRegion:        strings.TrimSpace(record.ClientRegion),
+		IPFamily:            ipFamily,
+		StatsVersion:        statsVersion,
+		Source:              strings.TrimSpace(record.Source),
+		SampleCount:         clampInt32(record.SampleCount),
+		RTTMinMs:            record.RTTMinMs,
+		RTTP50Ms:            record.RTTP50Ms,
+		RTTP95Ms:            record.RTTP95Ms,
+		RTTHist:             record.RTTHist,
+		PrefixSketch:        record.PrefixSketch,
+		DistinctPrefixCount: clampInt32(record.DistinctPrefixCount),
+		ClientLat:           record.ClientLat,
+		ClientLon:           record.ClientLon,
+		GeoAccuracyKm:       record.GeoAccuracyKm,
+		GeoSource:           strings.TrimSpace(record.GeoSource),
+		RetransRate:         record.RetransRate,
+		LossRate:            record.LossRate,
+		HopCount:            clampInt32(record.HopCount),
+		CapturedAt:          record.CapturedAt,
+		CreatedAt:           record.CreatedAt,
 	}
 }
 
-func fromAnalyticsNodeEdgeHealths(rows []analyticsmodel.NodeEdgeHealth) []*model.OpenFlareEdgeHealth {
-	result := make([]*model.OpenFlareEdgeHealth, len(rows))
-	for index, row := range rows {
-		result[index] = &model.OpenFlareEdgeHealth{
-			ID:          uint(row.ID),
-			NodeID:      row.NodeID,
-			CapturedAt:  row.CapturedAt,
-			Status:      normalizeEdgeHealthStatus(row.Status),
-			Connections: row.Connections,
-			CreatedAt:   row.CreatedAt,
-		}
+func toAnalyticsDNSMetricSnapshot(record *model.OpenFlareDNSMetricSnapshot) analyticsmodel.DNSMetricSnapshot {
+	return analyticsmodel.DNSMetricSnapshot{
+		ID:                 record.ID,
+		InstanceID:         strings.TrimSpace(record.InstanceID),
+		CapturedAt:         record.CapturedAt,
+		QueriesTotal:       record.QueriesTotal,
+		QueriesSuccess:     record.QueriesSuccess,
+		QueriesNXDomain:    record.QueriesNXDomain,
+		QueriesServFail:    record.QueriesServFail,
+		QueriesRateLimited: record.QueriesRateLimited,
+		QPS:                record.QPS,
+		LatencyP50Ms:       record.LatencyP50Ms,
+		LatencyP95Ms:       record.LatencyP95Ms,
+		LatencyP99Ms:       record.LatencyP99Ms,
+		CacheHitRatio:      record.CacheHitRatio,
+		SnapshotVersion:    record.SnapshotVersion,
+		CPUUsagePercent:    record.CPUUsagePercent,
+		MemoryUsagePercent: record.MemoryUsagePercent,
+		CreatedAt:          record.CreatedAt,
 	}
-	return result
 }

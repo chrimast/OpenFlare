@@ -44,6 +44,18 @@ definitions:
         type: integer
       status_code:
         type: integer
+      tcp_min_rtt_us:
+        type: integer
+      tcp_retrans:
+        type: integer
+      tcp_rtt_us:
+        type: integer
+      tcp_rtt_var_us:
+        type: integer
+      tcp_segs_out:
+        type: integer
+      tls_handshake_ms:
+        type: integer
       user_agent:
         type: string
     type: object
@@ -1934,6 +1946,23 @@ definitions:
         description: 用于加载更早日志的 cursor
         type: integer
     type: object
+  model.NodeTagSummary:
+    properties:
+      color:
+        type: string
+      default_weight:
+        type: number
+      effective_weight:
+        type: number
+      name:
+        type: string
+      slug:
+        type: string
+      tag_id:
+        type: integer
+      weight_override:
+        type: number
+    type: object
   model.OpenFlareApplyLog:
     properties:
       checksum:
@@ -2026,10 +2055,20 @@ definitions:
     type: object
   model.OpenFlareNode:
     properties:
+      asn:
+        type: integer
+      asn_org:
+        type: string
       auto_update_enabled:
         type: boolean
       capabilities_json:
         type: string
+      capacity_bandwidth_mbps:
+        type: integer
+      capacity_connections:
+        type: integer
+      capacity_weight:
+        type: integer
       contract_version:
         type: integer
       created_at:
@@ -2048,6 +2087,8 @@ definitions:
         type: boolean
       geo_name:
         type: string
+      geo_source:
+        type: string
       id:
         type: integer
       ip:
@@ -2060,10 +2101,14 @@ definitions:
         type: string
       name:
         type: string
+      network_group:
+        type: string
       node_id:
         type: string
       node_type:
         type: string
+      openresty_connections:
+        type: integer
       openresty_message:
         type: string
       openresty_status:
@@ -6814,6 +6859,38 @@ paths:
       summary: 上报远程执行结果
       tags:
       - openflare-agent
+  /api/v1/agent/net-probe/result:
+    post:
+      consumes:
+      - application/json
+      description: Agent 通过 HTTP 回落上报批量 Ping/TCPing、路由追踪或 DNS 探测结果；请求头需携带 X-Agent-Token
+      parameters:
+      - description: 网络探测结果
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_openflare_protocol.NetProbeResultPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上报成功
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: Token 无效
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - AgentTokenAuth: []
+      summary: 上报网络诊断探测结果
+      tags:
+      - openflare-agent
   /api/v1/agent/nodes/heartbeat:
     post:
       consumes:
@@ -8712,6 +8789,1071 @@ paths:
       summary: 更新 DNS 账号
       tags:
       - openflare-tls
+  /api/v1/d/network-tools/as-path:
+    post:
+      consumes:
+      - application/json
+      description: 基于已观测路由拓扑与 5 级质量预测器计算各边缘节点到达目标 ASN/IP（支持区域与 IP 族参数）的 AS 路径、预测延迟与评分
+      parameters:
+      - description: 目标 ASN 或 IP
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.ASPathInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 节点 AS 路径对比结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ASPathResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 多节点 AS 路径与质量对比
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/dns:
+    post:
+      consumes:
+      - application/json
+      description: 支持主控直接探测或下发到多个边缘节点探测（支持 EDNS0 Client Subnet 视角模拟），并自动富化应答 IP 的
+        ASN 与 GeoIP
+      parameters:
+      - description: DNS 查询参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.DNSQueryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DNS 查询结果或异步任务
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.DNSQueryResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: DNS 与 EDNS0 ECS 模拟查询
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/lookup/asn/{asn}:
+    get:
+      description: 查询自治系统号（ASN）的组织名称、分类标签、IPv4/IPv6 前缀规模与邻接 AS 关系
+      parameters:
+      - description: ASN 编号
+        in: path
+        name: asn
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ASN 详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ASNDetailResponse'
+              type: object
+        "400":
+          description: ASN 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: ASN 详情查询
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/lookup/asn/{asn}/prefixes:
+    get:
+      description: 按 IPv4/IPv6 地址族分页返回指定 ASN 宣告的 CIDR 前缀与热度权重
+      parameters:
+      - description: ASN 编号
+        in: path
+        name: asn
+        required: true
+        type: integer
+      - description: 地址族（all、ipv4 或 ipv6）
+        in: query
+        name: family
+        type: string
+      - description: 页码
+        in: query
+        name: p
+        type: integer
+      - description: 每页条数
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ASN 前缀分页列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ASNPrefixesResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 分页列出 ASN 宣告的 BGP 前缀
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/lookup/asn/{asn}/upstream-graph:
+    get:
+      description: 基于本地 CAIDA、RIPEstat Looking Glass/Neighbours 与实测路径构建 Origins ->
+        Upstreams -> Tier 1 ISPs 分层上游拓扑图
+      parameters:
+      - description: ASN 编号
+        in: path
+        name: asn
+        required: true
+        type: integer
+      - description: 采样前缀（可选，默认选用可见度最高的公告前缀）
+        in: query
+        name: prefix
+        type: string
+      - description: 是否忽略缓存强制刷新
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ASN 上游路由拓扑图
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ASNUpstreamGraphResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: ASN 上游路由接线图查询
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/lookup/ip:
+    get:
+      description: 查询目标 IP 或域名的地理位置、所属 ASN、BGP 宣告前缀与 AS 邻接关系
+      parameters:
+      - description: 目标 IP、CIDR 或域名
+        in: query
+        name: ip
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: IP 网络情报
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.IPLookupResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: IP / 域名网络情报查询
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/netintel/status:
+    get:
+      description: 查看各 GeoIP/ASN MMDB、bgp.tools 路由与标签库、可选 CAIDA 数据集的加载状态、记录数与版权信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 数据库状态列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.NetIntelStatusResponse'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取网络情报数据库状态
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/netintel/sync:
+    post:
+      consumes:
+      - application/json
+      description: 下发 of_netintel_sync 异步任务（若未启用任务队列则在当前请求同步执行）以更新数据库并热重载
+      parameters:
+      - description: 同步参数
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.triggerSyncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 同步任务已派发或完成
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.TriggerSyncResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 同步失败
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 触发网络情报数据库同步
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/ping:
+    post:
+      consumes:
+      - application/json
+      description: 向指定或全部在线边缘节点下发一次性批量 ICMP/TCP/HTTP 延迟探测任务，返回 task_id 供轮询结果
+      parameters:
+      - description: 探测参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.PingDispatchInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 探测任务状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ProbeTaskState'
+              type: object
+        "400":
+          description: 参数错误或无可用在线节点
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 多点 Ping / TCPing 探测
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/probe-targets:
+    get:
+      description: 列出 of_probe_targets 探测靶点及其按节点维度（of_probe_target_states）的连续失败次数、退避截止时间与最近成功延迟
+      parameters:
+      - description: 目标 ASN
+        in: query
+        name: asn
+        type: integer
+      - description: 国家/地区 ISO 编码
+        in: query
+        name: country
+        type: string
+      - description: IP 地址族（ipv4 或 ipv6）
+        in: query
+        name: ip_family
+        type: string
+      - description: 靶点类型（public_anchor、customer_isp、manual）
+        in: query
+        name: target_type
+        type: string
+      - description: Anycast 状态（unknown、unicast、confirmed）
+        in: query
+        name: anycast_status
+        type: string
+      - description: 是否启用
+        in: query
+        name: enabled
+        type: boolean
+      - description: 关键词搜索
+        in: query
+        name: search
+        type: string
+      - description: 页码
+        in: query
+        name: p
+        type: integer
+      - description: 每页条数
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 受控探测靶点列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ProbeTargetPage'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 分页查询受控主动探测靶点
+      tags:
+      - openflare-network-tools
+    post:
+      consumes:
+      - application/json
+      description: 执行公网 IP 与 SSRF 校验并保存受控探测靶点（禁止私网、回环、CGNAT 及内部地址）
+      parameters:
+      - description: 探测靶点配置
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.ProbeTargetInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 已创建的探测靶点
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.OpenFlareProbeTarget'
+              type: object
+        "400":
+          description: 参数错误或 SSRF 校验失败
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 新增受控主动探测靶点
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/probe-targets/{id}:
+    delete:
+      description: 删除指定探测靶点及其关联的节点探测退避状态
+      parameters:
+      - description: 靶点 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 删除受控主动探测靶点
+      tags:
+      - openflare-network-tools
+    put:
+      consumes:
+      - application/json
+      description: 修改探测靶点名称、协议、端口、Anycast 标注或启停状态
+      parameters:
+      - description: 靶点 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 靶点更新参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.ProbeTargetUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新后的探测靶点
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.OpenFlareProbeTarget'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 更新受控主动探测靶点
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/quality-matrix:
+    get:
+      description: 列出节点×访客 ASN×地区×IP族维度的被动 TCP RTT、主动探测 RTT、有效延迟、置信度与质量评分
+      parameters:
+      - description: 节点 ID
+        in: query
+        name: node_id
+        type: string
+      - description: 访客 ASN
+        in: query
+        name: client_asn
+        type: integer
+      - description: 国家/地区 ISO 编码
+        in: query
+        name: client_country
+        type: string
+      - description: 下钻省/州细分编码（如 CN-GD、US-CA）
+        in: query
+        name: client_region
+        type: string
+      - description: IP 地址族（ipv4、ipv6、unknown）
+        in: query
+        name: ip_family
+        type: string
+      - description: 聚合层级（country 或 region）
+        in: query
+        name: aggregation_level
+        type: string
+      - description: 实测来源（tcp_passive、tcp_active、icmp_active 等）
+        in: query
+        name: measurement_source
+        type: string
+      - description: 数据来源（measured 或 predicted）
+        in: query
+        name: data_source
+        type: string
+      - description: 关键词搜索
+        in: query
+        name: search
+        type: string
+      - description: 排序字段
+        in: query
+        name: sort_by
+        type: string
+      - description: 排序方向（asc 或 desc）
+        in: query
+        name: sort_order
+        type: string
+      - description: 页码
+        in: query
+        name: p
+        type: integer
+      - description: 每页条数
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 网络质量矩阵列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.QualityMatrixPage'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 分页查询网络质量矩阵
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/quality-matrix/predict:
+    post:
+      consumes:
+      - application/json
+      description: 基于 5 级预测器（区域精确→国家级→同节点相似上游→同城/同组节点→地理基线）计算各节点预测延迟、离散度、置信度与评分
+      parameters:
+      - description: 客户端目标（IP、ASN、国家/地区或 IP 族）
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.QualityPredictInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 各节点预测质量排序结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.QualityPredictResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 预测客户端到各节点网络质量
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/tasks/{task_id}:
+    get:
+      description: 根据 task_id 获取各边缘节点上传的 Ping/TCPing、Traceroute 或 DNS 探测结果
+      parameters:
+      - description: 探测任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 探测任务状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ProbeTaskState'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 任务不存在或已过期
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 查询网络探测任务状态与结果
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/traceroute:
+    post:
+      consumes:
+      - application/json
+      description: 向指定或全部在线边缘节点下发多轮 Traceroute（ICMP/UDP/TCP）探测任务，逐跳富化 ASN 与 GeoIP
+        信息
+      parameters:
+      - description: 路由追踪参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_nettools.TracerouteDispatchInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 路由追踪任务状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.ProbeTaskState'
+              type: object
+        "400":
+          description: 参数错误或无可用在线节点
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 多点路由追踪（Traceroute）
+      tags:
+      - openflare-network-tools
+  /api/v1/d/network-tools/traceroute/history:
+    get:
+      description: 分页查询手动或后台自动执行的边缘节点路由追踪历史与 AS 路径
+      parameters:
+      - description: 节点 ID
+        in: query
+        name: node_id
+        type: string
+      - description: 目标域名或 IP
+        in: query
+        name: target
+        type: string
+      - description: 触发类型（manual 或 auto）
+        in: query
+        name: trigger_type
+        type: string
+      - description: 目标 ASN
+        in: query
+        name: target_asn
+        type: integer
+      - description: 页码
+        in: query
+        name: p
+        type: integer
+      - description: 每页条数
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 历史路由追踪列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_nettools.TracerouteHistoryPage'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 列出路由追踪历史记录
+      tags:
+      - openflare-network-tools
+  /api/v1/d/node-tags:
+    get:
+      description: 获取所有节点路由分类标签与默认权重，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 节点标签列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/apps_openflare_node.TagView'
+                  type: array
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取节点路由标签列表
+      tags:
+      - openflare-node
+    post:
+      consumes:
+      - application/json
+      description: 创建节点路由标签并设置默认权重，需要管理员权限
+      parameters:
+      - description: 节点标签参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_node.TagInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_node.TagView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: 标识符冲突
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 创建节点路由标签
+      tags:
+      - openflare-node
+  /api/v1/d/node-tags/{id}/delete:
+    post:
+      description: 删除指定节点路由标签及其所有节点绑定，需要管理员权限
+      parameters:
+      - description: 标签 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 删除节点路由标签
+      tags:
+      - openflare-node
+  /api/v1/d/node-tags/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新指定节点路由标签名称、标识符、颜色与默认权重，需要管理员权限
+      parameters:
+      - description: 标签 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 节点标签参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_node.TagInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_node.TagView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限或不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: 标识符冲突
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 更新节点路由标签
+      tags:
+      - openflare-node
   /api/v1/d/nodes:
     get:
       description: 返回所有节点及最新配置下发记录，需要管理员权限
@@ -11271,6 +12413,878 @@ paths:
       summary: 删除远程执行任务
       tags:
       - openflare-exec
+  /api/v1/d/smartdns/discovery-token:
+    get:
+      description: 返回用于独立 openflare-dns 实例自动注册的全局令牌，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 发现令牌
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.DiscoveryTokenView'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 自动发现令牌
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/discovery-token/rotate:
+    post:
+      description: 重新生成独立 SmartDNS 实例注册用发现令牌，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新发现令牌
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.DiscoveryTokenView'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 轮换 SmartDNS 自动发现令牌
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances:
+    get:
+      description: 列出内置与独立部署的 SmartDNS 解析实例，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 实例列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+                  type: array
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 实例列表
+      tags:
+      - openflare-smartdns
+    post:
+      consumes:
+      - application/json
+      description: 预注册独立 SmartDNS 解析实例并返回专属令牌与部署命令，需要管理员权限
+      parameters:
+      - description: DNS 实例参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.InstanceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 创建独立 SmartDNS 实例
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances/{id}/delete:
+    post:
+      description: 删除指定的独立部署 SmartDNS 实例（内置实例不可删除），需要管理员权限
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 实例不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 删除 SmartDNS 实例
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances/{id}/quarantine:
+    post:
+      consumes:
+      - application/json
+      description: 隔离指定 SmartDNS 实例并断开其控制通道，需要管理员权限
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 隔离原因
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.QuarantineInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 隔离成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 实例不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 隔离 SmartDNS 实例
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances/{id}/rotate-token:
+    post:
+      description: 为独立 SmartDNS 实例生成新认证令牌并下发新部署命令，需要管理员权限
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 轮换成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 实例不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 轮换 SmartDNS 实例令牌
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances/{id}/unquarantine:
+    post:
+      description: 恢复被隔离 SmartDNS 实例的接入资格，需要管理员权限
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 实例不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 解除 SmartDNS 实例隔离
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/instances/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新 DNS 实例名称、监听地址、公网地址与地理坐标，需要管理员权限
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: DNS 实例参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.InstanceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.InstanceView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 实例不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 更新 SmartDNS 实例
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/overview:
+    get:
+      description: 返回 SmartDNS 实例在线数、QPS、延迟分位数、缓存命中率与时序指标，需要管理员权限
+      parameters:
+      - description: 按实例 ID 过滤
+        in: query
+        name: instance_id
+        type: string
+      - description: 时间窗口：1h|6h|24h|7d
+        in: query
+        name: window
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 概览统计
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.OverviewResult'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 运行概览
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies:
+    get:
+      description: 按优先级顺序返回所有 SmartDNS 解析策略，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 策略列表
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/apps_openflare_smartdns.PolicyView'
+                  type: array
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 解析策略列表
+      tags:
+      - openflare-smartdns
+    post:
+      consumes:
+      - application/json
+      description: 创建并编译可视化或预设 SmartDNS 调度策略，需要管理员权限
+      parameters:
+      - description: 策略参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.PolicyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.PolicyView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 创建 SmartDNS 解析策略
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies/{id}:
+    get:
+      description: 获取单个解析策略及其可视化流图与编译后的 JDM JSON，需要管理员权限
+      parameters:
+      - description: 策略 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 策略详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.PolicyView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 策略不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 解析策略详情
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies/{id}/delete:
+    post:
+      description: 删除未设默认且未被 Cloudflare 分组引用的解析策略，需要管理员权限
+      parameters:
+      - description: 策略 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: 默认策略不可删除
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 策略不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "409":
+          description: 策略正在被使用
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 删除 SmartDNS 解析策略
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies/{id}/set-default:
+    post:
+      description: 将指定策略设为全局默认解析策略并启用，需要管理员权限
+      parameters:
+      - description: 策略 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 设置成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 策略不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 设为默认 SmartDNS 策略
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies/{id}/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新并重新编译 SmartDNS 解析策略，递增加载版本号，需要管理员权限
+      parameters:
+      - description: 策略 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 策略参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.PolicyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.PolicyView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 策略不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 更新 SmartDNS 解析策略
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/policies/validate:
+    post:
+      consumes:
+      - application/json
+      description: 校验策略决策流图是否无环且表达式合法，并返回编译后的 GoRules JDM JSON，需要管理员权限
+      parameters:
+      - description: 校验请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.PolicyValidateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 校验通过
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.PolicyValidateResult'
+              type: object
+        "400":
+          description: 流图无效
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 校验并编译 SmartDNS 策略流图
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/settings:
+    get:
+      description: 返回委派主域名、NS 主机列表、默认 TTL 与快照刷新周期，需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: SmartDNS 设置
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.SettingsView'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 获取 SmartDNS 系统设置
+      tags:
+      - openflare-smartdns
+    post:
+      consumes:
+      - application/json
+      description: 更新全局委派域名、NS 主机、默认 TTL 与快照周期，并触发快照重建，需要管理员权限
+      parameters:
+      - description: SmartDNS 设置参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.SettingsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 保存成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.SettingsView'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 保存 SmartDNS 系统设置
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/settings/verify-delegation:
+    post:
+      consumes:
+      - application/json
+      description: 查询委派主域名的实时 NS 记录并与配置主机名比对，需要管理员权限
+      parameters:
+      - description: 可选校验域名
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.VerifyDelegationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 校验结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.DelegationVerifyResult'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 校验 SmartDNS 域名委派状态
+      tags:
+      - openflare-smartdns
+  /api/v1/d/smartdns/simulate:
+    post:
+      consumes:
+      - application/json
+      description: 基于客户端 IP、域名和记录类型模拟执行策略流图与四阶段评分，返回候选节点打分详情，需要管理员权限
+      parameters:
+      - description: 模拟参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/apps_openflare_smartdns.SimulateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 模拟结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/apps_openflare_smartdns.SimulateResult'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "404":
+          description: 策略不存在
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_Rain-kl_Wavelet_internal_shared_response.Any'
+      security:
+      - SessionCookie: []
+      summary: 模拟 SmartDNS 智能解析结果
+      tags:
+      - openflare-smartdns
   /api/v1/d/status:
     get:
       description: 返回版本、认证源与系统公开配置，无需登录

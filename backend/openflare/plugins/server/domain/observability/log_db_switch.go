@@ -212,8 +212,9 @@ func clearTargetLogTables(ctx context.Context, dst *logstore.Store) error {
 	}
 	for _, fn := range []func(context.Context) (int64, error){
 		dst.Observability.DeleteAllMetricSnapshots,
-		dst.Observability.DeleteAllEdgeHealth,
 		dst.Observability.DeleteAllPingRecords,
+		dst.Observability.DeleteAllNetworkQualitySamples,
+		dst.Observability.DeleteAllDNSMetricSnapshots,
 	} {
 		if _, err := fn(ctx); err != nil {
 			return err
@@ -342,16 +343,22 @@ func copyObservability(ctx context.Context, src, dst *logstore.Store) error {
 		lastMetricSnapshotID); err != nil {
 		return err
 	}
-	if err := copyObsTable(ctx, "edge_health",
-		src.Observability.ListEdgeHealthForMigration,
-		dst.Observability.BatchInsertNodeEdgeHealth,
-		lastEdgeHealthID); err != nil {
-		return err
-	}
 	if err := copyObsTable(ctx, "ping_records",
 		src.Observability.ListPingRecordsForMigration,
 		dst.Observability.BatchInsertNodePingRecords,
 		lastPingRecordID); err != nil {
+		return err
+	}
+	if err := copyObsTable(ctx, "network_quality_samples",
+		src.Observability.ListNetworkQualitySamplesForMigration,
+		dst.Observability.BatchInsertNetworkQualitySamples,
+		lastNetworkQualitySampleID); err != nil {
+		return err
+	}
+	if err := copyObsTable(ctx, "dns_metric_snapshots",
+		src.Observability.ListDNSMetricSnapshotsForMigration,
+		dst.Observability.BatchInsertDNSMetricSnapshots,
+		lastDNSMetricSnapshotID); err != nil {
 		return err
 	}
 	return nil
@@ -386,5 +393,10 @@ func copyObsTable[T any](ctx context.Context, name string,
 func lastMetricSnapshotID(rows []analyticsmodel.NodeMetricSnapshot) uint64 {
 	return rows[len(rows)-1].ID
 }
-func lastEdgeHealthID(rows []analyticsmodel.NodeEdgeHealth) uint64 { return rows[len(rows)-1].ID }
 func lastPingRecordID(rows []analyticsmodel.NodePingRecord) uint64 { return rows[len(rows)-1].ID }
+func lastNetworkQualitySampleID(rows []analyticsmodel.NetworkQualitySample) uint64 {
+	return rows[len(rows)-1].ID
+}
+func lastDNSMetricSnapshotID(rows []analyticsmodel.DNSMetricSnapshot) uint64 {
+	return rows[len(rows)-1].ID
+}

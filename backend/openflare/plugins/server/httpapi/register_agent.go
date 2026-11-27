@@ -28,6 +28,7 @@ func registerAgentRoutes(apiV1Router core.RouterExtension) {
 			authorizedRoute.GET("/pages/projects/:project_id/latest/package", agent.DownloadPagesProjectLatestPackageHandler)
 			authorizedRoute.POST("/apply-logs", agent.ReportApplyLogHandler)
 			authorizedRoute.POST("/ping/result", agent.ReportPingResultHandler)
+			authorizedRoute.POST("/net-probe/result", agent.ReportNetProbeResultHandler)
 			authorizedRoute.POST("/exec/result", agent.ReportExecResultHandler)
 		}
 	}
@@ -60,5 +61,24 @@ func registerOpenFlareTunnelRoutes(apiV1Router *gin.RouterGroup) {
 		tunnelRoute.GET("/config", tunnel.TunnelConfigHandler)
 		tunnelRoute.POST("/attachments", tunnel.TunnelNegotiateAttachmentsHandler)
 		tunnelRoute.GET("/ws", tunnel.TunnelWebSocketHandler)
+	}
+}
+
+func registerOpenFlareDNSAgentRoutes(apiV1Router *gin.RouterGroup) {
+	dnsAgentRoute := apiV1Router.Group("/dns-agent")
+	{
+		discoveryRoute := dnsAgentRoute.Group("/")
+		discoveryRoute.Use(smartdns.DNSInstanceRegisterAuth())
+		{
+			discoveryRoute.POST("/register", smartdns.AgentRegisterHandler)
+		}
+
+		authorizedRoute := dnsAgentRoute.Group("/")
+		authorizedRoute.Use(smartdns.DNSInstanceAuth())
+		{
+			authorizedRoute.POST("/heartbeat", smartdns.AgentHeartbeatHandler)
+			authorizedRoute.GET("/snapshot", smartdns.AgentPullSnapshotHandler)
+			authorizedRoute.GET("/ws", smartdns.AgentWebSocketHandler)
+		}
 	}
 }

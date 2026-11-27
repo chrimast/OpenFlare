@@ -17,7 +17,15 @@ export interface NodeItem {
   name: string;
   ip: string;
   ip_manual_override: boolean;
+  asn?: number;
+  asn_org?: string;
+  network_group?: string;
+  capacity_bandwidth_mbps?: number;
+  capacity_connections?: number;
+  capacity_weight?: number;
+  tags?: NodeTagSummary[];
   geo_name: string;
+  geo_source?: string;
   geo_latitude?: number | null;
   geo_longitude?: number | null;
   geo_manual_override: boolean;
@@ -130,6 +138,11 @@ export interface NodeMutationPayload {
   ip: string;
   ip_manual_override: boolean;
   auto_update_enabled: boolean;
+  network_group?: string;
+  capacity_bandwidth_mbps?: number;
+  capacity_connections?: number;
+  capacity_weight?: number;
+  tags?: NodeTagBindingInput[];
   geo_name: string;
   geo_latitude?: number | null;
   geo_longitude?: number | null;
@@ -808,6 +821,7 @@ export interface AccessLogItem {
   bytes_sent: number;
   request_length: number;
   request_time_ms: number;
+  tcp_rtt_us?: number;
   created_at: string;
 }
 
@@ -1318,6 +1332,15 @@ export interface TrafficDistributions {
   source_countries: DistributionItem[];
 }
 
+export interface DashboardCountryLatency {
+  region: string;
+  request_count: number;
+  avg_request_time_ms: number;
+  avg_tcp_rtt_ms: number;
+}
+
+export type CompactDashboardCountryLatency = [string, number, number, number];
+
 export interface DashboardTrends {
   traffic_24h: TrafficTrendPoint[];
   capacity_24h: CapacityTrendPoint[];
@@ -1351,6 +1374,7 @@ export interface DashboardOverview {
   traffic: DashboardTraffic;
   capacity: DashboardCapacity;
   distributions: TrafficDistributions;
+  country_latencies: DashboardCountryLatency[];
   trends: DashboardTrends;
   nodes: DashboardNodeHealth[];
 }
@@ -1398,6 +1422,9 @@ export interface DashboardOverviewCompact {
     top_domains: CompactDistributionItem[];
     source_countries: CompactDistributionItem[];
   };
+  country_latencies?: Array<
+    DashboardCountryLatency | CompactDashboardCountryLatency
+  >;
   trends: {
     traffic_24h: CompactTrafficTrendPoint[];
     capacity_24h: CompactCapacityTrendPoint[];
@@ -1496,9 +1523,12 @@ export interface CloudflareNodeOption {
 export interface CloudflareGroup {
   id: number;
   name: string;
-  target_mode: 'node' | 'custom';
+  target_mode: 'node' | 'custom' | 'smartdns';
   record_type: 'CNAME' | 'A' | 'AAAA';
   record_content: string;
+  smartdns_policy_id?: number | null;
+  smartdns_policy_name?: string;
+  smartdns_target_host?: string;
   primary_node: CloudflareNodeOption;
   backup_node: CloudflareNodeOption | null;
   active_node: CloudflareNodeOption;
@@ -1513,9 +1543,11 @@ export interface CloudflareGroup {
 
 export interface CloudflareGroupPayload {
   name: string;
-  target_mode: 'node' | 'custom';
+  target_mode: 'node' | 'custom' | 'smartdns';
   record_type: 'CNAME' | 'A' | 'AAAA';
   record_content: string;
+  smartdns_policy_id?: number | null;
+  smartdns_target_host?: string;
   primary_node_id: number;
   backup_node_id: number | null;
   /** 省略时保留旧调用方行为；1 表示自动，手动为 60..86400 秒。 */
@@ -1949,4 +1981,952 @@ export interface TunnelReleaseInfo {
   published_at: string;
   channel: ReleaseChannel;
   prerelease: boolean;
+}
+
+export type NetToolsPingProtocol = 'icmp' | 'tcp' | 'http';
+export type NetToolsTracerouteProtocol = 'icmp' | 'udp' | 'tcp';
+export type NetToolsTaskStatus = 'running' | 'completed' | 'timeout';
+export type NetToolsNodeResultStatus =
+  | 'pending'
+  | 'completed'
+  | 'failed'
+  | 'offline'
+  | 'timeout';
+
+export interface NetToolsPingPayload {
+  target: string;
+  protocol: NetToolsPingProtocol;
+  port?: number;
+  count?: number;
+  interval_ms?: number;
+  timeout_ms?: number;
+  node_ids?: string[];
+}
+
+export interface NetToolsPingSample {
+  seq: number;
+  rtt_ms: number;
+  success: boolean;
+}
+
+export interface NetToolsPingBatchResult {
+  protocol: string;
+  target: string;
+  resolved_ip?: string;
+  sent: number;
+  received: number;
+  loss_rate: number;
+  min_ms: number;
+  avg_ms: number;
+  max_ms: number;
+  p95_ms: number;
+  jitter_ms: number;
+  samples: NetToolsPingSample[];
+  error?: string;
+}
+
+export interface NetToolsTraceroutePayload {
+  target: string;
+  protocol: NetToolsTracerouteProtocol;
+  port?: number;
+  max_hops?: number;
+  probes_per_hop?: number;
+  timeout_ms?: number;
+  node_ids?: string[];
+}
+
+export interface NetToolsTracerouteProbe {
+  seq: number;
+  ip?: string;
+  rtt_ms?: number;
+}
+
+export interface NetToolsTracerouteHop {
+  ttl: number;
+  ip?: string;
+  alt_ips?: string[];
+  sent: number;
+  recv: number;
+  loss_pct: number;
+  min_ms?: number;
+  avg_ms?: number;
+  max_ms?: number;
+  jitter_ms?: number;
+  probes: NetToolsTracerouteProbe[];
+  country_iso?: string;
+  city_name?: string;
+  asn?: number;
+  asn_name?: string;
+  asn_tags?: string[];
+}
+
+export interface NetToolsTracerouteResult {
+  target: string;
+  resolved_ip?: string;
+  protocol: string;
+  hop_count: number;
+  reached: boolean;
+  total_rtt_ms: number;
+  hops: NetToolsTracerouteHop[];
+  error?: string;
+}
+
+export interface NetToolsDNSQueryPayload {
+  domain: string;
+  record_type: string;
+  resolver?: string;
+  ecs_subnet?: string;
+  timeout_ms?: number;
+  node_ids?: string[];
+}
+
+export interface NetToolsDNSRecord {
+  name: string;
+  record_type: string;
+  ttl: number;
+  value: string;
+  country_iso?: string;
+  city_name?: string;
+  asn?: number;
+  asn_name?: string;
+  asn_tags?: string[];
+}
+
+export interface NetToolsDirectDNSResult {
+  domain: string;
+  record_type: string;
+  resolver: string;
+  ecs_subnet?: string;
+  rcode: string;
+  authoritative: boolean;
+  truncated: boolean;
+  used_tcp: boolean;
+  latency_ms: number;
+  records: NetToolsDNSRecord[];
+}
+
+export interface NetToolsEdgeDNSResult {
+  domain: string;
+  record_type: string;
+  resolver: string;
+  rcode: string;
+  authoritative: boolean;
+  truncated: boolean;
+  used_tcp: boolean;
+  latency_ms: number;
+  records: NetToolsDNSRecord[];
+  error?: string;
+}
+
+export interface NetToolsProbeNodeResult {
+  node_id: string;
+  node_name: string;
+  node_geo: string;
+  node_asn: number;
+  status: NetToolsNodeResultStatus;
+  ping?: NetToolsPingBatchResult;
+  traceroute?: NetToolsTracerouteResult;
+  dns?: NetToolsEdgeDNSResult;
+  error?: string;
+  finished_at?: string;
+}
+
+export interface NetToolsProbeTaskState {
+  task_id: string;
+  kind: 'ping_batch' | 'traceroute' | 'dns_query';
+  target: string;
+  created_at: string;
+  expires_at: string;
+  total_nodes: number;
+  completed_nodes: number;
+  status: NetToolsTaskStatus;
+  nodes: NetToolsProbeNodeResult[];
+}
+
+export interface NetToolsDNSQueryResponse {
+  mode: 'direct' | 'nodes';
+  direct_result?: NetToolsDirectDNSResult;
+  task?: NetToolsProbeTaskState;
+}
+
+export interface NetToolsTracerouteHistoryItem {
+  id: number;
+  task_id: string;
+  trigger_type: 'manual' | 'auto';
+  node_id: string;
+  target: string;
+  resolved_ip: string;
+  target_asn: number;
+  target_country: string;
+  protocol: string;
+  hop_count: number;
+  reached: boolean;
+  total_rtt_ms: number;
+  hops: NetToolsTracerouteHop[];
+  as_path: number[];
+  error_message?: string;
+  created_at: string;
+}
+
+export interface NetToolsTracerouteHistoryQuery {
+  p?: number;
+  page_size?: number;
+  node_id?: string;
+  target?: string;
+  trigger_type?: string;
+  target_asn?: number;
+}
+
+export interface NetToolsTracerouteHistoryPage {
+  total: number;
+  results: NetToolsTracerouteHistoryItem[];
+}
+
+export interface NetToolsIPLookupResult {
+  ip: string;
+  continent_code?: string;
+  country_iso: string;
+  country_name: string;
+  region_code?: string;
+  city_name: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy_radius_km?: number;
+  geo_source?: string;
+  anycast_status?: string;
+  asn: number;
+  asn_name: string;
+  asn_class: string;
+  asn_country: string;
+  asn_tags: string[];
+  prefix: string;
+  prefix_hits: number;
+  data_sources: string[];
+}
+
+export interface NetToolsASNInfo {
+  asn: number;
+  name: string;
+  class: string;
+  country: string;
+  tags: string[];
+  ipv4_prefixes: number;
+  ipv6_prefixes: number;
+  neighbor_count: number;
+}
+
+export interface NetToolsASNeighbor {
+  peer_asn: number;
+  peer_name: string;
+  peer_country: string;
+  peer_class: string;
+  relation: string;
+  tags?: string[];
+  observed_rtt_ms?: number;
+  sample_count?: number;
+}
+
+export interface NetToolsIPLookupResponse {
+  query: string;
+  resolved_ips: string[];
+  primary?: NetToolsIPLookupResult;
+  all_results?: NetToolsIPLookupResult[];
+  asn_info?: NetToolsASNInfo;
+  neighbors: NetToolsASNeighbor[];
+  attribution: string;
+}
+
+export interface NetToolsASNDetailResponse {
+  asn_info: NetToolsASNInfo;
+  neighbors: NetToolsASNeighbor[];
+  attribution: string;
+}
+
+export interface NetToolsPrefixRecord {
+  cidr: string;
+  asn: number;
+  hits: number;
+  family: 'ipv4' | 'ipv6';
+}
+
+export interface NetToolsASNPrefixesResponse {
+  asn: number;
+  total: number;
+  results: NetToolsPrefixRecord[];
+  attribution: string;
+}
+
+export interface NetToolsASPathInput {
+  target_asn?: number;
+  target_ip?: string;
+  target_country?: string;
+  target_region?: string;
+  ip_family?: string;
+  node_ids?: string[];
+}
+
+export interface NetToolsASPathHopNode {
+  asn: number;
+  name: string;
+  country: string;
+  tags?: string[];
+}
+
+export interface NetToolsNodeASPathComparison {
+  node_id: string;
+  node_name: string;
+  node_ip: string;
+  node_geo: string;
+  node_asn: number;
+  node_asn_name: string;
+  network_group?: string;
+  geo_source?: string;
+  as_hops: number;
+  path: NetToolsASPathHopNode[];
+  effective_rtt_ms: number;
+  rtt_p95_ms?: number;
+  candidate_dispersion_ms?: number;
+  prediction_error_ms?: number | null;
+  quality_score: number;
+  confidence: number;
+  measurement_source?: string;
+  prediction_method?: string;
+  geo_base_rtt_ms?: number;
+  geo_base_known?: boolean;
+  sample_count?: number;
+  distinct_prefixes?: number;
+  last_observed_at?: string | null;
+  anycast_isolated?: boolean;
+  data_source: string;
+}
+
+export interface NetToolsASPathResponse {
+  target_asn: number;
+  target_asn_info?: NetToolsASNInfo;
+  target_country?: string;
+  target_region?: string;
+  ip_family?: string;
+  nodes: NetToolsNodeASPathComparison[];
+  attribution: string;
+}
+
+export interface NetToolsQualityPredictInput {
+  target_ip?: string;
+  target_asn?: number;
+  target_country?: string;
+  target_region?: string;
+  ip_family?: string;
+  node_ids?: string[];
+}
+
+export interface NetToolsNodeQualityPrediction {
+  node_id: string;
+  node_name: string;
+  node_ip: string;
+  node_geo: string;
+  node_asn: number;
+  node_asn_name: string;
+  network_group?: string;
+  geo_source?: string;
+  effective_rtt_ms: number;
+  rtt_p95_ms: number;
+  candidate_dispersion_ms: number;
+  prediction_error_ms?: number | null;
+  quality_score: number;
+  confidence: number;
+  measurement_source: string;
+  prediction_method: string;
+  geo_base_rtt_ms: number;
+  geo_base_known?: boolean;
+  sample_count: number;
+  distinct_prefixes: number;
+  last_observed_at?: string | null;
+  anycast_isolated?: boolean;
+  data_source: string;
+}
+
+export interface NetToolsQualityPredictResponse {
+  target_ip?: string;
+  target_asn: number;
+  target_asn_info?: NetToolsASNInfo;
+  target_country?: string;
+  target_region?: string;
+  ip_family: string;
+  anycast_status?: string;
+  geo_source?: string;
+  nodes: NetToolsNodeQualityPrediction[];
+  attribution: string;
+}
+
+export interface NetToolsQualityMatrixItem {
+  id: number;
+  node_id: string;
+  node_asn: number;
+  node_name: string;
+  node_geo: string;
+  node_status: string;
+  node_network_group?: string;
+  node_geo_source?: string;
+  client_asn: number;
+  client_country: string;
+  client_region?: string;
+  ip_family?: string;
+  aggregation_level?: string;
+  stats_version?: number;
+  client_asn_name: string;
+  tcp_rtt_p50_ms: number;
+  tcp_rtt_p95_ms: number;
+  tcp_min_rtt_ms: number;
+  tcp_retrans_rate: number;
+  tcp_sample_count: number;
+  tcp_last_seen_at?: string | null;
+  probe_rtt_p50_ms?: number;
+  probe_loss_rate?: number;
+  probe_sample_count?: number;
+  probe_proto?: string;
+  probe_last_seen_at?: string | null;
+  trace_rtt_p50_ms: number;
+  trace_loss_rate: number;
+  trace_hop_count: number;
+  trace_as_path: string;
+  trace_sample_count: number;
+  trace_last_seen_at?: string | null;
+  effective_rtt_ms: number;
+  predicted_rtt_ms: number;
+  rtt_ewma_ms?: number;
+  distinct_prefix_count?: number;
+  geo_base_rtt_ms?: number;
+  geo_accuracy_km?: number;
+  geo_source?: string;
+  geo_confidence?: number;
+  measurement_source?: string;
+  quality_score: number;
+  confidence: number;
+  data_source: 'measured' | 'predicted' | string;
+  last_observed_at?: string | null;
+  updated_at: string;
+}
+
+export interface NetToolsQualityMatrixQuery {
+  p?: number;
+  page_size?: number;
+  node_id?: string;
+  client_asn?: number;
+  client_country?: string;
+  client_region?: string;
+  ip_family?: string;
+  aggregation_level?: string;
+  measurement_source?: string;
+  data_source?: string;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
+export interface NetToolsQualityMatrixPage {
+  total: number;
+  results: NetToolsQualityMatrixItem[];
+}
+
+export interface NetToolsProbeTargetNodeState {
+  id: number;
+  node_id: string;
+  node_name: string;
+  node_geo: string;
+  node_status: string;
+  target_id: number;
+  consecutive_failures: number;
+  last_probed_at?: string | null;
+  last_success_at?: string | null;
+  next_probe_at?: string | null;
+  last_error: string;
+  last_rtt_ms: number;
+  updated_at: string;
+}
+
+export interface NetToolsProbeTarget {
+  id: number;
+  name: string;
+  ip: string;
+  ip_family: string;
+  probe_proto: 'icmp' | 'tcp' | 'traceroute' | string;
+  port: number;
+  asn: number;
+  country: string;
+  region: string;
+  target_type: 'public_anchor' | 'customer_isp' | 'manual' | string;
+  anycast_status: 'unknown' | 'unicast' | 'confirmed' | string;
+  enabled: boolean;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  states: NetToolsProbeTargetNodeState[];
+}
+
+export interface NetToolsProbeTargetPage {
+  total: number;
+  results: NetToolsProbeTarget[];
+}
+
+export interface NetToolsProbeTargetQuery {
+  p?: number;
+  page_size?: number;
+  asn?: number;
+  country?: string;
+  ip_family?: string;
+  target_type?: string;
+  anycast_status?: string;
+  enabled?: boolean;
+  search?: string;
+}
+
+export interface NetToolsProbeTargetInput {
+  name?: string;
+  ip: string;
+  probe_proto?: 'icmp' | 'tcp' | 'traceroute' | string;
+  port?: number;
+  asn?: number;
+  country?: string;
+  region?: string;
+  target_type?: 'public_anchor' | 'customer_isp' | 'manual' | string;
+  anycast_status?: 'unknown' | 'unicast' | 'confirmed' | string;
+  enabled?: boolean;
+  notes?: string;
+}
+
+export interface NetToolsProbeTargetUpdateInput {
+  name?: string;
+  probe_proto?: 'icmp' | 'tcp' | 'traceroute' | string;
+  port?: number;
+  asn?: number;
+  country?: string;
+  region?: string;
+  target_type?: 'public_anchor' | 'customer_isp' | 'manual' | string;
+  anycast_status?: 'unknown' | 'unicast' | 'confirmed' | string;
+  enabled?: boolean;
+  notes?: string;
+}
+
+export interface NetToolsDatasetStatus {
+  key: string;
+  filename: string;
+  loaded: boolean;
+  path: string;
+  size_bytes: number;
+  record_count: number;
+  updated_at?: string | null;
+  source_url: string;
+  license: string;
+  error?: string;
+}
+
+export interface NetToolsNetIntelStatusResponse {
+  data_dir: string;
+  datasets: NetToolsDatasetStatus[];
+  caida_enabled: boolean;
+  auto_probe_enabled: boolean;
+  attribution: string;
+}
+
+export interface NetToolsTriggerSyncResponse {
+  task_id?: string;
+  mode: 'queued' | 'inline';
+  summary?: {
+    data_dir: string;
+    geoip_source: string;
+    caida_enabled: boolean;
+    updated_files: string[];
+    skipped_files?: string[];
+    errors?: Record<string, string>;
+    backfilled_nodes: number;
+    duration_ms: number;
+  };
+}
+
+export interface NetToolsASUpstreamNode {
+  asn: number;
+  name: string;
+  short_name: string;
+  country: string;
+  class: string;
+  tags?: string[];
+  role: 'origin' | 'transit' | 'tier1_upstream' | 'tier1';
+  layer: number;
+  is_tier1: boolean;
+  path_hits: number;
+}
+
+export interface NetToolsASUpstreamEdge {
+  from: number;
+  to: number;
+  kind: 'upstream' | 'tier1_interconnect' | 'observed';
+  path_hits: number;
+  observed_rtt_ms?: number;
+  sample_count?: number;
+}
+
+export interface NetToolsASNUpstreamGraphResponse {
+  origin_asn: number;
+  sampled_prefix?: string;
+  data_source:
+    | 'caida'
+    | 'ripestat_lg'
+    | 'ripestat_neighbours'
+    | 'observed'
+    | 'none';
+  attribution: string;
+  total_paths_parsed: number;
+  nodes: NetToolsASUpstreamNode[];
+  edges: NetToolsASUpstreamEdge[];
+  cached: boolean;
+  generated_at: string;
+}
+
+export type NodeTagColor =
+  | 'slate'
+  | 'gray'
+  | 'zinc'
+  | 'neutral'
+  | 'stone'
+  | 'red'
+  | 'orange'
+  | 'amber'
+  | 'yellow'
+  | 'lime'
+  | 'green'
+  | 'emerald'
+  | 'teal'
+  | 'cyan'
+  | 'sky'
+  | 'blue'
+  | 'indigo'
+  | 'violet'
+  | 'purple'
+  | 'fuchsia'
+  | 'pink'
+  | 'rose';
+
+export interface NodeTagSummary {
+  tag_id: number;
+  slug: string;
+  name: string;
+  color: string;
+  default_weight: number;
+  weight_override?: number | null;
+  effective_weight: number;
+}
+
+export interface NodeTagBindingInput {
+  slug: string;
+  weight_override?: number | null;
+}
+
+export interface NodeTagItem {
+  id: number;
+  name: string;
+  slug: string;
+  color: string;
+  description: string;
+  default_weight: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NodeTagInput {
+  name: string;
+  slug: string;
+  color: string;
+  description: string;
+  default_weight: number | null;
+}
+
+export type SmartDNSOverviewWindow = '1h' | '6h' | '24h' | '7d';
+
+export interface SmartDNSOverviewSeriesPoint {
+  timestamp: string;
+  qps: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  latency_p99_ms: number;
+  cache_hit_ratio: number;
+  queries_total: number;
+  queries_error: number;
+}
+
+export interface SmartDNSOverview {
+  enabled: boolean;
+  delegation_domain: string;
+  total_instances: number;
+  online_instances: number;
+  total_qps: number;
+  avg_p50_ms: number;
+  avg_p95_ms: number;
+  avg_p99_ms: number;
+  avg_cache_hit_ratio: number;
+  active_policies: number;
+  managed_domains: number;
+  snapshot_version: number;
+  snapshot_etag: string;
+  window: SmartDNSOverviewWindow | string;
+  series: SmartDNSOverviewSeriesPoint[];
+}
+
+export interface SmartDNSSettings {
+  enabled: boolean;
+  delegation_domain: string;
+  ns_hosts: string[];
+  default_ttl: number;
+  snapshot_interval_seconds: number;
+  update_repo: string;
+  discovery_token: string;
+}
+
+export interface SmartDNSSettingsInput {
+  enabled?: boolean;
+  delegation_domain?: string;
+  ns_hosts?: string[];
+  default_ttl?: number;
+  snapshot_interval_seconds?: number;
+  update_repo?: string;
+}
+
+export interface SmartDNSDelegationVerifyResult {
+  delegation_domain: string;
+  configured_ns_hosts: string[];
+  observed_ns_records: string[];
+  matched_ns_hosts: string[];
+  missing_ns_hosts: string[];
+  verified: boolean;
+  checked_at: string;
+  error?: string;
+}
+
+export interface SmartDNSDiscoveryToken {
+  discovery_token: string;
+}
+
+export interface SmartDNSInstance {
+  id: number;
+  instance_id: string;
+  name: string;
+  mode: string;
+  public_addr: string;
+  listen_addr: string;
+  geo_name: string;
+  geo_latitude?: number | null;
+  geo_longitude?: number | null;
+  version: string;
+  status: string;
+  connected: boolean;
+  snapshot_version: number;
+  snapshot_etag: string;
+  qps: number;
+  p50_ms: number;
+  p95_ms: number;
+  p99_ms: number;
+  success_total: number;
+  error_total: number;
+  cache_hit_ratio: number;
+  cpu_usage_percent: number;
+  memory_usage_percent: number;
+  last_seen_at?: string | null;
+  last_error: string;
+  quarantined_at?: string | null;
+  quarantine_reason: string;
+  access_token?: string;
+  install_command?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SmartDNSInstanceInput {
+  name: string;
+  public_addr: string;
+  listen_addr: string;
+  geo_name: string;
+  geo_latitude?: number | null;
+  geo_longitude?: number | null;
+}
+
+export interface SmartDNSQuarantineInput {
+  reason: string;
+}
+
+export interface SmartDNSPolicyWeights {
+  latency: number;
+  load: number;
+  geo: number;
+}
+
+export interface SmartDNSPolicyFilters {
+  node_ids: string[];
+  countries: string[];
+  tags: string[];
+  network_groups: string[];
+}
+
+export interface SmartDNSFlowSwitchCase {
+  id: string;
+  label: string;
+  condition: string;
+}
+
+export interface SmartDNSFlowNodeData {
+  hit_policy?: string;
+  cases?: SmartDNSFlowSwitchCase[];
+  mode?: string;
+  weights?: SmartDNSPolicyWeights;
+  use_tag_weights?: boolean;
+  filters?: SmartDNSPolicyFilters;
+  max_answers?: number;
+  ttl?: number;
+}
+
+export interface SmartDNSFlowNode {
+  id: string;
+  type: 'input' | 'condition' | 'action' | 'output' | string;
+  label: string;
+  position: XYPosition;
+  data: SmartDNSFlowNodeData;
+}
+
+export interface SmartDNSFlowEdge {
+  id: string;
+  source: string;
+  source_handle?: string;
+  target: string;
+}
+
+export interface SmartDNSFlowGraph {
+  nodes: SmartDNSFlowNode[];
+  edges: SmartDNSFlowEdge[];
+}
+
+export interface SmartDNSPolicyConfig {
+  mode: string;
+  weights: SmartDNSPolicyWeights;
+  use_tag_weights: boolean;
+  filters: SmartDNSPolicyFilters;
+  max_answers?: number;
+  ttl?: number;
+  graph?: SmartDNSFlowGraph | null;
+}
+
+export interface SmartDNSPolicy {
+  id: number;
+  name: string;
+  description: string;
+  scope_type: 'all' | 'domains' | string;
+  scope_domains: string[];
+  strategy_type: 'smart' | 'load_balance' | 'custom_jdm' | string;
+  priority: number;
+  ttl: number;
+  max_answers: number;
+  enabled: boolean;
+  is_default: boolean;
+  fallback_strategy: string;
+  fallback_node_ids: string[];
+  config: SmartDNSPolicyConfig;
+  jdm_json: string;
+  revision: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SmartDNSPolicyInput {
+  name: string;
+  description: string;
+  scope_type: string;
+  scope_domains: string[];
+  strategy_type: string;
+  priority: number;
+  ttl: number;
+  max_answers: number;
+  enabled?: boolean;
+  is_default?: boolean;
+  fallback_strategy: string;
+  fallback_node_ids: string[];
+  config: SmartDNSPolicyConfig;
+  jdm_json: string;
+}
+
+export interface SmartDNSPolicyValidateInput {
+  strategy_type: string;
+  config: SmartDNSPolicyConfig;
+  jdm_json: string;
+}
+
+export interface SmartDNSPolicyValidateResult {
+  valid: boolean;
+  compiled_jdm: string;
+}
+
+export interface SmartDNSSimulateInput {
+  domain: string;
+  qtype: 'A' | 'AAAA' | string;
+  client_ip: string;
+  policy_id?: number;
+}
+
+export interface SmartDNSSimulatorClientContext {
+  client_ip: string;
+  client_prefix: string;
+  ip_family: string;
+  asn: number;
+  asn_name?: string;
+  country_iso: string;
+  region_code?: string;
+  city_name?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  geo_accuracy_km: number;
+  geo_source: string;
+  anycast_status?: string;
+}
+
+export interface SmartDNSSelectedAnswer {
+  node_id: string;
+  name: string;
+  ip: string;
+  score: number;
+}
+
+export interface SmartDNSCandidateTrace {
+  node_id: string;
+  name: string;
+  ip: string;
+  eligible: boolean;
+  overloaded: boolean;
+  selected: boolean;
+  exclusion_reason?: string;
+  source_tier?: string;
+  effective_rtt_ms: number;
+  loss_rate: number;
+  load_index: number;
+  latency_score: number;
+  load_score: number;
+  geo_score: number;
+  tag_multiplier: number;
+  final_score: number;
+}
+
+export interface SmartDNSSelectionResult {
+  policy_id: number;
+  policy_name: string;
+  mode: string;
+  ttl: number;
+  fallback_used: boolean;
+  fallback_reason?: string;
+  hysteresis_applied: boolean;
+  matched_nodes: string[];
+  matched_conditions: string[];
+  answers: SmartDNSSelectedAnswer[];
+  candidates: SmartDNSCandidateTrace[];
+}
+
+export interface SmartDNSSimulateResult {
+  domain: string;
+  qtype: string;
+  client: SmartDNSSimulatorClientContext;
+  selection: SmartDNSSelectionResult;
 }

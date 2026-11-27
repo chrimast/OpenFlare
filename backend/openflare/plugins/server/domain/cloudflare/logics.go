@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"regexp"
 	"strings"
@@ -21,10 +22,13 @@ import (
 )
 
 const (
-	automaticTTL     = 1
-	legacyDefaultTTL = 300
-	minManualTTL     = 60
-	maxManualTTL     = 86400
+	automaticTTL              = 1
+	legacyDefaultTTL          = 300
+	minManualTTL              = 60
+	maxManualTTL              = 86400
+	recordTypeCNAME           = "CNAME"
+	smartDNSFallbackSuffixMod = 100000
+	maxDNSLabelLength         = 63
 )
 
 var clientFactory = func(token string) Client { return NewHTTPClient(token) }
@@ -196,6 +200,9 @@ func CreateGroup(ctx context.Context, input GroupInput) (*GroupItem, error) {
 	if err = repository.CreateCFPointingGroup(ctx, group); err != nil {
 		return nil, err
 	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_group_create"})
+	}
 	return buildGroupItem(ctx, group)
 }
 
@@ -205,6 +212,7 @@ func UpdateGroup(ctx context.Context, id uint, input GroupInput) (*GroupItem, er
 	if err != nil {
 		return nil, err
 	}
+	previousMode := existing.TargetMode
 	group, err := groupFromInput(ctx, existing, input)
 	if err != nil {
 		return nil, err
@@ -212,8 +220,16 @@ func UpdateGroup(ctx context.Context, id uint, input GroupInput) (*GroupItem, er
 	if err = repository.SaveCFPointingGroup(ctx, group); err != nil {
 		return nil, err
 	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		if err = repository.UpdateCFPointingGroupMembersProxied(ctx, id, false); err != nil {
+			return nil, err
+		}
+	}
 	if err = repository.MarkCFPointingGroupMembersPending(ctx, id); err != nil {
 		return nil, err
+	}
+	if previousMode == model.CFPointingTargetModeSmartDNS || group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_group_update"})
 	}
 	if group.Enabled {
 		if _, err = DispatchGroupSync(ctx, id, "cloudflare_group_update"); err != nil {
@@ -240,6 +256,16 @@ func groupFromInput(ctx context.Context, existing *model.CFPointingGroup, input 
 	if err != nil {
 		return nil, err
 	}
+	smartDNSPolicyID, smartDNSTargetHost, err := resolveSmartDNSGroupTarget(ctx, existing, targetMode, name, input)
+	if err != nil {
+		return nil, err
+	}
+	defaultProxied := input.DefaultProxied
+	if targetMode == model.CFPointingTargetModeSmartDNS {
+		recordType = recordTypeCNAME
+		recordContent = smartDNSTargetHost
+		defaultProxied = false
+	}
 	primaryNodeID, activeNodeID, backupNodeID, err := resolveGroupAssignment(ctx, existing, targetMode, input)
 	if err != nil {
 		return nil, err
@@ -251,11 +277,13 @@ func groupFromInput(ctx context.Context, existing *model.CFPointingGroup, input 
 	existing.TargetMode = targetMode
 	existing.RecordType = recordType
 	existing.RecordContent = recordContent
+	existing.SmartDNSPolicyID = smartDNSPolicyID
+	existing.SmartDNSTargetHost = smartDNSTargetHost
 	existing.TTL = ttl
 	existing.PrimaryNodeID = primaryNodeID
 	existing.ActiveNodeID = activeNodeID
 	existing.BackupNodeID = backupNodeID
-	existing.DefaultProxied = input.DefaultProxied
+	existing.DefaultProxied = defaultProxied
 	existing.Enabled = input.Enabled
 	return existing, nil
 }
@@ -265,10 +293,96 @@ func resolveGroupTargetMode(raw string) (string, error) {
 	if targetMode == "" {
 		return model.CFPointingTargetModeNode, nil
 	}
-	if targetMode != model.CFPointingTargetModeNode && targetMode != model.CFPointingTargetModeCustom {
+	if targetMode != model.CFPointingTargetModeNode && targetMode != model.CFPointingTargetModeCustom && targetMode != model.CFPointingTargetModeSmartDNS {
 		return "", errors.New(errGroupTargetModeInvalid)
 	}
 	return targetMode, nil
+}
+
+var smartDNSLabelSanitizer = regexp.MustCompile(`[^a-z0-9-]+`)
+
+func resolveSmartDNSGroupTarget(
+	ctx context.Context,
+	existing *model.CFPointingGroup,
+	targetMode string,
+	groupName string,
+	input GroupInput,
+) (*uint, string, error) {
+	if targetMode != model.CFPointingTargetModeSmartDNS {
+		return nil, "", nil
+	}
+	delegation, err := loadSmartDNSDelegationDomain(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+	if err := validateSmartDNSPolicyRef(ctx, input.SmartDNSPolicyID); err != nil {
+		return nil, "", err
+	}
+	policyID := *input.SmartDNSPolicyID
+	host := resolveSmartDNSTargetHost(existing, delegation, groupName, input.SmartDNSTargetHost)
+	if !validCNAMEContent(host) || (host != delegation && !strings.HasSuffix(host, "."+delegation)) {
+		return nil, "", errors.New(errSmartDNSHostInvalid)
+	}
+	return &policyID, host, nil
+}
+
+func loadSmartDNSDelegationDomain(ctx context.Context) (string, error) {
+	cfg, err := repository.GetSystemConfigByKey(ctx, model.ConfigKeySmartDNSDelegationDomain)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", err
+	}
+	delegation := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(cfg.Value)), ".")
+	if delegation == "" || !validCNAMEContent(delegation) {
+		return "", errors.New(errSmartDNSDelegationUnset)
+	}
+	return delegation, nil
+}
+
+func validateSmartDNSPolicyRef(ctx context.Context, policyID *uint) error {
+	if policyID == nil || *policyID == 0 {
+		return errors.New(errSmartDNSPolicyInvalid)
+	}
+	if _, err := repository.GetDNSPolicyByID(ctx, *policyID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errSmartDNSPolicyInvalid)
+		}
+		return err
+	}
+	return nil
+}
+
+func resolveSmartDNSTargetHost(
+	existing *model.CFPointingGroup,
+	delegation string,
+	groupName string,
+	requestedHost string,
+) string {
+	host := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(requestedHost)), ".")
+	if host == "" && existing != nil && strings.TrimSpace(existing.SmartDNSTargetHost) != "" {
+		candidate := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(existing.SmartDNSTargetHost)), ".")
+		if candidate == delegation || strings.HasSuffix(candidate, "."+delegation) {
+			return candidate
+		}
+	}
+	if host != "" {
+		return host
+	}
+	return buildDefaultSmartDNSLabel(groupName) + "." + delegation
+}
+
+func buildDefaultSmartDNSLabel(groupName string) string {
+	label := smartDNSLabelSanitizer.ReplaceAllString(strings.ToLower(strings.TrimSpace(groupName)), "-")
+	label = strings.Trim(label, "-")
+	if label == "" {
+		label = fmt.Sprintf("smartdns-%d", time.Now().Unix()%smartDNSFallbackSuffixMod)
+	}
+	if len(label) > maxDNSLabelLength {
+		label = strings.TrimRight(label[:maxDNSLabelLength], "-")
+	}
+	if label == "" {
+		return "edge"
+	}
+	return label
 }
 
 func resolveGroupTTL(existing *model.CFPointingGroup, explicit *int) (int, error) {
@@ -350,7 +464,7 @@ func resolveGroupNodes(ctx context.Context, input GroupInput) (uint, *uint, erro
 }
 
 func validCustomRecordType(recordType string) bool {
-	return recordType == "CNAME" || recordType == "A" || recordType == "AAAA"
+	return recordType == recordTypeCNAME || recordType == "A" || recordType == "AAAA"
 }
 
 func validCustomRecordContent(recordType, content string) bool {
@@ -359,7 +473,7 @@ func validCustomRecordContent(recordType, content string) bool {
 		return isIPv4(content)
 	case "AAAA":
 		return isIPv6(content)
-	case "CNAME":
+	case recordTypeCNAME:
 		return validCNAMEContent(content)
 	default:
 		return false
@@ -411,47 +525,66 @@ func CheckNodeFailover(ctx context.Context) (int, error) {
 	var dispatchErrors []error
 	for i := range groups {
 		group := &groups[i]
-		if !group.Enabled || group.TargetMode == model.CFPointingTargetModeCustom || group.BackupNodeID == nil {
+		if !group.Enabled || (group.TargetMode != "" && group.TargetMode != model.CFPointingTargetModeNode) || group.BackupNodeID == nil {
 			continue
 		}
-		primary, primaryErr := repository.GetOpenFlareNodeByID(ctx, group.PrimaryNodeID)
-		if primaryErr != nil && !errors.Is(primaryErr, gorm.ErrRecordNotFound) {
-			return changed, primaryErr
+		didChange, dispatchErr, stepErr := reconcileGroupFailover(ctx, group, now)
+		if stepErr != nil {
+			return changed, stepErr
 		}
-		primaryHealthy := primaryErr == nil && isNodeHealthyForFailover(primary, now)
-		targetNodeID := group.ActiveNodeID
-		if primaryHealthy {
-			targetNodeID = group.PrimaryNodeID
-		} else {
-			backup, backupErr := repository.GetOpenFlareNodeByID(ctx, *group.BackupNodeID)
-			if backupErr != nil && !errors.Is(backupErr, gorm.ErrRecordNotFound) {
-				return changed, backupErr
-			}
-			if backupErr == nil && isNodeHealthyForFailover(backup, now) {
-				targetNodeID = *group.BackupNodeID
-			}
-		}
-		if targetNodeID != group.ActiveNodeID {
-			if err = repository.UpdateCFPointingGroupTarget(ctx, group.ID, map[string]any{"active_node_id": targetNodeID}); err != nil {
-				return changed, err
-			}
-			if err = repository.MarkCFPointingGroupMembersPending(ctx, group.ID); err != nil {
-				return changed, err
-			}
+		if didChange {
 			changed++
 		}
-		pending, pendingErr := repository.HasPendingCFPointingGroupMembers(ctx, group.ID)
-		if pendingErr != nil {
-			return changed, pendingErr
-		}
-		if pending {
-			if _, err = DispatchGroupSync(ctx, group.ID, "cloudflare_node_failover"); err != nil {
-				logger.WarnF(ctx, "[Cloudflare] dispatch failover sync failed: group_id=%d error=%v", group.ID, err)
-				dispatchErrors = append(dispatchErrors, err)
-			}
+		if dispatchErr != nil {
+			dispatchErrors = append(dispatchErrors, dispatchErr)
 		}
 	}
 	return changed, errors.Join(dispatchErrors...)
+}
+
+func reconcileGroupFailover(ctx context.Context, group *model.CFPointingGroup, now time.Time) (changed bool, dispatchErr, err error) {
+	targetNodeID, err := resolveFailoverTargetNode(ctx, group, now)
+	if err != nil {
+		return false, nil, err
+	}
+	if targetNodeID != group.ActiveNodeID {
+		if err = repository.UpdateCFPointingGroupTarget(ctx, group.ID, map[string]any{"active_node_id": targetNodeID}); err != nil {
+			return false, nil, err
+		}
+		if err = repository.MarkCFPointingGroupMembersPending(ctx, group.ID); err != nil {
+			return false, nil, err
+		}
+		changed = true
+	}
+	pending, err := repository.HasPendingCFPointingGroupMembers(ctx, group.ID)
+	if err != nil {
+		return changed, nil, err
+	}
+	if pending {
+		if _, syncErr := DispatchGroupSync(ctx, group.ID, "cloudflare_node_failover"); syncErr != nil {
+			logger.WarnF(ctx, "[Cloudflare] dispatch failover sync failed: group_id=%d error=%v", group.ID, syncErr)
+			dispatchErr = syncErr
+		}
+	}
+	return changed, dispatchErr, nil
+}
+
+func resolveFailoverTargetNode(ctx context.Context, group *model.CFPointingGroup, now time.Time) (uint, error) {
+	primary, primaryErr := repository.GetOpenFlareNodeByID(ctx, group.PrimaryNodeID)
+	if primaryErr != nil && !errors.Is(primaryErr, gorm.ErrRecordNotFound) {
+		return 0, primaryErr
+	}
+	if primaryErr == nil && isNodeHealthyForFailover(primary, now) {
+		return group.PrimaryNodeID, nil
+	}
+	backup, backupErr := repository.GetOpenFlareNodeByID(ctx, *group.BackupNodeID)
+	if backupErr != nil && !errors.Is(backupErr, gorm.ErrRecordNotFound) {
+		return 0, backupErr
+	}
+	if backupErr == nil && isNodeHealthyForFailover(backup, now) {
+		return *group.BackupNodeID, nil
+	}
+	return group.ActiveNodeID, nil
 }
 
 func isNodeHealthyForFailover(node *model.OpenFlareNode, now time.Time) bool {
@@ -475,7 +608,7 @@ func FailoverQuarantinedNode(ctx context.Context, nodeID uint) ([]string, []stri
 
 	for i := range groups {
 		group := &groups[i]
-		if !group.Enabled || group.TargetMode == model.CFPointingTargetModeCustom || group.ActiveNodeID != nodeID {
+		if !group.Enabled || (group.TargetMode != "" && group.TargetMode != model.CFPointingTargetModeNode) || group.ActiveNodeID != nodeID {
 			continue
 		}
 		var fallbackID *uint
@@ -535,7 +668,27 @@ func buildGroupItem(ctx context.Context, group *model.CFPointingGroup) (*GroupIt
 	if err != nil {
 		return nil, err
 	}
-	item := &GroupItem{ID: group.ID, Name: group.Name, TargetMode: targetMode, RecordType: group.RecordType, RecordContent: group.RecordContent, PrimaryNode: nodeOptionForID(group.PrimaryNodeID, primary), ActiveNode: nodeOptionForID(group.ActiveNodeID, active), DefaultProxied: group.DefaultProxied, Enabled: group.Enabled, MemberCount: count, CreatedAt: group.CreatedAt, UpdatedAt: group.UpdatedAt}
+	item := &GroupItem{
+		ID:                 group.ID,
+		Name:               group.Name,
+		TargetMode:         targetMode,
+		RecordType:         group.RecordType,
+		RecordContent:      group.RecordContent,
+		SmartDNSPolicyID:   group.SmartDNSPolicyID,
+		SmartDNSTargetHost: group.SmartDNSTargetHost,
+		PrimaryNode:        nodeOptionForID(group.PrimaryNodeID, primary),
+		ActiveNode:         nodeOptionForID(group.ActiveNodeID, active),
+		DefaultProxied:     group.DefaultProxied && targetMode != model.CFPointingTargetModeSmartDNS,
+		Enabled:            group.Enabled,
+		MemberCount:        count,
+		CreatedAt:          group.CreatedAt,
+		UpdatedAt:          group.UpdatedAt,
+	}
+	if targetMode == model.CFPointingTargetModeSmartDNS && group.SmartDNSPolicyID != nil {
+		if policy, pErr := repository.GetDNSPolicyByID(ctx, *group.SmartDNSPolicyID); pErr == nil && policy != nil {
+			item.SmartDNSPolicyName = policy.Name
+		}
+	}
 	item.TTL = groupTTL(group)
 	if group.BackupNodeID != nil {
 		backup, backupErr := lookupGroupNode(ctx, group.ID, *group.BackupNodeID)
@@ -604,9 +757,15 @@ func CreateMember(ctx context.Context, groupID uint, input MemberCreateInput) (*
 	if input.Proxied != nil {
 		proxied = *input.Proxied
 	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		proxied = false
+	}
 	member := &model.CFPointingMember{GroupID: groupID, ZoneDomainID: domain.ID, Proxied: proxied, SyncStatus: model.CFMemberSyncPending}
 	if err = repository.CreateCFPointingMember(ctx, member); err != nil {
 		return nil, err
+	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_member_create"})
 	}
 	if group.Enabled {
 		if _, err = DispatchMemberSync(ctx, member.ID, "cloudflare_member_create"); err != nil {
@@ -618,18 +777,24 @@ func CreateMember(ctx context.Context, groupID uint, input MemberCreateInput) (*
 
 // UpdateMember updates orange-cloud state and queues reconciliation.
 func UpdateMember(ctx context.Context, groupID, memberID uint, input MemberUpdateInput) (*MemberItem, error) {
+	group, err := repository.GetCFPointingGroup(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS && input.Proxied {
+		return nil, errors.New(errSmartDNSProxyUnsupported)
+	}
 	member, err := repository.GetCFPointingMember(ctx, groupID, memberID)
 	if err != nil {
 		return nil, err
 	}
 	member.Proxied = input.Proxied
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		member.Proxied = false
+	}
 	member.SyncStatus = model.CFMemberSyncPending
 	member.LastError = ""
 	if err = repository.SaveCFPointingMember(ctx, member); err != nil {
-		return nil, err
-	}
-	group, err := repository.GetCFPointingGroup(ctx, groupID)
-	if err != nil {
 		return nil, err
 	}
 	if group.Enabled {
@@ -653,7 +818,13 @@ func RemoveMember(ctx context.Context, groupID, memberID uint) error {
 	if err = DeleteManagedRecord(ctx, member.ID); err != nil {
 		return errors.New(errDeleteRemoteFailed)
 	}
-	return repository.DeleteCFPointingMember(ctx, member)
+	if err = repository.DeleteCFPointingMember(ctx, member); err != nil {
+		return err
+	}
+	if group, gErr := repository.GetCFPointingGroup(ctx, groupID); gErr == nil && group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_member_remove"})
+	}
+	return nil
 }
 
 // MoveMember transfers a member from sourceGroupID to targetGroupID.
@@ -661,6 +832,7 @@ func MoveMember(ctx context.Context, sourceGroupID, memberID, targetGroupID uint
 	if targetGroupID == 0 || targetGroupID == sourceGroupID {
 		return nil, errors.New(errTargetGroupSame)
 	}
+	sourceGroup, _ := repository.GetCFPointingGroup(ctx, sourceGroupID)
 	targetGroup, err := repository.GetCFPointingGroup(ctx, targetGroupID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -673,10 +845,16 @@ func MoveMember(ctx context.Context, sourceGroupID, memberID, targetGroupID uint
 		return nil, err
 	}
 	member.GroupID = targetGroupID
+	if targetGroup.TargetMode == model.CFPointingTargetModeSmartDNS {
+		member.Proxied = false
+	}
 	member.SyncStatus = model.CFMemberSyncPending
 	member.LastError = ""
 	if err = repository.SaveCFPointingMember(ctx, member); err != nil {
 		return nil, err
+	}
+	if (sourceGroup != nil && sourceGroup.TargetMode == model.CFPointingTargetModeSmartDNS) || targetGroup.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_member_move"})
 	}
 	if targetGroup.Enabled {
 		if _, err = DispatchMemberSync(ctx, member.ID, "cloudflare_member_move"); err != nil {
@@ -698,6 +876,7 @@ func BatchMoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatch
 	if input.TargetGroupID == 0 || input.TargetGroupID == sourceGroupID {
 		return errors.New(errTargetGroupSame)
 	}
+	sourceGroup, _ := repository.GetCFPointingGroup(ctx, sourceGroupID)
 	targetGroup, err := repository.GetCFPointingGroup(ctx, input.TargetGroupID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -711,6 +890,9 @@ func BatchMoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatch
 			continue
 		}
 		member.GroupID = input.TargetGroupID
+		if targetGroup.TargetMode == model.CFPointingTargetModeSmartDNS {
+			member.Proxied = false
+		}
 		member.SyncStatus = model.CFMemberSyncPending
 		member.LastError = ""
 		if saveErr := repository.SaveCFPointingMember(ctx, member); saveErr != nil {
@@ -723,6 +905,9 @@ func BatchMoveMembers(ctx context.Context, sourceGroupID uint, input MemberBatch
 			}
 		}
 	}
+	if (sourceGroup != nil && sourceGroup.TargetMode == model.CFPointingTargetModeSmartDNS) || targetGroup.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_member_batch_move"})
+	}
 	return nil
 }
 
@@ -731,6 +916,7 @@ func BatchRemoveMembers(ctx context.Context, sourceGroupID uint, input MemberBat
 	if len(input.MemberIDs) == 0 {
 		return errors.New(errNoMembersSelected)
 	}
+	sourceGroup, _ := repository.GetCFPointingGroup(ctx, sourceGroupID)
 	for _, memberID := range uniqueIDs(input.MemberIDs) {
 		member, err := repository.GetCFPointingMember(ctx, sourceGroupID, memberID)
 		if err != nil {
@@ -743,6 +929,9 @@ func BatchRemoveMembers(ctx context.Context, sourceGroupID uint, input MemberBat
 			logger.ErrorF(ctx, "[Cloudflare] delete member failed during batch remove: member_id=%d error=%v", member.ID, err)
 		}
 	}
+	if sourceGroup != nil && sourceGroup.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_member_batch_remove"})
+	}
 	return nil
 }
 
@@ -754,6 +943,9 @@ func BatchEnableProxy(ctx context.Context, groupID uint, input MemberBatchProxyI
 	group, err := repository.GetCFPointingGroup(ctx, groupID)
 	if err != nil {
 		return err
+	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		return errors.New(errSmartDNSProxyUnsupported)
 	}
 	var firstErr error
 	for _, memberID := range uniqueIDs(input.MemberIDs) {
@@ -806,7 +998,8 @@ func uniqueIDs(ids []uint) []uint {
 
 // DeleteGroup removes every managed remote DNS record and then local state.
 func DeleteGroup(ctx context.Context, groupID uint) error {
-	if _, err := repository.GetCFPointingGroup(ctx, groupID); err != nil {
+	group, err := repository.GetCFPointingGroup(ctx, groupID)
+	if err != nil {
 		return err
 	}
 	members, err := repository.ListCFPointingMembersByGroupID(ctx, groupID)
@@ -818,7 +1011,13 @@ func DeleteGroup(ctx context.Context, groupID uint) error {
 			return errors.New(errDeleteRemoteFailed)
 		}
 	}
-	return repository.DeleteCFPointingGroupAndMembers(ctx, groupID)
+	if err = repository.DeleteCFPointingGroupAndMembers(ctx, groupID); err != nil {
+		return err
+	}
+	if group.TargetMode == model.CFPointingTargetModeSmartDNS {
+		listener.EmitSmartDNSSnapshotDirty(ctx, listener.SmartDNSSnapshotDirty{Reason: "cloudflare_group_delete"})
+	}
+	return nil
 }
 
 // ListAvailableDomains returns ZoneDomains not yet assigned to a group.

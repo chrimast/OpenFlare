@@ -271,6 +271,44 @@ func TestGormRegionCountsEmptyNodeIDAggregatesAll(t *testing.T) {
 	}
 }
 
+func TestGormRegionCountsComputesAverageLatencies(t *testing.T) {
+	ResetForTest()
+	SetConfigReader(func(_ context.Context, _ string) (string, error) { return "", nil })
+	s := newTestGormStore(t)
+	ctx := context.Background()
+	now := time.Now()
+	rows := []analyticsmodel.NodeAccessLog{
+		{ID: 1, NodeID: "n1", LoggedAt: now, RemoteAddr: "1.1.1.1", Region: " CN ", RequestTimeMs: 40, TCPRTTUs: 12000},
+		{ID: 2, NodeID: "n2", LoggedAt: now, RemoteAddr: "2.2.2.2", Region: "CN", RequestTimeMs: 80, TCPRTTUs: 24000},
+		// TCPRTTUs=0 should still count in RequestTimeMs avg, but be excluded from TCP RTT avg.
+		{ID: 3, NodeID: "n1", LoggedAt: now, RemoteAddr: "3.3.3.3", Region: "CN", RequestTimeMs: 60, TCPRTTUs: 0},
+		// Historical unrecorded latency (RequestTimeMs=0, TCPRTTUs=0) must not dilute RequestTimeMs avg.
+		{ID: 4, NodeID: "n1", LoggedAt: now, RemoteAddr: "3.3.3.4", Region: "CN", RequestTimeMs: 0, TCPRTTUs: 0},
+		{ID: 5, NodeID: "n1", LoggedAt: now, RemoteAddr: "4.4.4.4", Region: "JP", RequestTimeMs: 25, TCPRTTUs: 0},
+		{ID: 6, NodeID: "n1", LoggedAt: now, RemoteAddr: "5.5.5.5", Region: "PT", RequestTimeMs: 0, TCPRTTUs: 0},
+	}
+	if err := s.BatchInsertNodeAccessLogs(ctx, rows); err != nil {
+		t.Fatalf("insert: %v", err)
+	}
+
+	all, err := s.RegionCounts(ctx, "", now.Add(-time.Hour), 0)
+	if err != nil {
+		t.Fatalf("region counts: %v", err)
+	}
+	if len(all) != 3 {
+		t.Fatalf("want 3 regions, got %+v", all)
+	}
+	if all[0].Region != "CN" || all[0].Count != 4 || all[0].AvgRequestTimeMs != 60 || all[0].AvgTCPRTTMs != 18 {
+		t.Fatalf("CN row = %+v, want count=4 avg_request_time_ms=60 avg_tcp_rtt_ms=18", all[0])
+	}
+	if all[1].Region != "JP" || all[1].Count != 1 || all[1].AvgRequestTimeMs != 25 || all[1].AvgTCPRTTMs != 0 {
+		t.Fatalf("JP row = %+v, want count=1 avg_request_time_ms=25 avg_tcp_rtt_ms=0", all[1])
+	}
+	if all[2].Region != "PT" || all[2].Count != 1 || all[2].AvgRequestTimeMs != 0 || all[2].AvgTCPRTTMs != 0 {
+		t.Fatalf("PT row = %+v, want count=1 avg_request_time_ms=0 avg_tcp_rtt_ms=0", all[2])
+	}
+}
+
 // testGormStoreSeq 保证每个测试获得独立的共享内存库（cache=shared 下同名 DSN 会复用同一库，
 // 导致跨测试 id 冲突）。
 var testGormStoreSeq int64
@@ -298,19 +336,14 @@ func TestGormObservabilityInsertList(t *testing.T) {
 
 	s := newTestGormStoreWithModels(t,
 		&analyticsmodel.NodeMetricSnapshot{},
-		&analyticsmodel.NodeEdgeHealth{},
 	)
 	ctx := context.Background()
 	now := time.Now()
 
-	// 写入入口：hook 入队（metric/edge hook 均触发），不直接落库。
-	var (
-		hookedMetric *analyticsmodel.NodeMetricSnapshot
-		hookedEdge   *analyticsmodel.NodeEdgeHealth
-	)
+	// 写入入口：hook 入队，不直接落库。
+	var hookedMetric *analyticsmodel.NodeMetricSnapshot
 	SetObservabilityHooks(ObservabilityHooks{
 		QueueMetricSnapshot: func(row analyticsmodel.NodeMetricSnapshot) { hookedMetric = &row },
-		QueueEdgeHealth:     func(row analyticsmodel.NodeEdgeHealth) { hookedEdge = &row },
 	})
 	metricRec := &model.OpenFlareMetricSnapshot{ID: 99, NodeID: "n1", CapturedAt: now, CPUUsagePercent: 12.5, MemoryUsedBytes: 1024}
 	if err := s.InsertMetricSnapshot(ctx, metricRec); err != nil {
@@ -319,23 +352,11 @@ func TestGormObservabilityInsertList(t *testing.T) {
 	if hookedMetric == nil || hookedMetric.NodeID != "n1" || hookedMetric.CPUUsagePercent != 12.5 || hookedMetric.ID != 99 {
 		t.Fatalf("metric hook not fired with converted row: %+v", hookedMetric)
 	}
-	edgeRec := &model.OpenFlareEdgeHealth{ID: 98, NodeID: "n1", CapturedAt: now, Status: "healthy", Connections: 5}
-	if err := s.InsertEdgeHealth(ctx, edgeRec); err != nil {
-		t.Fatalf("insert edge entry: %v", err)
-	}
-	if hookedEdge == nil || hookedEdge.ID != 98 || hookedEdge.Status != "healthy" || hookedEdge.Connections != 5 {
-		t.Fatalf("edge hook not fired with converted row: %+v", hookedEdge)
-	}
-	// 两个入口均只入队、不落库。
+	// 写入入口只入队、不落库。
 	if rows, err := s.ListMetricSnapshots(ctx, "n1", now.Add(-time.Hour), 10); err != nil {
 		t.Fatalf("list metrics after entry insert: %v", err)
 	} else if len(rows) != 0 {
 		t.Fatalf("metric entry insert must not write rows, got %d", len(rows))
-	}
-	if rows, err := s.ListEdgeHealth(ctx, "n1", now.Add(-time.Hour), 10); err != nil {
-		t.Fatalf("list edge after entry insert: %v", err)
-	} else if len(rows) != 0 {
-		t.Fatalf("edge entry insert must not write rows, got %d", len(rows))
 	}
 	SetObservabilityHooks(ObservabilityHooks{})
 
@@ -381,30 +402,6 @@ func TestGormObservabilityInsertList(t *testing.T) {
 	}
 	if len(left) != 0 {
 		t.Fatalf("metrics should be empty after delete, got %d", len(left))
-	}
-
-	// edge health：flush + 查询 + 迁移分页 + 删除。
-	if err := s.BatchInsertNodeEdgeHealth(ctx, []analyticsmodel.NodeEdgeHealth{
-		{ID: 1, NodeID: "n1", CapturedAt: now, Status: "healthy", Connections: 3},
-	}); err != nil {
-		t.Fatalf("flush edge health: %v", err)
-	}
-	edges, err := s.ListEdgeHealth(ctx, "n1", now.Add(-time.Hour), 10)
-	if err != nil {
-		t.Fatalf("list edge health: %v", err)
-	}
-	if len(edges) != 1 || edges[0].Status != "healthy" || edges[0].Connections != 3 {
-		t.Fatalf("edge health list mismatch: %+v", edges)
-	}
-	edgeMig, err := s.ListEdgeHealthForMigration(ctx, 0, 10)
-	if err != nil {
-		t.Fatalf("edge migration list: %v", err)
-	}
-	if len(edgeMig) != 1 {
-		t.Fatalf("edge migration want 1, got %d", len(edgeMig))
-	}
-	if _, err := s.DeleteAllEdgeHealth(ctx); err != nil {
-		t.Fatalf("delete all edge health: %v", err)
 	}
 }
 
@@ -1012,7 +1009,6 @@ func TestGormWriteMethodsFreezeDuringMigration(t *testing.T) {
 	s := newTestGormStoreWithModels(t,
 		&analyticsmodel.NodeAccessLog{},
 		&analyticsmodel.NodeMetricSnapshot{},
-		&analyticsmodel.NodeEdgeHealth{},
 		&analyticsmodel.UserAccessLog{},
 	)
 	ua := newUserAccessLogGormStore(s.db)
@@ -1035,19 +1031,11 @@ func TestGormWriteMethodsFreezeDuringMigration(t *testing.T) {
 		{"InsertMetricSnapshot", func() error {
 			return s.InsertMetricSnapshot(ctx, &model.OpenFlareMetricSnapshot{NodeID: "n1", CapturedAt: now})
 		}},
-		{"InsertEdgeHealth", func() error {
-			return s.InsertEdgeHealth(ctx, &model.OpenFlareEdgeHealth{NodeID: "n1", CapturedAt: now})
-		}},
 		{"BatchInsertNodeMetricSnapshots", func() error {
 			return s.BatchInsertNodeMetricSnapshots(ctx, []analyticsmodel.NodeMetricSnapshot{{NodeID: "n1", CapturedAt: now}})
 		}},
-		{"BatchInsertNodeEdgeHealth", func() error {
-			return s.BatchInsertNodeEdgeHealth(ctx, []analyticsmodel.NodeEdgeHealth{{NodeID: "n1", CapturedAt: now}})
-		}},
 		{"DeleteAllMetricSnapshots", func() error { _, err := s.DeleteAllMetricSnapshots(ctx); return err }},
 		{"DeleteMetricSnapshotsBefore", func() error { _, err := s.DeleteMetricSnapshotsBefore(ctx, now); return err }},
-		{"DeleteAllEdgeHealth", func() error { _, err := s.DeleteAllEdgeHealth(ctx); return err }},
-		{"DeleteEdgeHealthBefore", func() error { _, err := s.DeleteEdgeHealthBefore(ctx, now); return err }},
 		{"UserAccessLogBatchInsert", func() error { return ua.BatchInsert(ctx, []analyticsmodel.UserAccessLog{{UserID: 1, CreatedAt: now}}) }},
 	}
 	for _, tc := range cases {
@@ -1255,5 +1243,70 @@ func TestGormUserAccessLogEndTimeInclusive(t *testing.T) {
 	}
 	if total != 2 {
 		t.Fatalf("count by end time want 2 (boundary row included), got %d", total)
+	}
+}
+
+func TestGormDNSMetricSnapshots(t *testing.T) {
+	ResetForTest()
+	SetConfigReader(func(_ context.Context, _ string) (string, error) { return "", nil })
+
+	s := newTestGormStoreWithModels(t, &analyticsmodel.DNSMetricSnapshot{})
+	ctx := context.Background()
+	base := time.Now().UTC().Truncate(time.Second)
+
+	rows := []analyticsmodel.DNSMetricSnapshot{
+		{
+			ID:                 1,
+			InstanceID:         "dns-embedded",
+			CapturedAt:         base.Add(-10 * time.Minute),
+			QueriesTotal:       100,
+			QueriesSuccess:     98,
+			QueriesNXDomain:    2,
+			QPS:                10,
+			LatencyP50Ms:       0.5,
+			LatencyP95Ms:       1.2,
+			LatencyP99Ms:       2.1,
+			CacheHitRatio:      0.9,
+			SnapshotVersion:    1,
+			CPUUsagePercent:    1.2,
+			MemoryUsagePercent: 0.8,
+			CreatedAt:          base.Add(-10 * time.Minute),
+		},
+		{
+			ID:                 2,
+			InstanceID:         "dns-hk-1",
+			CapturedAt:         base.Add(-2 * time.Minute),
+			QueriesTotal:       500,
+			QueriesSuccess:     495,
+			QueriesNXDomain:    4,
+			QueriesServFail:    1,
+			QPS:                50,
+			LatencyP50Ms:       0.4,
+			LatencyP95Ms:       0.9,
+			LatencyP99Ms:       1.7,
+			CacheHitRatio:      0.95,
+			SnapshotVersion:    2,
+			CPUUsagePercent:    3.5,
+			MemoryUsagePercent: 1.4,
+			CreatedAt:          base.Add(-2 * time.Minute),
+		},
+	}
+	if err := s.BatchInsertDNSMetricSnapshots(ctx, rows); err != nil {
+		t.Fatalf("batch insert dns metrics: %v", err)
+	}
+	listed, err := s.ListDNSMetricSnapshots(ctx, "dns-hk-1", base.Add(-20*time.Minute), 10)
+	if err != nil || len(listed) != 1 || listed[0].ID != 2 {
+		t.Fatalf("list dns metrics failed: err=%v len=%d", err, len(listed))
+	}
+	forMig, err := s.ListDNSMetricSnapshotsForMigration(ctx, 0, 10)
+	if err != nil || len(forMig) != 2 {
+		t.Fatalf("list dns metrics for migration failed: err=%v len=%d", err, len(forMig))
+	}
+	deleted, err := s.DeleteDNSMetricSnapshotsBefore(ctx, base.Add(-5*time.Minute))
+	if err != nil || deleted != 1 {
+		t.Fatalf("delete before failed: err=%v deleted=%d", err, deleted)
+	}
+	if _, err := s.DeleteAllDNSMetricSnapshots(ctx); err != nil {
+		t.Fatalf("delete all dns metrics failed: %v", err)
 	}
 }

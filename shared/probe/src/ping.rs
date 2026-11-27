@@ -1,4 +1,7 @@
-use crate::types::{PingRequest, PingResult, PingType};
+use crate::safety::{extract_http_target_host, resolve_public_ip, resolve_public_socket_addr};
+use crate::types::{
+    PingBatchRequest, PingBatchResult, PingRequest, PingResult, PingSample, PingType,
+};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU16, Ordering};
@@ -29,22 +32,36 @@ impl Default for PingOptions {
 }
 
 /// Executes a single ICMP, TCP, or HTTP latency probe and always returns a
-/// [`PingResult`] (`value = -1` on timeout/failure).
+/// [`PingResult`] (`value = -1` on timeout/failure), enforcing SSRF public-target validation.
 pub async fn execute_ping(
     req: &PingRequest,
     http_client: Option<&reqwest::Client>,
     options: &PingOptions,
 ) -> PingResult {
+    execute_ping_with_policy(req, http_client, options, true).await
+}
+
+pub(crate) async fn execute_ping_with_policy(
+    req: &PingRequest,
+    http_client: Option<&reqwest::Client>,
+    options: &PingOptions,
+    enforce_safety: bool,
+) -> PingResult {
     let ping_type = PingType::parse(&req.ping_type);
     let value = match ping_type {
-        Some(PingType::Icmp) => measure_icmp(&req.ping_target, options.icmp_timeout).await,
-        Some(PingType::Tcp) => measure_tcp(&req.ping_target, options.tcp_timeout).await,
+        Some(PingType::Icmp) => {
+            measure_icmp(&req.ping_target, options.icmp_timeout, enforce_safety).await
+        }
+        Some(PingType::Tcp) => {
+            measure_tcp(&req.ping_target, options.tcp_timeout, enforce_safety).await
+        }
         Some(PingType::Http) => {
             measure_http(
                 &req.ping_target,
                 http_client,
                 options.http_timeout,
                 &options.user_agent,
+                enforce_safety,
             )
             .await
         }
@@ -64,16 +81,232 @@ pub async fn execute_ping(
     }
 }
 
-async fn measure_tcp(target: &str, timeout: Duration) -> i64 {
+/// Executes a multi-sample ICMP, TCP, or HTTP latency probe batch by reusing
+/// [`execute_ping`], returning packet loss and latency percentiles/jitter.
+pub async fn execute_ping_batch(
+    req: &PingBatchRequest,
+    http_client: Option<&reqwest::Client>,
+    options: &PingOptions,
+) -> PingBatchResult {
+    execute_ping_batch_with_policy(req, http_client, options, true).await
+}
+
+pub(crate) async fn execute_ping_batch_with_policy(
+    req: &PingBatchRequest,
+    http_client: Option<&reqwest::Client>,
+    options: &PingOptions,
+    enforce_safety: bool,
+) -> PingBatchResult {
+    let trimmed_target = req.target.trim();
+    let Some(ping_type) = PingType::parse(&req.protocol) else {
+        return PingBatchResult {
+            protocol: req.protocol.clone(),
+            target: trimmed_target.to_owned(),
+            resolved_ip: None,
+            sent: 0,
+            received: 0,
+            loss_rate: 100.0,
+            min_ms: 0.0,
+            avg_ms: 0.0,
+            max_ms: 0.0,
+            p95_ms: 0.0,
+            jitter_ms: 0.0,
+            samples: Vec::new(),
+            error: Some(format!("unsupported ping protocol: {}", req.protocol)),
+        };
+    };
+
+    if trimmed_target.is_empty() {
+        return PingBatchResult {
+            protocol: ping_type.as_str().to_owned(),
+            target: String::new(),
+            resolved_ip: None,
+            sent: 0,
+            received: 0,
+            loss_rate: 100.0,
+            min_ms: 0.0,
+            avg_ms: 0.0,
+            max_ms: 0.0,
+            p95_ms: 0.0,
+            jitter_ms: 0.0,
+            samples: Vec::new(),
+            error: Some("ping target cannot be empty".to_owned()),
+        };
+    }
+
+    let count = req.count.clamp(1, 10);
+    let interval = Duration::from_millis(req.interval_ms.clamp(50, 2000));
+    let mut effective_options = options.clone();
+    if let Some(timeout_ms) = req.timeout_ms.filter(|&v| v > 0) {
+        let clamped = Duration::from_millis(timeout_ms.clamp(200, 15_000));
+        effective_options.icmp_timeout = clamped;
+        effective_options.tcp_timeout = clamped;
+        effective_options.http_timeout = clamped;
+    }
+
+    let (host, parsed_port) = split_host_port(trimmed_target);
+    let resolved_ip = if enforce_safety {
+        let check_host = if ping_type == PingType::Http {
+            match extract_http_target_host(trimmed_target) {
+                Ok(h) => h,
+                Err(err) => {
+                    return PingBatchResult {
+                        protocol: ping_type.as_str().to_owned(),
+                        target: trimmed_target.to_owned(),
+                        resolved_ip: None,
+                        sent: 0,
+                        received: 0,
+                        loss_rate: 100.0,
+                        min_ms: 0.0,
+                        avg_ms: 0.0,
+                        max_ms: 0.0,
+                        p95_ms: 0.0,
+                        jitter_ms: 0.0,
+                        samples: Vec::new(),
+                        error: Some(err),
+                    };
+                }
+            }
+        } else {
+            host.clone()
+        };
+        match resolve_public_ip(&check_host).await {
+            Ok(ip) => Some(ip.to_string()),
+            Err(err) => {
+                return PingBatchResult {
+                    protocol: ping_type.as_str().to_owned(),
+                    target: trimmed_target.to_owned(),
+                    resolved_ip: None,
+                    sent: 0,
+                    received: 0,
+                    loss_rate: 100.0,
+                    min_ms: 0.0,
+                    avg_ms: 0.0,
+                    max_ms: 0.0,
+                    p95_ms: 0.0,
+                    jitter_ms: 0.0,
+                    samples: Vec::new(),
+                    error: Some(err),
+                };
+            }
+        }
+    } else {
+        resolve_ip(&host).await.ok().map(|ip| ip.to_string())
+    };
+
+    let ping_target = match ping_type {
+        PingType::Tcp => {
+            let port = req.port.unwrap_or(parsed_port);
+            format_host_port(resolved_ip.as_deref().unwrap_or(&host), port)
+        }
+        PingType::Icmp => resolved_ip.clone().unwrap_or_else(|| host.clone()),
+        PingType::Http => trimmed_target.to_owned(),
+    };
+
+    let single_req = PingRequest {
+        ping_task_id: 0,
+        ping_type: ping_type.as_str().to_owned(),
+        ping_target,
+    };
+
+    let mut samples = Vec::with_capacity(usize::from(count));
+    let mut successes = Vec::with_capacity(usize::from(count));
+    for seq in 1..=count {
+        let res =
+            execute_ping_with_policy(&single_req, http_client, &effective_options, enforce_safety)
+                .await;
+        let success = res.value >= 0;
+        if success {
+            successes.push(res.value as f64);
+        }
+        samples.push(PingSample {
+            seq,
+            rtt_ms: res.value,
+            success,
+        });
+        if seq < count {
+            tokio::time::sleep(interval).await;
+        }
+    }
+
+    let received = successes.len() as u8;
+    let loss_rate = if count > 0 {
+        f64::from(count - received) / f64::from(count) * 100.0
+    } else {
+        0.0
+    };
+
+    let (min_ms, avg_ms, max_ms, p95_ms, jitter_ms) = summarize_latencies(&successes);
+    let error = if received == 0 {
+        Some("all ping probes timed out or failed".to_owned())
+    } else {
+        None
+    };
+
+    PingBatchResult {
+        protocol: ping_type.as_str().to_owned(),
+        target: trimmed_target.to_owned(),
+        resolved_ip,
+        sent: count,
+        received,
+        loss_rate,
+        min_ms,
+        avg_ms,
+        max_ms,
+        p95_ms,
+        jitter_ms,
+        samples,
+        error,
+    }
+}
+
+fn format_host_port(host: &str, port: u16) -> String {
+    if host.contains(':') && !host.starts_with('[') {
+        format!("[{host}]:{port}")
+    } else {
+        format!("{host}:{port}")
+    }
+}
+
+fn summarize_latencies(values: &[f64]) -> (f64, f64, f64, f64, f64) {
+    if values.is_empty() {
+        return (0.0, 0.0, 0.0, 0.0, 0.0);
+    }
+    let mut jitter_sum = 0.0;
+    for pair in values.windows(2) {
+        jitter_sum += (pair[1] - pair[0]).abs();
+    }
+    let jitter = if values.len() > 1 {
+        jitter_sum / (values.len() - 1) as f64
+    } else {
+        0.0
+    };
+
+    let mut sorted = values.to_vec();
+    sorted.sort_by(f64::total_cmp);
+    let min_ms = sorted[0];
+    let max_ms = sorted[sorted.len() - 1];
+    let avg_ms = sorted.iter().sum::<f64>() / sorted.len() as f64;
+    let p95_idx = ((sorted.len() as f64) * 0.95).ceil() as usize;
+    let p95_ms = sorted[p95_idx.saturating_sub(1).min(sorted.len() - 1)];
+    (min_ms, avg_ms, max_ms, p95_ms, jitter)
+}
+
+async fn measure_tcp(target: &str, timeout: Duration, enforce_safety: bool) -> i64 {
     let (host, port) = split_host_port(target.trim());
     if host.is_empty() {
         return -1;
     }
 
-    let addr = match resolve_socket_addr(&host, port).await {
+    let addr = if enforce_safety {
+        resolve_public_socket_addr(&host, port).await
+    } else {
+        resolve_socket_addr(&host, port).await
+    };
+    let addr = match addr {
         Ok(addr) => addr,
         Err(error) => {
-            tracing::debug!(%error, target, "tcp ping DNS resolution failed");
+            tracing::debug!(%error, target, "tcp ping address resolution/policy rejected");
             return -1;
         }
     };
@@ -94,10 +327,24 @@ async fn measure_http(
     shared_client: Option<&reqwest::Client>,
     timeout: Duration,
     user_agent: &str,
+    enforce_safety: bool,
 ) -> i64 {
     let trimmed = target.trim();
     if trimmed.is_empty() {
         return -1;
+    }
+    if enforce_safety {
+        let host = match extract_http_target_host(trimmed) {
+            Ok(h) => h,
+            Err(error) => {
+                tracing::debug!(%error, target = trimmed, "http ping target rejected");
+                return -1;
+            }
+        };
+        if let Err(error) = resolve_public_ip(&host).await {
+            tracing::debug!(%error, target = trimmed, "http ping SSRF policy rejected");
+            return -1;
+        }
     }
     let url = if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
         trimmed.to_owned()
@@ -110,6 +357,7 @@ async fn measure_http(
         existing
     } else {
         match reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
             .timeout(timeout)
             .user_agent(user_agent)
             .build()
@@ -138,16 +386,21 @@ async fn measure_http(
     }
 }
 
-async fn measure_icmp(target: &str, timeout: Duration) -> i64 {
+async fn measure_icmp(target: &str, timeout: Duration, enforce_safety: bool) -> i64 {
     let trimmed = target.trim();
     if trimmed.is_empty() {
         return -1;
     }
 
-    let ip = match resolve_ip(trimmed).await {
+    let ip = if enforce_safety {
+        resolve_public_ip(trimmed).await
+    } else {
+        resolve_ip(trimmed).await
+    };
+    let ip = match ip {
         Ok(ip) => ip,
         Err(error) => {
-            tracing::debug!(%error, target = trimmed, "icmp ping DNS resolution failed");
+            tracing::debug!(%error, target = trimmed, "icmp ping address resolution/policy rejected");
             return -1;
         }
     };
@@ -171,7 +424,7 @@ async fn measure_icmp(target: &str, timeout: Duration) -> i64 {
     }
 }
 
-async fn resolve_ip(host_or_ip: &str) -> Result<IpAddr, String> {
+pub(crate) async fn resolve_ip(host_or_ip: &str) -> Result<IpAddr, String> {
     let cleaned = host_or_ip.trim_start_matches('[').trim_end_matches(']');
     if let Ok(ip) = IpAddr::from_str(cleaned) {
         return Ok(ip);
@@ -308,6 +561,8 @@ fn open_icmp_socket(
     if dgram >= 0 {
         return Ok((SocketGuard(dgram), true));
     }
+    #[cfg(target_os = "linux")]
+    let _ = trippy_privilege::Privilege::acquire_privileges();
     let raw = unsafe { libc::socket(domain, libc::SOCK_RAW | libc::SOCK_CLOEXEC, protocol) };
     if raw >= 0 {
         return Ok((SocketGuard(raw), false));
@@ -534,7 +789,7 @@ mod tests {
             let _ = listener.accept().await;
         });
 
-        let result = execute_ping(
+        let result = execute_ping_with_policy(
             &PingRequest {
                 ping_task_id: 42,
                 ping_type: "tcp".into(),
@@ -542,6 +797,7 @@ mod tests {
             },
             None,
             &PingOptions::default(),
+            false,
         )
         .await;
         let _ = accept_task.await;
@@ -550,5 +806,85 @@ mod tests {
         assert_eq!(result.ping_type, "tcp");
         assert!(result.value >= 0);
         assert!(!result.finished_at.is_empty());
+    }
+
+    #[tokio::test]
+    async fn tcp_ping_batch_reuses_execute_ping_and_computes_stats() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let accept_task = tokio::spawn(async move {
+            for _ in 0..3 {
+                let _ = listener.accept().await;
+            }
+        });
+
+        let result = execute_ping_batch_with_policy(
+            &PingBatchRequest {
+                protocol: "tcp".into(),
+                target: "127.0.0.1".into(),
+                port: Some(addr.port()),
+                count: 3,
+                interval_ms: 50,
+                timeout_ms: Some(1000),
+            },
+            None,
+            &PingOptions::default(),
+            false,
+        )
+        .await;
+        let _ = accept_task.await;
+
+        assert_eq!(result.protocol, "tcp");
+        assert_eq!(result.sent, 3);
+        assert_eq!(result.received, 3);
+        assert_eq!(result.loss_rate, 0.0);
+        assert_eq!(result.resolved_ip.as_deref(), Some("127.0.0.1"));
+        assert!(result.error.is_none());
+        assert_eq!(result.samples.len(), 3);
+        assert!(result.samples.iter().all(|s| s.success && s.rtt_ms >= 0));
+    }
+
+    #[tokio::test]
+    async fn ssrf_secondary_guard_blocks_internal_targets_in_public_api() {
+        for blocked in [
+            "127.0.0.1:80",
+            "169.254.169.254:80",
+            "100.64.0.1:80",
+            "198.18.0.1:80",
+            "10.0.0.1:80",
+            "[fe80::1]:80",
+        ] {
+            let single = execute_ping(
+                &PingRequest {
+                    ping_task_id: 1,
+                    ping_type: "tcp".into(),
+                    ping_target: blocked.into(),
+                },
+                None,
+                &PingOptions::default(),
+            )
+            .await;
+            assert_eq!(single.value, -1, "expected {blocked} ping to be blocked");
+
+            let batch = execute_ping_batch(
+                &PingBatchRequest {
+                    protocol: "tcp".into(),
+                    target: blocked.into(),
+                    port: Some(80),
+                    count: 1,
+                    interval_ms: 50,
+                    timeout_ms: Some(500),
+                },
+                None,
+                &PingOptions::default(),
+            )
+            .await;
+            assert_eq!(batch.received, 0);
+            assert!(
+                batch.error.as_deref().is_some_and(|e| e.contains("SSRF")),
+                "expected SSRF error for {blocked}, got {:?}",
+                batch.error
+            );
+        }
     }
 }

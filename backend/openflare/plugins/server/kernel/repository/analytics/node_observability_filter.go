@@ -67,12 +67,16 @@ func chNodeMetricSnapshotTableName() string {
 	return "of_node_metric_snapshots"
 }
 
-func chNodeEdgeHealthTableName() string {
-	return "of_node_edge_health"
-}
-
 func chNodePingRecordTableName() string {
 	return "of_node_ping_records"
+}
+
+func chNetworkQualitySampleTableName() string {
+	return "of_network_quality_samples"
+}
+
+func chDNSMetricSnapshotTableName() string {
+	return "of_dns_metric_snapshots"
 }
 
 func chAccessLogHourlyTableName() string {

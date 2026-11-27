@@ -75,6 +75,8 @@ func scanNodeAccessLogRows(rows driver.Rows) ([]analyticsmodel.NodeAccessLog, er
 			&item.CreatedAt,
 			&item.WAFAction,
 			&item.WAFAudit,
+			&item.ClientASN,
+			&item.TCPRTTUs,
 		); err != nil {
 			return nil, fmt.Errorf("scan node access log row: %w", err)
 		}
@@ -113,7 +115,11 @@ func (s *clickhouseLogStore) RegionCounts(ctx context.Context, nodeID string, si
 	filter := analyticsmodel.NodeAccessLogFilter{NodeID: nodeID, Since: since}
 	clause, args := buildCHNodeAccessLogFilterClause(filter)
 	sql := fmt.Sprintf(`
-SELECT trim(region) AS trimmed_region, count() AS count
+SELECT
+	trim(region) AS trimmed_region,
+	count() AS count,
+	if(countIf(request_time_ms > 0) > 0, avgIf(toFloat64(request_time_ms), request_time_ms > 0), 0.0) AS avg_request_time_ms,
+	if(countIf(tcp_rtt_us > 0) > 0, avgIf(toFloat64(tcp_rtt_us), tcp_rtt_us > 0), 0.0) AS avg_tcp_rtt_us
 FROM %s
 WHERE %s AND trim(region) != ''
 GROUP BY trimmed_region
@@ -131,15 +137,19 @@ ORDER BY count DESC, trimmed_region ASC`, chNodeAccessLogTableName(), clause)
 	var result []*model.OpenFlareAccessLogRegionCount
 	for rows.Next() {
 		var (
-			region string
-			count  uint64
+			region           string
+			count            uint64
+			avgRequestTimeMs float64
+			avgTCPRTTUs      float64
 		)
-		if err := rows.Scan(&region, &count); err != nil {
+		if err := rows.Scan(&region, &count, &avgRequestTimeMs, &avgTCPRTTUs); err != nil {
 			return nil, fmt.Errorf("scan region count row: %w", err)
 		}
 		result = append(result, &model.OpenFlareAccessLogRegionCount{
-			Region: region,
-			Count:  safeInt64Count(count),
+			Region:           region,
+			Count:            safeInt64Count(count),
+			AvgRequestTimeMs: sanitizeNonNegativeFloat(avgRequestTimeMs),
+			AvgTCPRTTMs:      sanitizeNonNegativeFloat(avgTCPRTTUs / microsecondsPerMilli),
 		})
 	}
 	return result, nil

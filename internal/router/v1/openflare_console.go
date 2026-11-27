@@ -44,7 +44,9 @@ func registerOpenFlareConsoleRoutes(apiV1Router *gin.RouterGroup) {
 	registerOpenFlareSecurityRoutes(group)
 	registerOpenFlareTLSRoutes(group)
 	registerOpenFlareCloudflareRoutes(group)
+	registerOpenFlareSmartDNSRoutes(group)
 	registerOpenFlarePagesRoutes(group)
+	registerOpenFlareNetworkToolsRoutes(group)
 }
 
 func registerOpenFlareSystemRoutes(apiGroup *gin.RouterGroup) {
@@ -158,6 +160,15 @@ func registerOpenFlareNodeRoutes(apiGroup *gin.RouterGroup) {
 		nodeRoute.GET("/:id/runtime-logs", node.RuntimeLogsHandler)
 		nodeRoute.POST("/:id/observability/cleanup", node.CleanupHealthEventsHandler)
 		nodeRoute.GET("/:id/ping-records", ping.GetNodePingRecordsHandler)
+	}
+
+	tagRoute := apiGroup.Group("/node-tags")
+	tagRoute.Use(openFlareAdminMiddlewares()...)
+	{
+		httpx.RegisterCollection(tagRoute, "GET", node.ListNodeTagsHandler)
+		httpx.RegisterCollection(tagRoute, "POST", node.CreateNodeTagHandler)
+		tagRoute.POST("/:id/update", node.UpdateNodeTagHandler)
+		tagRoute.POST("/:id/delete", node.DeleteNodeTagHandler)
 	}
 
 	pingRoute := apiGroup.Group("/ping-tasks")

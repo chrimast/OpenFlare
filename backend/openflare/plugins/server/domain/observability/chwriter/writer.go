@@ -40,13 +40,13 @@ const (
 var (
 	initOnce sync.Once
 
-	metricSnapshotWriter *batchwriter.Writer[analyticsmodel.NodeMetricSnapshot]
-	edgeHealthWriter     *batchwriter.Writer[analyticsmodel.NodeEdgeHealth]
-	pingRecordWriter     *batchwriter.Writer[analyticsmodel.NodePingRecord]
-	nodeAccessLogWriter  *batchwriter.Writer[analyticsmodel.NodeAccessLog]
+	metricSnapshotWriter       *batchwriter.Writer[analyticsmodel.NodeMetricSnapshot]
+	pingRecordWriter           *batchwriter.Writer[analyticsmodel.NodePingRecord]
+	networkQualitySampleWriter *batchwriter.Writer[analyticsmodel.NetworkQualitySample]
+	dnsMetricSnapshotWriter    *batchwriter.Writer[analyticsmodel.DNSMetricSnapshot]
+	nodeAccessLogWriter        *batchwriter.Writer[analyticsmodel.NodeAccessLog]
 
 	metricSnapshotDedup *dedupSet
-	edgeHealthDedup     *dedupSet
 )
 
 // Init starts OpenFlare log batch writers. Safe to call multiple times.
@@ -55,7 +55,6 @@ var (
 func Init(ctx context.Context) {
 	initOnce.Do(func() {
 		metricSnapshotDedup = newDedupSet()
-		edgeHealthDedup = newDedupSet()
 
 		metricSnapshotWriter = mustNewObservabilityWriter(
 			"metric_snapshots",
@@ -63,23 +62,30 @@ func Init(ctx context.Context) {
 			metricSnapshotDedup,
 			metricSnapshotKey,
 		)
-		edgeHealthWriter = mustNewObservabilityWriter(
-			"edge_health",
-			withFlushRetries(flushNodeEdgeHealth),
-			edgeHealthDedup,
-			edgeHealthKey,
-		)
 		pingRecordWriter = mustNewObservabilityWriter(
 			"ping_records",
 			withFlushRetries(flushNodePingRecords),
 			nil,
 			nil,
 		)
+		networkQualitySampleWriter = mustNewObservabilityWriter(
+			"network_quality_samples",
+			withFlushRetries(flushNetworkQualitySamples),
+			nil,
+			nil,
+		)
+		dnsMetricSnapshotWriter = mustNewObservabilityWriter(
+			"dns_metric_snapshots",
+			withFlushRetries(flushDNSMetricSnapshots),
+			nil,
+			nil,
+		)
 		nodeAccessLogWriter = mustNewNodeAccessLogWriter()
 
 		metricSnapshotWriter.Start(ctx)
-		edgeHealthWriter.Start(ctx)
 		pingRecordWriter.Start(ctx)
+		networkQualitySampleWriter.Start(ctx)
+		dnsMetricSnapshotWriter.Start(ctx)
 		nodeAccessLogWriter.Start(ctx)
 
 		wireModelInsertHooks()
@@ -95,8 +101,9 @@ func Stop(ctx context.Context) error {
 	var firstErr error
 	for _, writer := range []batchStopper{
 		metricSnapshotWriter,
-		edgeHealthWriter,
 		pingRecordWriter,
+		networkQualitySampleWriter,
+		dnsMetricSnapshotWriter,
 		nodeAccessLogWriter,
 	} {
 		if writer == nil {
@@ -158,8 +165,9 @@ func allDepthZero(stats []batchwriter.Stats) bool {
 func WriterStats() []batchwriter.Stats {
 	writers := []statsProvider{
 		metricSnapshotWriter,
-		edgeHealthWriter,
 		pingRecordWriter,
+		networkQualitySampleWriter,
+		dnsMetricSnapshotWriter,
 		nodeAccessLogWriter,
 	}
 	out := make([]batchwriter.Stats, 0, len(writers))
@@ -177,17 +185,28 @@ func QueueMetricSnapshot(snapshot analyticsmodel.NodeMetricSnapshot) {
 	queueWithDedup(metricSnapshotWriter, metricSnapshotDedup, metricSnapshotKey(snapshot), snapshot)
 }
 
-// QueueEdgeHealth enqueues an L2 edge health snapshot for asynchronous flush.
-func QueueEdgeHealth(row analyticsmodel.NodeEdgeHealth) {
-	queueWithDedup(edgeHealthWriter, edgeHealthDedup, edgeHealthKey(row), row)
-}
-
 // QueuePingRecord enqueues a node latency probe record for asynchronous flush.
 func QueuePingRecord(row analyticsmodel.NodePingRecord) {
 	if pingRecordWriter == nil {
 		return
 	}
 	pingRecordWriter.TryEnqueue(row)
+}
+
+// QueueNetworkQualitySample enqueues a network quality sample for asynchronous flush.
+func QueueNetworkQualitySample(row analyticsmodel.NetworkQualitySample) {
+	if networkQualitySampleWriter == nil {
+		return
+	}
+	networkQualitySampleWriter.TryEnqueue(row)
+}
+
+// QueueDNSMetricSnapshot enqueues a SmartDNS instance metric snapshot for asynchronous flush.
+func QueueDNSMetricSnapshot(row analyticsmodel.DNSMetricSnapshot) {
+	if dnsMetricSnapshotWriter == nil {
+		return
+	}
+	dnsMetricSnapshotWriter.TryEnqueue(row)
 }
 
 // QueueNodeAccessLogs enqueues node access logs for asynchronous flush.
@@ -303,9 +322,10 @@ func withFlushRetries[T any](flush batchwriter.FlushFunc[T]) batchwriter.FlushFu
 
 func wireModelInsertHooks() {
 	logstore.SetObservabilityHooks(logstore.ObservabilityHooks{
-		QueueMetricSnapshot: QueueMetricSnapshot,
-		QueueEdgeHealth:     QueueEdgeHealth,
-		QueuePingRecord:     QueuePingRecord,
+		QueueMetricSnapshot:       QueueMetricSnapshot,
+		QueuePingRecord:           QueuePingRecord,
+		QueueNetworkQualitySample: QueueNetworkQualitySample,
+		QueueDNSMetricSnapshot:    QueueDNSMetricSnapshot,
 	})
 	logstore.SetAccessLogHooks(logstore.AccessLogHooks{
 		QueueNodeAccessLogs: QueueNodeAccessLogs,
@@ -322,20 +342,28 @@ func flushNodeMetricSnapshots(ctx context.Context, rows []analyticsmodel.NodeMet
 	return s.Observability.BatchInsertNodeMetricSnapshots(ctx, rows)
 }
 
-func flushNodeEdgeHealth(ctx context.Context, rows []analyticsmodel.NodeEdgeHealth) error {
-	s, err := logstore.Active(ctx)
-	if err != nil {
-		return err
-	}
-	return s.Observability.BatchInsertNodeEdgeHealth(ctx, rows)
-}
-
 func flushNodePingRecords(ctx context.Context, rows []analyticsmodel.NodePingRecord) error {
 	s, err := logstore.Active(ctx)
 	if err != nil {
 		return err
 	}
 	return s.Observability.BatchInsertNodePingRecords(ctx, rows)
+}
+
+func flushNetworkQualitySamples(ctx context.Context, rows []analyticsmodel.NetworkQualitySample) error {
+	s, err := logstore.Active(ctx)
+	if err != nil {
+		return err
+	}
+	return s.Observability.BatchInsertNetworkQualitySamples(ctx, rows)
+}
+
+func flushDNSMetricSnapshots(ctx context.Context, rows []analyticsmodel.DNSMetricSnapshot) error {
+	s, err := logstore.Active(ctx)
+	if err != nil {
+		return err
+	}
+	return s.Observability.BatchInsertDNSMetricSnapshots(ctx, rows)
 }
 
 func flushNodeAccessLogs(ctx context.Context, rows []analyticsmodel.NodeAccessLog) error {
@@ -348,10 +376,6 @@ func flushNodeAccessLogs(ctx context.Context, rows []analyticsmodel.NodeAccessLo
 
 func metricSnapshotKey(snapshot analyticsmodel.NodeMetricSnapshot) string {
 	return fmt.Sprintf("%s|%d", snapshot.NodeID, snapshot.CapturedAt.UTC().UnixNano())
-}
-
-func edgeHealthKey(row analyticsmodel.NodeEdgeHealth) string {
-	return fmt.Sprintf("%s|%d", row.NodeID, row.CapturedAt.UTC().UnixNano())
 }
 
 type batchStopper interface {

@@ -31,15 +31,20 @@ func AgentUpdateRepo(ctx context.Context) string {
 
 // Input is the create/update node payload.
 type Input struct {
-	Name              string   `json:"name"`
-	IP                string   `json:"ip"`
-	IPManualOverride  *bool    `json:"ip_manual_override"`
-	AutoUpdateEnabled bool     `json:"auto_update_enabled"`
-	GeoName           string   `json:"geo_name"`
-	GeoLatitude       *float64 `json:"geo_latitude"`
-	GeoLongitude      *float64 `json:"geo_longitude"`
-	GeoManualOverride bool     `json:"geo_manual_override"`
-	NodeType          string   `json:"node_type"`
+	Name                  string            `json:"name"`
+	IP                    string            `json:"ip"`
+	IPManualOverride      *bool             `json:"ip_manual_override"`
+	AutoUpdateEnabled     bool              `json:"auto_update_enabled"`
+	GeoName               string            `json:"geo_name"`
+	GeoLatitude           *float64          `json:"geo_latitude"`
+	GeoLongitude          *float64          `json:"geo_longitude"`
+	GeoManualOverride     bool              `json:"geo_manual_override"`
+	NetworkGroup          string            `json:"network_group"`
+	NodeType              string            `json:"node_type"`
+	CapacityBandwidthMbps int               `json:"capacity_bandwidth_mbps"`
+	CapacityConnections   int               `json:"capacity_connections"`
+	CapacityWeight        int               `json:"capacity_weight"`
+	Tags                  []TagBindingInput `json:"tags"`
 }
 
 // AgentUpdateInput requests an agent self-update on a node.
@@ -75,11 +80,19 @@ type View struct {
 	Name                      string          `json:"name"`
 	IP                        string          `json:"ip"`
 	IPManualOverride          bool            `json:"ip_manual_override"`
-	GeoName                   string          `json:"geo_name"`
-	GeoLatitude               *float64        `json:"geo_latitude"`
-	GeoLongitude              *float64        `json:"geo_longitude"`
-	GeoManualOverride         bool            `json:"geo_manual_override"`
-	AccessToken               string          `json:"access_token"`
+	ASN                       uint32          `json:"asn"`
+	ASNOrg                    string          `json:"asn_org"`
+	GeoName               string                 `json:"geo_name"`
+	GeoLatitude           *float64               `json:"geo_latitude"`
+	GeoLongitude          *float64               `json:"geo_longitude"`
+	GeoManualOverride     bool                   `json:"geo_manual_override"`
+	GeoSource             string                 `json:"geo_source"`
+	NetworkGroup          string                 `json:"network_group"`
+	CapacityBandwidthMbps int                    `json:"capacity_bandwidth_mbps"`
+	CapacityConnections   int                    `json:"capacity_connections"`
+	CapacityWeight        int                    `json:"capacity_weight"`
+	Tags                  []model.NodeTagSummary `json:"tags"`
+	AccessToken           string                 `json:"access_token"`
 	AutoUpdateEnabled         bool            `json:"auto_update_enabled"`
 	EdgeUpdateSupported       bool            `json:"edge_update_supported"`
 	UpdateRequested           bool            `json:"update_requested"`
@@ -157,6 +170,7 @@ func buildNodeViews(ctx context.Context, nodes []model.OpenFlareNode, now time.T
 		}
 		views = append(views, view)
 	}
+	attachNodeTagsToViews(ctx, views)
 	return views, nil
 }
 
@@ -169,21 +183,38 @@ func CreateNode(ctx context.Context, input Input) (*View, error) {
 	if name == "" {
 		return nil, errors.New(errNodeNameRequired)
 	}
+	tagSpecs, err := validateNodeCapacityAndTags(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 	ipManualOverride := resolveNodeIPManualOverride(input, nil, ip)
+	geoSource := ""
+	if geoManualOverride {
+		geoSource = pkgnetintel.GeoSourceManual
+	}
+	capacityWeight := input.CapacityWeight
+	if capacityWeight == 0 {
+		capacityWeight = defaultNodeCapacityWt
+	}
 	node := &model.OpenFlareNode{
-		Name:              name,
-		IP:                ip,
-		IPManualOverride:  ipManualOverride,
-		GeoName:           geoName,
-		GeoLatitude:       geoLatitude,
-		GeoLongitude:      geoLongitude,
-		GeoManualOverride: geoManualOverride,
-		Version:           "",
-		ExtVersion:        "",
-		Status:            nodeStatusPending,
-		AutoUpdateEnabled: input.AutoUpdateEnabled,
-		NodeType:          normalizeNodeType(input.NodeType),
-		CapabilitiesJSON:  "[]",
+		Name:                  name,
+		IP:                    ip,
+		IPManualOverride:      ipManualOverride,
+		GeoName:               geoName,
+		GeoLatitude:           geoLatitude,
+		GeoLongitude:          geoLongitude,
+		GeoManualOverride:     geoManualOverride,
+		GeoSource:             geoSource,
+		NetworkGroup:          normalizeNodeNetworkGroup(input.NetworkGroup),
+		CapacityBandwidthMbps: input.CapacityBandwidthMbps,
+		CapacityConnections:   input.CapacityConnections,
+		CapacityWeight:        capacityWeight,
+		Version:               "",
+		ExtVersion:            "",
+		Status:                nodeStatusPending,
+		AutoUpdateEnabled:     input.AutoUpdateEnabled,
+		NodeType:              normalizeNodeType(input.NodeType),
+		CapabilitiesJSON:      "[]",
 	}
 	node.NodeID, err = newServerNodeID()
 	if err != nil {
@@ -196,14 +227,25 @@ func CreateNode(ctx context.Context, input Input) (*View, error) {
 	if node.NodeType == "edge_node" {
 		node.Engine = enginePingora
 	}
+	if !geoManualOverride && ip != "" {
+		ofgeoip.ApplyNodeGeoFromIP(ctx, node, ip)
+	}
+	netintel.EnrichNodeASN(node)
 	if err = repository.CreateOpenFlareNode(ctx, node); err != nil {
 		if isUniqueConstraintError(err) {
 			return nil, errors.New(errNodeIDConflict)
 		}
 		return nil, err
 	}
+	if input.Tags != nil {
+		if err = repository.ReplaceOpenFlareNodeTagBindings(ctx, node.NodeID, tagSpecs); err != nil {
+			return nil, err
+		}
+	}
 	ping.AttachNewNode(ctx, node.NodeID)
-	return buildNodeView(node), nil
+	view := buildNodeView(node)
+	attachNodeTagsToViews(ctx, []*View{view})
+	return view, nil
 }
 
 // UpdateNode updates an existing node.
@@ -215,6 +257,10 @@ func UpdateNode(ctx context.Context, id uint, input Input) (*View, error) {
 	if name == "" {
 		return nil, errors.New(errNodeNameRequired)
 	}
+	tagSpecs, err := validateNodeCapacityAndTags(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 	node, err := repository.GetOpenFlareNodeByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -224,21 +270,60 @@ func UpdateNode(ctx context.Context, id uint, input Input) (*View, error) {
 	node.Name = name
 	node.IP = ip
 	node.IPManualOverride = ipManualOverride
+	if strings.TrimSpace(previousIP) != strings.TrimSpace(ip) {
+		node.ASN = 0
+		node.ASNOrg = ""
+	}
+	netintel.EnrichNodeASN(node)
 	node.GeoName = geoName
 	node.GeoLatitude = geoLatitude
 	node.GeoLongitude = geoLongitude
 	node.GeoManualOverride = geoManualOverride
+	if geoManualOverride {
+		node.GeoSource = pkgnetintel.GeoSourceManual
+	} else {
+		ofgeoip.ApplyNodeGeoFromIP(ctx, node, node.IP)
+	}
+	node.NetworkGroup = normalizeNodeNetworkGroup(input.NetworkGroup)
+	node.CapacityBandwidthMbps = input.CapacityBandwidthMbps
+	node.CapacityConnections = input.CapacityConnections
+	if input.CapacityWeight > 0 {
+		node.CapacityWeight = input.CapacityWeight
+	} else {
+		node.CapacityWeight = normalizeNodeCapacityWeight(node.CapacityWeight)
+	}
 	node.AutoUpdateEnabled = input.AutoUpdateEnabled
-	fields := []string{"name", "ip", "ip_manual_override", "geo_name", "geo_latitude", "geo_longitude", "geo_manual_override", "auto_update_enabled"}
+	fields := []string{
+		"name", "ip", "ip_manual_override", "asn", "asn_org",
+		"geo_name", "geo_latitude", "geo_longitude", "geo_manual_override",
+		"geo_source", "network_group", "capacity_bandwidth_mbps", "capacity_connections", "capacity_weight",
+		"auto_update_enabled",
+	}
 	if err = repository.UpdateOpenFlareNodeFields(ctx, node, fields...); err != nil {
 		return nil, err
+	}
+	if input.Tags != nil {
+		if err = repository.ReplaceOpenFlareNodeTagBindings(ctx, node.NodeID, tagSpecs); err != nil {
+			return nil, err
+		}
 	}
 	if strings.TrimSpace(previousIP) != strings.TrimSpace(node.IP) {
 		if _, dispatchErr := cf.DispatchNodeSync(ctx, node.ID, "cloudflare_node_ip_update"); dispatchErr != nil {
 			logger.ErrorF(ctx, "[Cloudflare] enqueue node sync failed: node_id=%d error=%v", node.ID, dispatchErr)
 		}
 	}
-	return buildNodeView(node), nil
+	view := buildNodeView(node)
+	attachNodeTagsToViews(ctx, []*View{view})
+	return view, nil
+}
+
+func normalizeNodeNetworkGroup(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	const maxNetworkGroupLen = 64
+	if len(trimmed) > maxNetworkGroupLen {
+		return trimmed[:maxNetworkGroupLen]
+	}
+	return trimmed
 }
 
 // DeleteNode removes a node by id.
@@ -249,6 +334,9 @@ func DeleteNode(ctx context.Context, id uint) error {
 	}
 	if err := repository.DeleteOpenFlareNode(ctx, id); err != nil {
 		return err
+	}
+	if err := repository.ReplaceOpenFlareNodeTagBindings(ctx, target.NodeID, nil); err != nil {
+		logger.WarnF(ctx, "failed to cleanup tag bindings for deleted node %s: %v", target.NodeID, err)
 	}
 	ping.DetachDeletedNode(ctx, target.NodeID)
 	return nil

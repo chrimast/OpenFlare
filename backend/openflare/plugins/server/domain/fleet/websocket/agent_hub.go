@@ -42,6 +42,7 @@ var (
 	agentHandlersMu          sync.RWMutex
 	pingResultHandler        func(ctx context.Context, nodeID string, payload protocol.PingResultPayload)
 	pingScheduleReloadHandle func(ctx context.Context)
+	netProbeResultHandler    func(ctx context.Context, nodeID string, payload protocol.NetProbeResultPayload)
 )
 
 // SetPingResultHandler registers the callback invoked when an agent reports a ping result over WebSocket.
@@ -58,6 +59,22 @@ func SetPingScheduleReloadHandler(fn func(ctx context.Context)) {
 	agentHandlersMu.Unlock()
 }
 
+// SetNetProbeResultHandler registers the callback invoked when an agent reports a network probe result.
+func SetNetProbeResultHandler(fn func(ctx context.Context, nodeID string, payload protocol.NetProbeResultPayload)) {
+	agentHandlersMu.Lock()
+	netProbeResultHandler = fn
+	agentHandlersMu.Unlock()
+}
+
+// HandleNetProbeResult dispatches an agent network probe result to the registered handler if present.
+func HandleNetProbeResult(ctx context.Context, nodeID string, payload protocol.NetProbeResultPayload) {
+	handler := currentNetProbeResultHandler()
+	if handler == nil {
+		return
+	}
+	handler(ctx, nodeID, payload)
+}
+
 func currentPingResultHandler() func(ctx context.Context, nodeID string, payload protocol.PingResultPayload) {
 	agentHandlersMu.RLock()
 	defer agentHandlersMu.RUnlock()
@@ -68,6 +85,12 @@ func currentPingScheduleReloadHandler() func(ctx context.Context) {
 	agentHandlersMu.RLock()
 	defer agentHandlersMu.RUnlock()
 	return pingScheduleReloadHandle
+}
+
+func currentNetProbeResultHandler() func(ctx context.Context, nodeID string, payload protocol.NetProbeResultPayload) {
+	agentHandlersMu.RLock()
+	defer agentHandlersMu.RUnlock()
+	return netProbeResultHandler
 }
 
 // ServeAgent handles an upgraded agent websocket connection.
@@ -157,6 +180,13 @@ func sendLocalPingTask(nodeID string, task protocol.PingTaskDispatch) bool {
 	})
 }
 
+func sendLocalNetProbeTask(nodeID string, task protocol.NetProbeTaskDispatch) bool {
+	return sendAgentMessage(nodeID, Message{
+		Type:    protocol.WSMessageTypeNetProbeTask,
+		Payload: task,
+	})
+}
+
 func sendLocalRemoteExec(nodeID string, task protocol.RemoteExecDispatch) bool {
 	if !config.Config.EnableWebShell {
 		return false
@@ -234,6 +264,13 @@ func (c *agentClient) readPump() {
 			if handler := currentPingResultHandler(); handler != nil {
 				handler(context.Background(), c.nodeID, payload)
 			}
+		case protocol.WSMessageTypeNetProbeResult:
+			var payload protocol.NetProbeResultPayload
+			if err := json.Unmarshal(inbound.Payload, &payload); err != nil {
+				slog.Debug("agent ws invalid net_probe_result payload", "node_id", c.nodeID, "error", err)
+				continue
+			}
+			HandleNetProbeResult(context.Background(), c.nodeID, payload)
 		case protocol.WSMessageTypeRuntimeLogFrame:
 			var frame protocol.RuntimeLogFrame
 			if json.Unmarshal(inbound.Payload, &frame) == nil {

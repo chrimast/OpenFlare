@@ -1,4 +1,7 @@
-import type { DistributionItem } from '@/lib/services/openflare';
+import type {
+  DashboardCountryLatency,
+  DistributionItem,
+} from '@/lib/services/openflare';
 import centroids from './data/country-centroids.json';
 import world from './data/world-geo.json';
 
@@ -89,4 +92,72 @@ export function buildCountryHeat(
       ];
     }),
   );
+}
+
+export type CountryLatencyDatum = {
+  name: string;
+  requestCount: number;
+  avgTcpRttMs: number;
+  hasBoundary: boolean;
+  coordinate?: Coordinate;
+};
+
+export function buildCountryLatency(
+  items: DashboardCountryLatency[],
+): Map<string, CountryLatencyDatum> {
+  const buckets = new Map<
+    string,
+    {
+      requestCount: number;
+      tcpWeight: number;
+      weightedTcpRttMs: number;
+    }
+  >();
+
+  for (const item of items) {
+    if (!item.region || item.request_count <= 0) continue;
+    const name = resolveCountryName(item.region);
+    if (!name) continue;
+    const avgTcpMs =
+      Number.isFinite(item.avg_tcp_rtt_ms) && item.avg_tcp_rtt_ms > 0
+        ? item.avg_tcp_rtt_ms
+        : 0;
+    if (avgTcpMs <= 0) continue;
+
+    const current = buckets.get(name) ?? {
+      requestCount: 0,
+      tcpWeight: 0,
+      weightedTcpRttMs: 0,
+    };
+    current.requestCount += item.request_count;
+    current.tcpWeight += item.request_count;
+    current.weightedTcpRttMs += avgTcpMs * item.request_count;
+    buckets.set(name, current);
+  }
+
+  const entries: Array<[string, CountryLatencyDatum]> = [];
+  for (const [name, bucket] of buckets) {
+    const avgTcpRttMs =
+      bucket.tcpWeight > 0 ? bucket.weightedTcpRttMs / bucket.tcpWeight : 0;
+    if (avgTcpRttMs <= 0) continue;
+    entries.push([
+      name,
+      {
+        name,
+        requestCount: bucket.requestCount,
+        avgTcpRttMs,
+        hasBoundary: boundaries.has(name),
+        coordinate: countryCentroids[name]
+          ? [countryCentroids[name][0], countryCentroids[name][1]]
+          : undefined,
+      },
+    ]);
+  }
+  entries.sort((a, b) => {
+    if (b[1].requestCount !== a[1].requestCount) {
+      return b[1].requestCount - a[1].requestCount;
+    }
+    return b[1].avgTcpRttMs - a[1].avgTcpRttMs;
+  });
+  return new Map(entries);
 }

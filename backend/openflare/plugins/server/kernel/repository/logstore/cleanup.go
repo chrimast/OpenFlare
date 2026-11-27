@@ -130,13 +130,18 @@ func CleanupExpired(ctx context.Context) (*CleanupSummary, error) {
 	}, summary); err != nil {
 		return nil, err
 	}
-	if err := cleanupTable("edge_health", func() (int64, error) {
-		return s.Observability.DeleteEdgeHealthBefore(ctx, cutoff)
+	if err := cleanupTable("ping_records", func() (int64, error) {
+		return s.Observability.DeletePingRecordsBefore(ctx, metricCutoff)
 	}, summary); err != nil {
 		return nil, err
 	}
-	if err := cleanupTable("ping_records", func() (int64, error) {
-		return s.Observability.DeletePingRecordsBefore(ctx, metricCutoff)
+	if err := cleanupTable("network_quality_samples", func() (int64, error) {
+		return s.Observability.DeleteNetworkQualitySamplesBefore(ctx, metricCutoff)
+	}, summary); err != nil {
+		return nil, err
+	}
+	if err := cleanupTable("dns_metric_snapshots", func() (int64, error) {
+		return s.Observability.DeleteDNSMetricSnapshotsBefore(ctx, metricCutoff)
 	}, summary); err != nil {
 		return nil, err
 	}

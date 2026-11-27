@@ -95,6 +95,22 @@ const (
 	ConfigKeySWOfflineEnabled = "sw_offline_enabled" // 是否启用 Service Worker 离线兜底
 	ConfigKeySWOfflineHTML    = "sw_offline_html"    // 离线联系页自定义 HTML（空则内置默认）
 	ConfigKeySWOfflineDomains = "sw_offline_domains" // 离线兜底生效域名列表（JSON 数组，空则仅总开关无效）
+
+	// 网络情报库与网络质量探测配置
+	ConfigKeyNetIntelDataDir          = "netintel_data_dir"            // 网络情报数据库本地存储目录
+	ConfigKeyNetIntelGeoIPSource      = "netintel_geoip_source"        // GeoIP/ASN 数据库下载源（fyralabs 或 sapics）
+	ConfigKeyNetIntelBGPToolsUA       = "netintel_bgptools_user_agent" // 请求 bgp.tools 公开数据接口的 User-Agent
+	ConfigKeyNetIntelCAIDAEnabled     = "netintel_caida_enabled"       // 是否启用运行期 CAIDA AS Relationships 数据集同步
+	ConfigKeyNetIntelAutoProbeEnabled = "netintel_auto_probe_enabled"  // 是否启用边缘节点后台自动路由探测
+
+	// SmartDNS 权威智能解析配置
+	ConfigKeySmartDNSEnabled                 = "smartdns_enabled"                  // SmartDNS 服务总开关
+	ConfigKeySmartDNSDelegationDomain        = "smartdns_delegation_domain"        // SmartDNS 全局委派主域名（如 edge.example.com）
+	ConfigKeySmartDNSNSHosts                 = "smartdns_ns_hosts"                 // SmartDNS 权威 NS 主机名列表 JSON 数组
+	ConfigKeySmartDNSDefaultTTL              = "smartdns_default_ttl"              // SmartDNS 默认解析应答 TTL（秒）
+	ConfigKeySmartDNSDiscoveryToken          = "smartdns_discovery_token"          //nolint:gosec // false positive: config key name. SmartDNS 实例自动发现注册令牌
+	ConfigKeySmartDNSSnapshotIntervalSeconds = "smartdns_snapshot_interval_seconds" // SmartDNS 快照刷新周期（秒）
+	ConfigKeySmartDNSUpdateRepo              = "smartdns_update_repo"              // SmartDNS 独立节点更新仓库
 )
 
 // 日志数据库解耦

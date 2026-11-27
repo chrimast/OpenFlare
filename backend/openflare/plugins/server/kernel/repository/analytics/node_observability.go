@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	analyticsmodel "Wavelet/openflare/plugins/server/kernel/model/analytics"
@@ -88,47 +89,6 @@ func listCHLatestMetricSnapshots(ctx context.Context, filter analyticsmodel.Node
 		scanNodeMetricSnapshotRows,
 		fromAnalyticsNodeMetricSnapshots,
 	)
-}
-
-func (s *clickhouseLogStore) ListEdgeHealth(ctx context.Context, nodeID string, since time.Time, limit int) ([]*model.OpenFlareEdgeHealth, error) {
-	conn, err := chConn()
-	if err != nil {
-		return nil, err
-	}
-	filter := analyticsmodel.NodeObservabilityFilter{NodeID: nodeID, Since: since, Limit: limit}
-	clause, args := buildCHNodeObservabilityFilterClause(filter, "captured_at")
-	sql := fmt.Sprintf(`
-SELECT id, node_id, captured_at, status, connections, created_at
-FROM %s
-WHERE %s
-ORDER BY %s`, chNodeEdgeHealthTableName(), clause, chNodeObservabilityCapturedAtOrderClause())
-	if filter.Limit > 0 {
-		sql += clickHouseLimitClause
-		args = append(args, filter.Limit)
-	}
-	rows, err := conn.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("list node edge health: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	var result []analyticsmodel.NodeEdgeHealth
-	for rows.Next() {
-		var item analyticsmodel.NodeEdgeHealth
-		if err := rows.Scan(
-			&item.ID,
-			&item.NodeID,
-			&item.CapturedAt,
-			&item.Status,
-			&item.Connections,
-			&item.CreatedAt,
-		); err != nil {
-			return nil, fmt.Errorf("scan node edge health row: %w", err)
-		}
-		item.CapturedAt = item.CapturedAt.UTC()
-		item.CreatedAt = item.CreatedAt.UTC()
-		result = append(result, item)
-	}
-	return fromAnalyticsNodeEdgeHealths(result), nil
 }
 
 //nolint:dupl // scan shapes differ by model fields; shared helper would obscure CH column mapping
@@ -232,6 +192,137 @@ func scanNodePingRecordRows(rows driver.Rows) ([]analyticsmodel.NodePingRecord, 
 			return nil, fmt.Errorf("scan node ping record row: %w", err)
 		}
 		item.RecordedAt = item.RecordedAt.UTC()
+		item.CreatedAt = item.CreatedAt.UTC()
+		result = append(result, item)
+	}
+	return result, rows.Err()
+}
+
+func (s *clickhouseLogStore) ListNetworkQualitySamplesSince(ctx context.Context, since time.Time, limit int) ([]analyticsmodel.NetworkQualitySample, error) {
+	conn, err := chConn()
+	if err != nil {
+		return nil, err
+	}
+	clause, args := buildCHNodeObservabilityFilterClause(analyticsmodel.NodeObservabilityFilter{Since: since}, "captured_at")
+	sql := fmt.Sprintf(`
+SELECT %s
+FROM %s
+WHERE %s
+ORDER BY captured_at DESC, id DESC`, analyticsmodel.NetworkQualitySample{}.InsertColumns(), chNetworkQualitySampleTableName(), clause)
+	if limit > 0 {
+		sql += clickHouseLimitClause
+		args = append(args, limit)
+	}
+	rows, err := conn.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list network quality samples: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	return scanNetworkQualitySampleRows(rows)
+}
+
+func scanNetworkQualitySampleRows(rows driver.Rows) ([]analyticsmodel.NetworkQualitySample, error) {
+	var result []analyticsmodel.NetworkQualitySample
+	for rows.Next() {
+		var item analyticsmodel.NetworkQualitySample
+		if err := rows.Scan(
+			&item.ID,
+			&item.NodeID,
+			&item.NodeASN,
+			&item.ClientASN,
+			&item.ClientCountry,
+			&item.ClientRegion,
+			&item.IPFamily,
+			&item.StatsVersion,
+			&item.Source,
+			&item.SampleCount,
+			&item.RTTMinMs,
+			&item.RTTP50Ms,
+			&item.RTTP95Ms,
+			&item.RTTHist,
+			&item.PrefixSketch,
+			&item.DistinctPrefixCount,
+			&item.ClientLat,
+			&item.ClientLon,
+			&item.GeoAccuracyKm,
+			&item.GeoSource,
+			&item.RetransRate,
+			&item.LossRate,
+			&item.HopCount,
+			&item.CapturedAt,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan network quality sample row: %w", err)
+		}
+		item.CapturedAt = item.CapturedAt.UTC()
+		item.CreatedAt = item.CreatedAt.UTC()
+		result = append(result, item)
+	}
+	return result, rows.Err()
+}
+
+func (s *clickhouseLogStore) ListDNSMetricSnapshots(ctx context.Context, instanceID string, since time.Time, limit int) ([]analyticsmodel.DNSMetricSnapshot, error) {
+	conn, err := chConn()
+	if err != nil {
+		return nil, err
+	}
+	var parts []string
+	var args []any
+	if trimmed := strings.TrimSpace(instanceID); trimmed != "" {
+		parts = append(parts, "instance_id = ?")
+		args = append(args, trimmed)
+	}
+	if !since.IsZero() {
+		parts = append(parts, "captured_at >= ?")
+		args = append(args, since.UTC())
+	}
+	clause := "1"
+	if len(parts) > 0 {
+		clause = strings.Join(parts, " AND ")
+	}
+	sql := fmt.Sprintf(`
+SELECT %s
+FROM %s
+WHERE %s
+ORDER BY captured_at DESC, id DESC`, analyticsmodel.DNSMetricSnapshot{}.InsertColumns(), chDNSMetricSnapshotTableName(), clause)
+	if limit > 0 {
+		sql += clickHouseLimitClause
+		args = append(args, limit)
+	}
+	rows, err := conn.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list dns metric snapshots: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	return scanDNSMetricSnapshotRows(rows)
+}
+
+func scanDNSMetricSnapshotRows(rows driver.Rows) ([]analyticsmodel.DNSMetricSnapshot, error) {
+	var result []analyticsmodel.DNSMetricSnapshot
+	for rows.Next() {
+		var item analyticsmodel.DNSMetricSnapshot
+		if err := rows.Scan(
+			&item.ID,
+			&item.InstanceID,
+			&item.CapturedAt,
+			&item.QueriesTotal,
+			&item.QueriesSuccess,
+			&item.QueriesNXDomain,
+			&item.QueriesServFail,
+			&item.QueriesRateLimited,
+			&item.QPS,
+			&item.LatencyP50Ms,
+			&item.LatencyP95Ms,
+			&item.LatencyP99Ms,
+			&item.CacheHitRatio,
+			&item.SnapshotVersion,
+			&item.CPUUsagePercent,
+			&item.MemoryUsagePercent,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan dns metric snapshot row: %w", err)
+		}
+		item.CapturedAt = item.CapturedAt.UTC()
 		item.CreatedAt = item.CreatedAt.UTC()
 		result = append(result, item)
 	}

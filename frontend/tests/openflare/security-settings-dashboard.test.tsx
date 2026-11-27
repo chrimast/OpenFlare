@@ -114,12 +114,40 @@ const dashboardFixture: DashboardOverview = {
     high_memory_nodes: 0,
     high_storage_nodes: 0,
   },
-  nodes: [],
+  nodes: [
+    {
+      id: 1,
+      node_id: 'edge-jp-1',
+      name: 'edge-jp-1',
+      geo_name: 'Tokyo, Japan',
+      geo_latitude: 35.68,
+      geo_longitude: 139.76,
+      status: 'online',
+      openresty_status: 'healthy',
+      current_version: 'v4.1.1',
+      last_seen_at: '2026-11-20T03:59:55Z',
+      active_event_count: 0,
+      cpu_usage_percent: 12,
+      memory_usage_percent: 34,
+      storage_usage_percent: 20,
+      request_count: 1000,
+      error_count: 5,
+      unique_visitor_count: 120,
+    },
+  ],
   distributions: {
     source_countries: [{ key: 'CN', value: 600 }],
     status_codes: [{ key: '2xx', value: 995 }],
     top_domains: [{ key: 'example.com', value: 900 }],
   },
+  country_latencies: [
+    {
+      region: 'CN',
+      request_count: 600,
+      avg_request_time_ms: 42.5,
+      avg_tcp_rtt_ms: 18.2,
+    },
+  ],
   trends: {
     traffic_24h: [
       {
@@ -267,6 +295,7 @@ describe('Security menu split, dashboard layout, and global settings', () => {
     const user = userEvent.setup();
     renderWithProviders(<OpenFlareDashboardPage />);
 
+    const latencyView = await screen.findByText('全球延迟视图');
     const reqTrend = await screen.findByText('24 小时请求趋势');
     const pressure = await screen.findByText('请求压力');
     const topDomain = await screen.findByText('Top Domain');
@@ -274,6 +303,10 @@ describe('Security menu split, dashboard layout, and global settings', () => {
     const topIpRps = await screen.findByText('平均 RPS 最高 IP');
     const capacityTrend = await screen.findByText('24 小时业务流量与容量趋势');
 
+    expect(
+      latencyView.compareDocumentPosition(reqTrend) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(
       reqTrend.compareDocumentPosition(pressure) &
         Node.DOCUMENT_POSITION_FOLLOWING,
@@ -294,6 +327,23 @@ describe('Security menu split, dashboard layout, and global settings', () => {
       topIpRps.compareDocumentPosition(capacityTrend) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+
+    expect(screen.getAllByText('18.2 ms').length).toBeGreaterThan(0);
+
+    const sortToggle = screen.getByRole('button', {
+      name: '请求数从高到低',
+    });
+    await user.click(sortToggle);
+    expect(
+      screen.getByRole('button', { name: '请求数从低到高' }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: '切换为节点负载排行' }),
+    );
+    expect(await screen.findByText('节点负载排行')).toBeInTheDocument();
+    expect(screen.getAllByText('1,000 次请求').length).toBeGreaterThan(0);
+    expect(screen.getByText('CPU 12% · 内存 34%')).toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: '3 天' }));
     await waitFor(() =>

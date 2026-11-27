@@ -61,6 +61,8 @@ type OpenFlareAccessLog struct {
 	BytesSent     int64     `json:"bytes_sent" gorm:"column:bytes_sent;not null;default:0"`
 	RequestLength int64     `json:"request_length" gorm:"column:request_length;not null;default:0"`
 	RequestTimeMs int64     `json:"request_time_ms" gorm:"column:request_time_ms;not null;default:0"`
+	ClientASN     uint32    `json:"client_asn" gorm:"column:client_asn;not null;default:0"`
+	TCPRTTUs      uint32    `json:"tcp_rtt_us" gorm:"column:tcp_rtt_us;not null;default:0"`
 	CreatedAt     time.Time `json:"created_at" gorm:"autoCreateTime"`
 }
 
@@ -69,10 +71,12 @@ func (OpenFlareAccessLog) TableName() string {
 	return "of_node_access_logs"
 }
 
-// OpenFlareAccessLogRegionCount aggregates access log regions.
+// OpenFlareAccessLogRegionCount aggregates access log regions and latency.
 type OpenFlareAccessLogRegionCount struct {
-	Region string `json:"region"`
-	Count  int64  `json:"count"`
+	Region           string  `json:"region"`
+	Count            int64   `json:"count"`
+	AvgRequestTimeMs float64 `json:"avg_request_time_ms"`
+	AvgTCPRTTMs      float64 `json:"avg_tcp_rtt_ms"`
 }
 
 // OpenFlareHealthEvent stores node health alert events.
@@ -126,21 +130,6 @@ type OpenFlareNodeSystemProfile struct {
 // TableName returns the GORM table name.
 func (OpenFlareNodeSystemProfile) TableName() string {
 	return "of_node_system_profiles"
-}
-
-// OpenFlareEdgeHealth is L2 OpenResty health (of_node_edge_health).
-type OpenFlareEdgeHealth struct {
-	ID          uint      `json:"id"`
-	NodeID      string    `json:"node_id"`
-	CapturedAt  time.Time `json:"captured_at"`
-	Status      string    `json:"status"`
-	Connections int64     `json:"connections"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// TableName returns the ClickHouse table name.
-func (OpenFlareEdgeHealth) TableName() string {
-	return "of_node_edge_health"
 }
 
 // OpenFlareAccessLogQuery filters access log list queries.

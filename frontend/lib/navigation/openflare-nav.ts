@@ -3,8 +3,10 @@ import {
   FileText,
   Gauge,
   Globe,
+  Globe2,
   LayoutDashboard,
   Network,
+  Radar,
   Route,
   ShieldAlert,
   ScrollText,
@@ -53,6 +55,19 @@ export const openflareNodeNavGroup: OpenFlareNavGroup = {
   ],
 };
 
+/** 网络工具折叠组 */
+export const openflareNetworkToolsNavGroup: OpenFlareNavGroup = {
+  titleKey: 'networkTools',
+  icon: Radar,
+  items: [
+    { titleKey: 'netToolsPing', url: '/network-tools/ping' },
+    { titleKey: 'netToolsTraceroute', url: '/network-tools/traceroute' },
+    { titleKey: 'netToolsAsn', url: '/network-tools/asn' },
+    { titleKey: 'netToolsDns', url: '/network-tools/dns' },
+    { titleKey: 'netToolsQuality', url: '/network-tools/quality' },
+  ],
+};
+
 /** 安全性折叠组 */
 export const openflareSecurityNavGroup: OpenFlareNavGroup = {
   titleKey: 'security',
@@ -72,12 +87,6 @@ export const openflareWebsiteNavGroup: OpenFlareNavGroup = {
   items: [
     { titleKey: 'websites', url: '/websites', childUrls: ['/websites/detail'] },
     { titleKey: 'certificates', url: '/certificates' },
-    { titleKey: 'dnsAccounts', url: '/dns-accounts' },
-    {
-      titleKey: 'cloudflare',
-      url: '/cloudflare',
-      childUrls: ['/cloudflare/settings'],
-    },
     { titleKey: 'origins', url: '/origins', childUrls: ['/origins/detail'] },
     {
       titleKey: 'responses',
@@ -92,6 +101,26 @@ export const openflareWebsiteNavGroup: OpenFlareNavGroup = {
   ],
 };
 
+/** DNS 解析管理折叠组 */
+export const openflareDNSNavGroup: OpenFlareNavGroup = {
+  titleKey: 'dns',
+  icon: Globe2,
+  items: [
+    {
+      titleKey: 'dnsResolve',
+      url: '/cloudflare',
+      childUrls: ['/cloudflare/groups'],
+    },
+    { titleKey: 'dnsAccounts', url: '/dns-accounts' },
+    {
+      titleKey: 'dnsSettings',
+      url: '/dns/settings',
+      childUrls: ['/cloudflare/settings'],
+    },
+    { titleKey: 'smartDns', url: '/dns/smartdns' },
+  ],
+};
+
 /**
  * OpenFlare 侧栏导航顺序（单一配置源）。
  * 调整菜单顺序或折叠组位置时，只需修改此数组。
@@ -99,6 +128,7 @@ export const openflareWebsiteNavGroup: OpenFlareNavGroup = {
 export const openflareSidebarNav: OpenFlareSidebarNavEntry[] = [
   { kind: 'item', titleKey: 'dashboard', url: '/', icon: LayoutDashboard },
   { kind: 'group', ...openflareNodeNavGroup },
+  { kind: 'group', ...openflareNetworkToolsNavGroup },
   {
     kind: 'item',
     titleKey: 'tunnels',
@@ -114,6 +144,7 @@ export const openflareSidebarNav: OpenFlareSidebarNavEntry[] = [
     childUrls: ['/proxy-routes/detail'],
   },
   { kind: 'group', ...openflareWebsiteNavGroup },
+  { kind: 'group', ...openflareDNSNavGroup },
   { kind: 'group', ...openflareSecurityNavGroup },
   {
     kind: 'item',
@@ -153,9 +184,15 @@ export const openflareNavItems: OpenFlareNavItem[] = openflareSidebarNav
 export const openflareWebsiteSubNav = [
   { titleKey: 'websites', url: '/websites' },
   { titleKey: 'certificates', url: '/certificates' },
-  { titleKey: 'dnsAccounts', url: '/dns-accounts' },
-  { titleKey: 'cloudflare', url: '/cloudflare' },
   { titleKey: 'responses', url: '/responses' },
+] as const;
+
+/** DNS 模块页内二级导航 */
+export const openflareDNSSubNav = [
+  { titleKey: 'dnsResolve', url: '/cloudflare' },
+  { titleKey: 'dnsAccounts', url: '/dns-accounts' },
+  { titleKey: 'dnsSettings', url: '/dns/settings' },
+  { titleKey: 'smartDns', url: '/dns/smartdns' },
 ] as const;
 
 const nonConsoleRoutePrefixes = [

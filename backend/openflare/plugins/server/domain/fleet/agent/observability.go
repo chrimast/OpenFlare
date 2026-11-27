@@ -22,14 +22,13 @@ const (
 	accessLogCacheStatusMaxLength = 32
 )
 
-// PersistHeartbeatObservability stores profile, host metrics, edge health, and access logs.
+// PersistHeartbeatObservability stores profile, host metrics, and access logs.
 func PersistHeartbeatObservability(ctx context.Context, nodeID string, payload protocol.NodePayload, reportedAt time.Time) {
 	if strings.TrimSpace(nodeID) == "" {
 		return
 	}
 	if payload.Profile == nil &&
 		payload.HostMetrics == nil &&
-		payload.EdgeHealth == nil &&
 		len(payload.AccessLogs) == 0 &&
 		len(payload.Buffered) == 0 &&
 		payload.HealthEvents == nil {
@@ -63,9 +62,6 @@ func PersistHeartbeatObservability(ctx context.Context, nodeID string, payload p
 	if err := persistNodeMetricSnapshot(ctx, nodeID, payload.HostMetrics, reportedAt); err != nil {
 		zap.L().Error("persist metric snapshot failed", zap.String("node_id", nodeID), zap.Error(err))
 	}
-	if err := persistNodeEdgeHealth(ctx, nodeID, payload.EdgeHealth, payload.OpenrestyStatus, reportedAt); err != nil {
-		zap.L().Error("persist edge health failed", zap.String("node_id", nodeID), zap.Error(err))
-	}
 
 	if err := persistNodeAccessLogs(ctx, nodeID, accessLogRecords, reportedAt); err != nil {
 		zap.L().Error("persist heartbeat access logs failed", zap.String("node_id", nodeID), zap.Error(err))
@@ -77,30 +73,8 @@ func persistBufferedObservability(ctx context.Context, nodeID string, records []
 		if err := persistNodeMetricSnapshot(ctx, nodeID, record.HostMetrics, reportedAt); err != nil {
 			return err
 		}
-		if err := persistNodeEdgeHealth(ctx, nodeID, record.EdgeHealth, "", reportedAt); err != nil {
-			return err
-		}
 	}
 	return nil
-}
-
-func persistNodeEdgeHealth(ctx context.Context, nodeID string, health *protocol.NodeEdgeHealth, fallbackStatus string, reportedAt time.Time) error {
-	if health == nil {
-		return nil
-	}
-	status := strings.TrimSpace(health.Status)
-	if status == "" {
-		status = strings.TrimSpace(fallbackStatus)
-	}
-	if status == "" {
-		status = openrestyStatusUnknown
-	}
-	return repository.InsertOpenFlareEdgeHealth(ctx, &model.OpenFlareEdgeHealth{
-		NodeID:      nodeID,
-		CapturedAt:  timeFromUnix(health.CapturedAtUnix, reportedAt),
-		Status:      status,
-		Connections: health.Connections,
-	})
 }
 
 func buildNodeSystemProfileModel(nodeID string, profile *protocol.NodeSystemProfile, reportedAt time.Time) *model.OpenFlareNodeSystemProfile {
@@ -203,6 +177,23 @@ func buildNodeAccessLogRecords(ctx context.Context, nodeID string, direct []prot
 			bytesSent := max(item.BytesSent, 0)
 			requestLength := max(item.RequestLength, 0)
 			requestTimeMs := max(item.RequestTimeMs, 0)
+			normalizedIP := normalizeAccessLogIP(item.RemoteAddr)
+			var clientASN uint32
+			var clientCountry, clientRegion, geoSource string
+			var clientLat, clientLon *float64
+			var geoAccuracyKm float64
+			ipFamily := pkgnetintel.DetectIPFamily(normalizedIP)
+			if normalizedIP != "" {
+				if lookup := netintel.LookupIP(normalizedIP); lookup != nil {
+					clientASN = lookup.ASN
+					clientCountry = lookup.CountryISO
+					clientRegion = lookup.RegionCode
+					clientLat = lookup.Latitude
+					clientLon = lookup.Longitude
+					geoAccuracyKm = lookup.AccuracyRadiusKm
+					geoSource = lookup.GeoSource
+				}
+			}
 			record := &model.OpenFlareAccessLog{
 				NodeID:        nodeID,
 				LoggedAt:      timeFromUnix(item.LoggedAtUnix, reportedAt),
@@ -218,6 +209,27 @@ func buildNodeAccessLogRecords(ctx context.Context, nodeID string, direct []prot
 				BytesSent:     bytesSent,
 				RequestLength: requestLength,
 				RequestTimeMs: requestTimeMs,
+				ClientASN:     clientASN,
+				TCPRTTUs:      item.TCPRTTUs,
+			}
+			if clientASN > 0 && item.TCPRTTUs > 0 {
+				netquality.RecordPassiveSampleInput(ctx, netquality.PassiveSampleInput{
+					NodeID:        nodeID,
+					ClientIP:      normalizedIP,
+					ClientASN:     clientASN,
+					ClientCountry: clientCountry,
+					ClientRegion:  clientRegion,
+					IPFamily:      ipFamily,
+					ClientLat:     clientLat,
+					ClientLon:     clientLon,
+					GeoAccuracyKm: geoAccuracyKm,
+					GeoSource:     geoSource,
+					TCPRTTUs:      item.TCPRTTUs,
+					TCPMinRTTUs:   item.TCPMinRTTUs,
+					TCPRetrans:    item.TCPRetrans,
+					TCPSegsOut:    item.TCPSegsOut,
+					TLSHandshake:  item.TLSHandshakeMs,
+				})
 			}
 			records = append(records, record)
 		}
