@@ -5,6 +5,7 @@ package netintel
 
 import (
 	"encoding/json"
+	"math"
 	"net"
 	"net/netip"
 	"os"
@@ -32,8 +33,8 @@ type Manager struct {
 func NewManager() *Manager {
 	m := &Manager{}
 	m.snap.Store(&Snapshot{
-		bgp:   &bgpToolsIndex{asns: map[uint32]asnMeta{}, tags: map[uint32][]string{}, v6Buckets: map[int]map[[16]byte]prefixPayload{}, asnPrefixes: map[uint32][]PrefixRecord{}},
-		caida: &caidaGraph{neighbors: map[uint32][]ASRelation{}},
+		bgp:   &bgpToolsIndex{},
+		caida: &caidaGraph{},
 	})
 	return m
 }
@@ -187,18 +188,9 @@ func (m *Manager) LookupASN(asn uint32) *ASNInfo {
 	meta, hasMeta := s.bgp.asns[asn]
 	prefixes := s.bgp.asnPrefixes[asn]
 	tags := s.bgp.tags[asn]
-	neighbors := s.caida.neighbors[asn]
-	if !hasMeta && len(prefixes) == 0 && len(tags) == 0 && len(neighbors) == 0 {
+	neighborCount := s.caida.degree(asn)
+	if !hasMeta && prefixes.start == prefixes.end && len(tags) == 0 && neighborCount == 0 {
 		return nil
-	}
-
-	v4Count, v6Count := 0, 0
-	for _, p := range prefixes {
-		if p.Family == "ipv6" {
-			v6Count++
-		} else {
-			v4Count++
-		}
 	}
 
 	copiedTags := make([]string, len(tags))
@@ -209,9 +201,9 @@ func (m *Manager) LookupASN(asn uint32) *ASNInfo {
 		Class:        meta.Class,
 		Country:      meta.Country,
 		Tags:         copiedTags,
-		IPv4Prefixes: v4Count,
-		IPv6Prefixes: v6Count,
-		NeighborCnt:  len(neighbors),
+		IPv4Prefixes: prefixes.ipv4Count,
+		IPv6Prefixes: prefixes.end - prefixes.start - prefixes.ipv4Count,
+		NeighborCnt:  neighborCount,
 	}
 }
 
@@ -233,22 +225,48 @@ func (m *Manager) ListASNPrefixes(asn uint32, family string, page, pageSize int)
 		pageSize = maxASNPrefixPageSize
 	}
 	fam := strings.ToLower(strings.TrimSpace(family))
-	all := s.bgp.asnPrefixes[asn]
-	filtered := make([]PrefixRecord, 0, len(all))
-	for _, p := range all {
-		if fam != "" && fam != "all" && p.Family != fam {
-			continue
-		}
-		filtered = append(filtered, p)
+	prefixes := s.bgp.asnPrefixes[asn]
+	all := s.bgp.asnOrder[prefixes.start:prefixes.end]
+	total := len(all)
+	switch fam {
+	case "", "all":
+	case IPFamilyIPv4:
+		total = prefixes.ipv4Count
+	case IPFamilyIPv6:
+		total -= prefixes.ipv4Count
+	default:
+		return []PrefixRecord{}, 0
 	}
-	total := len(filtered)
+	if page-1 > math.MaxInt/pageSize {
+		return []PrefixRecord{}, total
+	}
 	start := (page - 1) * pageSize
 	if start >= total {
 		return []PrefixRecord{}, total
 	}
-	end := min(start+pageSize, total)
-	out := make([]PrefixRecord, end-start)
-	copy(out, filtered[start:end])
+	limit := min(pageSize, total-start)
+	out := make([]PrefixRecord, 0, limit)
+	if fam == "" || fam == "all" {
+		for _, id := range all[start : start+limit] {
+			out = append(out, s.bgp.prefixRecord(id))
+		}
+		return out, total
+	}
+
+	wantIPv6 := fam == IPFamilyIPv6
+	for _, id := range all {
+		if id.isIPv6() != wantIPv6 {
+			continue
+		}
+		if start > 0 {
+			start--
+			continue
+		}
+		out = append(out, s.bgp.prefixRecord(id))
+		if len(out) == limit {
+			break
+		}
+	}
 	return out, total
 }
 
@@ -258,7 +276,8 @@ func (m *Manager) LookupASNeighbors(asn uint32, limit int) []ASRelation {
 	if s == nil || asn == 0 {
 		return nil
 	}
-	raw := s.caida.neighbors[asn]
+	start, end := s.caida.neighborBounds(asn)
+	raw := s.caida.peers[start:end]
 	if len(raw) == 0 {
 		return []ASRelation{}
 	}
@@ -266,16 +285,16 @@ func (m *Manager) LookupASNeighbors(asn uint32, limit int) []ASRelation {
 		limit = len(raw)
 	}
 	out := make([]ASRelation, 0, limit)
-	for _, item := range raw[:limit] {
-		meta := s.bgp.asns[item.PeerASN]
+	for i, peer := range raw[:limit] {
+		meta := s.bgp.asns[peer]
 		rel := ASRelation{
-			PeerASN:     item.PeerASN,
+			PeerASN:     peer,
 			PeerName:    meta.Name,
 			PeerCountry: meta.Country,
 			PeerClass:   meta.Class,
-			Relation:    item.Relation,
+			Relation:    caidaRelationNames[s.caida.relations[start+i]],
 		}
-		if tags := s.bgp.tags[item.PeerASN]; len(tags) > 0 {
+		if tags := s.bgp.tags[peer]; len(tags) > 0 {
 			rel.Tags = append([]string(nil), tags...)
 		}
 		out = append(out, rel)

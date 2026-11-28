@@ -83,7 +83,7 @@ func newServerNodeID() (string, error) {
 	return "node-" + token, nil
 }
 
-func normalizeNodeType(raw string) string {
+func normalizeNodeType(_ string) string {
 	return nodeTypeEdgeNode
 }
 

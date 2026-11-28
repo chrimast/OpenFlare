@@ -1,58 +1,65 @@
-# SmartDNS 智能权威解析使用指南
+# SmartDNS 智能解析
 
-OpenFlare SmartDNS（Phase 2）结合控制面实时感知的网络质量矩阵、节点负载容量与视觉化 JDM 规则引擎，为域名提供低延迟、支持 EDNS0 Client Subnet（ECS）的高性能权威解析能力，并支持两种运行形态：
+通过权威委派、区域拓扑与节点实时状态实现智能 `A`/`AAAA` 调度，支持内嵌或独立实例部署。
 
-- **独立 Rust 高性能实例（`openflare-dns`）**：基于 `hickory-server`、`zen-engine`、`moka` 与 `SO_REUSEPORT` 多核 UDP/TCP 监听，单核缓存命中压测可达裸 `hickory-server` 吞吐的 84%–87%。
-- **控制面内嵌 Go 兜底引擎（`embedded_go`）**：在配置启用 `smartdns.enabled: true` 时随机启动，适合轻量测试与过渡期本地权威解析验证。
+## 1. 部署与启用
 
----
+- **内嵌模式（轻量场景）**：在 Server 配置中设置 `smartdns.enabled: true`（默认监听 `:53`）并开放宿主机 `53/UDP` 与 `53/TCP`。
+- **独立模式（生产推荐）**：按 [部署 SmartDNS](../deployment/openflare-dns.md) 在专用节点部署 `openflare-dns` 并通过 Discovery Token 自动注册。
 
-## 1. 准备工作：配置节点容量与路由标签
+> Linux 若启用 `systemd-resolved` 占用 `53` 端口，需停用其 Stub Listener 后再启动 SmartDNS。
 
-1. 进入控制台 **「节点管理 → 节点列表」**，点击右上角 **「标签管理」** 创建路由分类标签（如 `optimized`、`high-bandwidth` 等，可设定默认权重乘数 `0.01 ~ 100`）。
-2. 编辑边缘节点时填写：
-   - **带宽上限（Mbps）**、**并发连接上限** 与 **容量基准权重**（默认 `100`，`0` 表示不限制）；
-   - **SmartDNS 路由标签**：勾选所属标签，可选填写单节点权重覆盖值。
+## 2. 控制台配置
 
----
+1. 打开 **DNS 管理** > **SmartDNS** > **权威实例**，确认至少一个实例状态为 **在线**（可在 **运行概览** 查看在线实例数、QPS 与缓存命中率）。
+2. 在 **调度策略** 选择预设策略（**智能分配策略** / **容量负载均衡策略**）或新建自定义策略。
+3. 在 **委派设置** 填写全局委派子域（如 `sdns.example.com`）与 NS 主机名（如 `ns1.example.com`），调整默认 TTL（默认 `60s`）并保存启用。
 
-## 2. 配置 SmartDNS 委派域名与权威实例
+![SmartDNS 运行概览与查询监控](../assets/images/smartdns-overview.png)
 
-1. 进入左侧栏 **「DNS → SmartDNS」**。
-2. 在 **「总览与全局设置」** 页签配置：
-   - **委派子域（Delegation Domain）**：例如 `sdns.example.com`。
-   - **权威 NS 主机名列表**：例如 `ns1.sdns.example.com`、`ns2.sdns.example.com`。
-   - **默认 TTL** 与 **快照同步周期**。
-3. 在托管域名的上级 DNS（如 Cloudflare）完成 `NS` 委派记录与对应胶水 `A/AAAA` 记录配置后，点击 **「验证 NS 委派解析」** 确认公网解析生效。
-4. 切换至 **「权威实例」** 页签：
-   - 可直接在页面中选择发布通道（**正式版** / **Canary 预览版**）以及部署方式（**Linux 一键脚本** / **Docker**），复制控制面生成的 Discovery 模式命令或预注册实例后的专属凭证命令在目标节点运行；
-   - Linux 主机也支持在安装或升级命令末尾附加 `canary` 参数（或 `--channel canary`）切换至 Canary 预览通道，例如：
+4. 在 **DNS 管理** > **DNS 解析** 的 **指向分组** 中，将目标域名分组指向对应的 **SmartDNS** 策略，系统会自动生成委派子域下的 `CNAME` 目标：
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/install-openflare-dns.sh -o install-openflare-dns.sh && \
-  sudo bash install-openflare-dns.sh \
-    --controller-url https://panel.example.com \
-    --discovery-token <DISCOVERY_TOKEN> \
-    --public-addr 203.0.113.53 \
-    --listen 0.0.0.0:53
+![DNS 解析指向分组与 SmartDNS 策略绑定](../assets/images/dns-resolution.png)
+
+## 3. 注册商委派与硬性约束
+
+| 约束项 | 说明 |
+| :--- | :--- |
+| NS 主机名位置 | 委派记录中的 NS 主机名必须在被委派子域之外；若使用主域自身 NS，需配置 Glue 记录 |
+| 站点绑定方式 | 将站点域名通过 **仅 DNS**（关闭上游代理）的 `CNAME` 指向被委派子域（如 `www.example.com -> www.edge.example.com`） |
+| 传输协议 | SmartDNS 实例与防火墙必须同时放行 `53/UDP` 与 `53/TCP` |
+| Apex 根域名 | 标准 DNS 不允许根域直接设置 `CNAME`，需依赖注册商 ALIAS/ANAME/CNAME 展平或转用支持厂商的直接托管 |
+| 启用顺序 | 先确认实例在线并通过本地解析验证，再向注册商添加 `NS` 委派记录 |
+
+## 4. 策略编排变量（可选）
+
+在 **解析策略** DAG 中可结合客户端与请求属性定义过滤、权重（`latency`、`load`、`geo`）及标签偏好（`use_tag_weights`）：
+
+| 变量 | 说明 | 示例 |
+| :--- | :--- | :--- |
+| `client.country` / `client.region` | 客户端国家（ISO 2 位）与省份/区域 | `"CN"`、`"California"` |
+| `client.asn` | 客户端自治系统号 | `4134` |
+| `client.ip_family` | 请求来源 IP 协议族 | `"v4"` / `"v6"` |
+| `domain` / `qtype` | 查询域名与记录类型 | `"www.example.com"`、`"A"` |
+
+## 5. 验证与排错
+
+可在 SmartDNS 控制台右上角点击 **决策模拟器**，输入查询域名与客户端 / ECS IP 实时查看命中策略、候选节点评分过程及最终应答 IP：
+
+![SmartDNS 决策模拟器与候选节点评分明细](../assets/images/smartdns-simulator.png)
+
+也可使用命令行验证实际权威解析返回：
+
+```sh
+dig @<SMARTDNS_IP> www.edge.example.com A +short
+dig +trace www.edge.example.com A
 ```
 
-   - 使用容器化部署时，可通过标准 Docker 镜像 `ghcr.io/rain-kl/openflare-dns:latest`（或 `:canary`），或在项目根目录通过 `docker compose up -d dns` 启动独立 `dns` 服务。详细端口映射、环境变量与系统权限说明请查看 [SmartDNS 部署文档](../deployment/openflare-dns.md)。
+| 现象 | 排查方向 |
+| :--- | :--- |
+| 解析超时 / `SERVFAIL` | 确认 `openflare-dns` 进程在线且防火墙同时放行 `53/UDP` 与 `53/TCP` |
+| 返回 `NXDOMAIN` | 检查委派域名是否已启用，以及站点路由或全局记录是否已绑定到 SmartDNS |
+| 命中节点与预期不符 | 确认客户端公网 IP 具备 GeoIP/ASN 信息，并检查节点状态或策略过滤条件是否排除了目标节点 |
+| UDP 正常但 TCP 失败 | 确认云安全组与宿主机防火墙允许 `53/TCP`，供大响应包与 `+trace` 降级回退 |
 
----
-
-## 3. 编排调度策略与决策流
-
-切换至 **「调度策略与流程」** 页签创建或编辑策略：
-
-- **预设策略（Smart / Load Balance）**：直接调整延迟权重（`w_lat`）、负载权重（`w_load`）、地理权重（`w_geo`）与筛选条件（国家、节点标签、线路分组）。
-- **可视化 JDM 决策流**：使用流程图画布连接 `Input → Condition (Switch) → Action (Expression) → Output`，支持基于 `client.country`、`client.region`、`client.asn`、`client.ip_family`、`domain`、`qtype` 编写分支条件并实时校验编译结果。
-- 完成后点击页面右上角 **「决策模拟器」** 输入域名、查询类型（`A` / `AAAA`）及模拟客户端 IP，直观查看客户端网络归属画像、JDM 命中的分支及所有候选节点的 4 阶段打分明细。
-
----
-
-## 4. 在 Cloudflare DNS 指向中使用 SmartDNS
-
-1. 打开 **「DNS → DNS 解析」**，新增或编辑指向分组。
-2. 将指向方式切换为 **「SmartDNS 调度」**，选择目标 SmartDNS 调度策略，可选自定义目标主机名（留空将自动在 `delegation_domain` 下生成唯一子域）。
-3. 注意：SmartDNS 指向分组固定采用 **仅 DNS 的 CNAME** 同步模式，成员域名的 Cloudflare 代理开关将被锁定为关闭，确保访客真实 ECS 子网直达 OpenFlare SmartDNS 权威节点。
+网络探测与节点品质来源参见 [网络质量与探测工具](./network-tools.md)，内部架构参见 [SmartDNS 架构设计](../design/smartdns-design.md)。

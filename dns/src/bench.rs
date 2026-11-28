@@ -216,10 +216,15 @@ pub fn build_bench_snapshot() -> SnapshotEnvelope {
                 ip_family: "ipv4".to_string(),
                 level: "country".to_string(),
                 effective_rtt_ms: 18.0,
+                observed_rtt_ms: 18.0,
+                predicted_rtt_ms: 18.0,
                 rtt_p95_ms: 25.0,
+                p95_weight: 0.35,
                 dispersion_ms: 4.0,
                 loss_rate: 0.0,
                 confidence: 0.9,
+                quality_state: "healthy".to_string(),
+                explore_priority: 0.0,
                 geo_base_rtt_ms: 16.0,
                 geo_base_known: true,
                 source_tier: "asn_country".to_string(),
@@ -247,7 +252,11 @@ fn build_query_packet(id: u16, fqdn: &str, client_v4: Ipv4Addr) -> Result<Vec<u8
     let mut edns = Edns::new();
     edns.set_max_payload(1232);
     edns.options_mut()
-        .insert(EdnsOption::Subnet(ClientSubnet::new(client_v4.into(), 24, 0)));
+        .insert(EdnsOption::Subnet(ClientSubnet::new(
+            client_v4.into(),
+            24,
+            0,
+        )));
     msg.set_edns(edns);
     let mut buf = Vec::with_capacity(96);
     let mut encoder = hickory_proto::serialize::binary::BinEncoder::new(&mut buf);
@@ -255,13 +264,16 @@ fn build_query_packet(id: u16, fqdn: &str, client_v4: Ipv4Addr) -> Result<Vec<u8
     Ok(buf)
 }
 
-async fn blast_udp(
+async fn run_udp_workers<F>(
     addr: SocketAddr,
     packets: Arc<Vec<Vec<u8>>>,
-    total_queries: usize,
     concurrency: usize,
-) -> Result<Duration> {
-    let remaining = Arc::new(AtomicUsize::new(total_queries));
+    next_index: F,
+) -> Result<Duration>
+where
+    F: Fn(usize, &mut usize) -> Option<usize> + Send + Sync + 'static,
+{
+    let next_index = Arc::new(next_index);
     let mut handles = Vec::with_capacity(concurrency);
     let start = Instant::now();
 
@@ -269,19 +281,12 @@ async fn blast_udp(
         let sock = UdpSocket::bind("127.0.0.1:0").await?;
         sock.connect(addr).await?;
         let packets = packets.clone();
-        let remaining = remaining.clone();
+        let next_index = next_index.clone();
         handles.push(tokio::spawn(async move {
             let mut recv_buf = [0u8; 512];
             let mut seq = worker_id;
-            loop {
-                let prev = remaining.fetch_sub(1, Ordering::Relaxed);
-                if prev == 0 || prev > total_queries {
-                    // Restore if underflow occurred across threads before checking.
-                    break;
-                }
-                let pkt = &packets[seq % packets.len()];
-                seq = seq.wrapping_add(1);
-                sock.send(pkt).await?;
+            while let Some(idx) = next_index(packets.len(), &mut seq) {
+                sock.send(&packets[idx]).await?;
                 tokio::time::timeout(Duration::from_secs(2), sock.recv(&mut recv_buf))
                     .await
                     .context("UDP bench recv timeout")??;
@@ -294,6 +299,36 @@ async fn blast_udp(
         handle.await.context("bench worker join")??;
     }
     Ok(start.elapsed())
+}
+
+/// Prime each unique packet once across workers so warmup avoids cold-key stampedes.
+async fn prime_udp(addr: SocketAddr, packets: Arc<Vec<Vec<u8>>>, concurrency: usize) -> Result<()> {
+    let next = AtomicUsize::new(0);
+    run_udp_workers(addr, packets, concurrency, move |len, _| {
+        let idx = next.fetch_add(1, Ordering::Relaxed);
+        (idx < len).then_some(idx)
+    })
+    .await?;
+    Ok(())
+}
+
+async fn blast_udp(
+    addr: SocketAddr,
+    packets: Arc<Vec<Vec<u8>>>,
+    total_queries: usize,
+    concurrency: usize,
+) -> Result<Duration> {
+    let remaining = AtomicUsize::new(total_queries);
+    run_udp_workers(addr, packets, concurrency, move |len, seq| {
+        let prev = remaining.fetch_sub(1, Ordering::Relaxed);
+        if prev == 0 || prev > total_queries {
+            return None;
+        }
+        let idx = *seq % len;
+        *seq = seq.wrapping_add(1);
+        Some(idx)
+    })
+    .await
 }
 
 pub async fn run_bench(args: BenchArgs) -> Result<()> {
@@ -315,8 +350,10 @@ pub async fn run_bench(args: BenchArgs) -> Result<()> {
     // 1. Bare hickory-server baseline.
     let bare_sock = UdpSocket::bind("127.0.0.1:0").await?;
     let bare_addr = bare_sock.local_addr()?;
-    let mut bare_server =
-        Server::new(BareBenchHandler::new("bench.sdns.example.com.", Ipv4Addr::new(203, 0, 113, 10))?);
+    let mut bare_server = Server::new(BareBenchHandler::new(
+        "bench.sdns.example.com.",
+        Ipv4Addr::new(203, 0, 113, 10),
+    )?);
     bare_server.register_socket(bare_sock);
 
     blast_udp(bare_addr, packets.clone(), 256, concurrency.min(16)).await?;
@@ -338,6 +375,7 @@ pub async fn run_bench(args: BenchArgs) -> Result<()> {
     let mut sdns_server = Server::new(sdns_handler);
     sdns_server.register_socket(sdns_sock);
 
+    prime_udp(sdns_addr, packets.clone(), concurrency.min(16)).await?;
     blast_udp(sdns_addr, packets.clone(), 256, concurrency.min(16)).await?;
     let sdns_elapsed = blast_udp(sdns_addr, packets.clone(), queries, concurrency).await?;
     sdns_server.shutdown_gracefully().await?;

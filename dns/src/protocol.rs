@@ -51,6 +51,9 @@ pub struct HeartbeatRequest {
     pub memory_usage_percent: f64,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub last_error: String,
+    pub remote_update_supported: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub update_receipt: Option<UpdateReceipt>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -60,6 +63,19 @@ pub struct HeartbeatResponse {
     pub snapshot_version: u64,
     #[serde(default)]
     pub snapshot_etag: String,
+    pub update: Option<UpdateCommand>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct UpdateCommand {
+    pub id: String,
+    pub channel: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UpdateReceipt {
+    pub id: String,
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -222,14 +238,24 @@ pub struct CompactQualityEntry {
     pub level: String,
     #[serde(rename = "rtt")]
     pub effective_rtt_ms: f64,
+    #[serde(rename = "obs_rtt", default)]
+    pub observed_rtt_ms: f64,
+    #[serde(rename = "pred_rtt", default)]
+    pub predicted_rtt_ms: f64,
     #[serde(rename = "p95", default)]
     pub rtt_p95_ms: f64,
+    #[serde(rename = "p95w", default)]
+    pub p95_weight: f64,
     #[serde(rename = "disp", default)]
     pub dispersion_ms: f64,
     #[serde(rename = "loss", default)]
     pub loss_rate: f64,
     #[serde(rename = "conf")]
     pub confidence: f64,
+    #[serde(rename = "st", default)]
+    pub quality_state: String,
+    #[serde(rename = "exp", default)]
+    pub explore_priority: f64,
     #[serde(rename = "geo_rtt", default)]
     pub geo_base_rtt_ms: f64,
     #[serde(rename = "geo_ok", default)]

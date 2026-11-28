@@ -1,24 +1,21 @@
-# 登录验证码设计 (Login CAPTCHA Integration)
+# 登录验证码设计 (Cap PoW 集成)
 
-本文档阐述在 OpenFlare 控制面中引入基于 Proof-of-Work (PoW) 与无感浏览器指纹特征的开源 CAPTCHA 方案 —— Cap，以防止对登录 API 进行暴力破解与爬虫撞库攻击的设计。
-
----
-
-## 1. 业务背景与产品范围
-
-### 背景与痛点
-OpenFlare 的登录端点 `/api/v1/user/login` 缺少用户维度的防护机制，攻击者可使用代理池对高权限账户（如 `root`）实施撞库和暴力破解。同时，标准的视觉验证码对登录页用户体验和无障碍不够友好。
-
-### 产品范围与技术选型
-* **技术选型**：Cap (Proof-of-Work 驱动的无感无图像验证码解决方案)。
-  - **核心原理**：客户端（Widget/网页）从服务器获取工作量证明 (PoW) 的难题，使用浏览器后台计算求解并将答案回传。服务器验证答案的正确性，完成人机识别。
-  - **优势**：无感、无图像验证、不依赖任何外部第三方 API 节点（私密）、包极小。
-* **接入范围**：控制面 Server 登录 API（`/api/v1/user/login`）以及前端登录页面。
-* **配置粒度**：支持管理员通过控制台 Option 表随时开启/关闭验证码（`cap_login_enabled`）。
+OpenFlare 控制面在用户登录端点集成开源工作量证明（PoW）人机验证组件 Cap，由浏览器后台计算 SHA-256 难题换取一次性凭证，在不依赖第三方图像验证码 API 的前提下防范针对 `admin` 等管理员账户的暴力破解与撞库请求。
 
 ---
 
-## 2. 系统架构与交互时序
+## 1. 产品边界与模块分工
+
+* **配置开关**：管理员可通过系统设置项 `cap_login_enabled` 动态开启或关闭登录验证码校验。
+* **控制面后端（`internal/apps/cap/`、`pkg/cap/`）**：
+  * `POST /api/cap/challenge`：公开接口，签发带过期时间的难题 JWT（默认 `scope = "login"`）与难度参数 `{ c, s, d }`；
+  * `POST /api/cap/redeem`：校验解答与难题 JWT 签名，核销难题并向前端颁发一次性凭证 `token`（有效期写入 Redis 或内存 `Store`）；
+  * `POST /api/v1/user/login`：挂载 `cap.VerifyMiddleware(mgr, "login")` 中间件，当开启验证时读取请求头 `X-Cap-Token` 并执行单次消费校验，无效或已消费则拦截返回 `401 Unauthorized`。
+* **前端登录页**：按配置状态挂载 `cap-widget` Web Component 在 Worker 中无感求解，并在提交登录表单时附加 `X-Cap-Token` 请求头。
+
+---
+
+## 2. 验证流与防重放机制
 
 ### 2.1 模块分工
 1. **Frontend (前端)**：
@@ -35,9 +32,9 @@ OpenFlare 的登录端点 `/api/v1/user/login` 缺少用户维度的防护机制
 sequenceDiagram
     autonumber
     actor User as 用户
-    participant Browser as 浏览器 (前端 Web)
-    participant Server as OpenFlare Server (后端)
-    participant Cache as 内存/Redis 缓存
+    participant Browser as 浏览器 (Web)
+    participant Server as OpenFlare Server
+    participant Store as Redis / 内存 Store
 
     User->>Browser: 打开登录页面
     Browser->>Server: POST /api/v1/cap/challenge (获取难题)
@@ -60,12 +57,12 @@ sequenceDiagram
         else token 无效或已被消费
             Server->>Browser: 拦截并返回验证码错误 (401 Unauthorized)
         end
-    else CapLoginEnabled = false
-        Server->>Server: c.Next() -> 执行常规登录逻辑
+    else cap_login_enabled = false
+        Server->>Server: 直接执行登录逻辑
     end
 ```
 
----
+### 安全机制说明
 
 ## 3. 核心接口与数据模型
 

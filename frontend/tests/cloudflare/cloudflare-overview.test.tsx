@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CloudflarePage from '@/app/(main)/cloudflare/page';
@@ -55,8 +55,9 @@ function renderPage() {
   );
 }
 
-describe('Cloudflare overview', () => {
+describe('DNS resolution overview', () => {
   beforeEach(() => {
+    window.history.replaceState(null, '', '/cloudflare');
     vi.mocked(CloudflareService.listGroups).mockResolvedValue([]);
     vi.mocked(NodeService.listNodes).mockResolvedValue([]);
     vi.mocked(AdminTaskService.listTaskExecutions).mockResolvedValue({
@@ -66,6 +67,7 @@ describe('Cloudflare overview', () => {
       page_size: 10,
     });
     vi.mocked(CloudflareService.getOverview).mockResolvedValue({
+      dns_ready: false,
       connection: {
         configured: false,
         ready: false,
@@ -82,21 +84,26 @@ describe('Cloudflare overview', () => {
     });
   });
 
-  it('shows the token readiness gate without the synchronization boundary card', async () => {
+  it('links to DNS accounts when no provider is ready', async () => {
     renderPage();
 
-    expect(await screen.findByText('Cloudflare 连接尚未就绪')).toBeVisible();
+    expect(await screen.findByText('暂无可用 DNS 账号')).toBeVisible();
+    expect(screen.getByRole('link', { name: '管理 DNS 账号' })).toHaveAttribute(
+      'href',
+      '/dns-accounts',
+    );
     expect(screen.queryByText('同步边界')).not.toBeInTheDocument();
   });
 
-  it('renders pointing groups directly on the overview page', async () => {
+  it('opens pointing groups and sync history from their tabs', async () => {
     vi.mocked(CloudflareService.getOverview).mockResolvedValue({
+      dns_ready: true,
       connection: {
-        configured: true,
-        ready: true,
-        source: 'standalone',
+        configured: false,
+        ready: false,
+        source: '',
         dns_account_id: null,
-        status: 'ready',
+        status: '',
         verified_at: null,
       },
       group_count: 1,
@@ -127,10 +134,18 @@ describe('Cloudflare overview', () => {
     renderPage();
 
     expect(await screen.findByText('生产节点')).toBeVisible();
-    expect(screen.getByRole('link', { name: '管理' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '生产节点' })).toHaveAttribute(
       'href',
       '/cloudflare/groups/7',
     );
-    expect(await screen.findByText('同步任务')).toBeVisible();
+    fireEvent.mouseDown(screen.getByRole('tab', { name: '同步记录' }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    expect(await screen.findByText('暂无同步任务')).toBeVisible();
+    expect(window.location.hash).toBe('#sync-history');
+    expect(
+      screen.queryByRole('link', { name: '生产节点' }),
+    ).not.toBeInTheDocument();
   });
 });

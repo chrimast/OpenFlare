@@ -22,70 +22,70 @@ const copy = {
     navDocs: '阅读文档',
     github: 'GitHub',
     telegram: 'Telegram',
-    eyebrow: 'OPEN SOURCE · EDGE SECURITY',
-    title: '让边缘网络',
-    accent: '清晰可控',
+    eyebrow: '开源自托管 · 基于 RUST PINGORA · 原生支持 CLI & MCP',
+    title: '开源自托管的',
+    accent: '分布式边缘网络',
     description:
-      '用一个控制面管理 OpenFlare Edge 集群，同步站点配置，并在网络边缘执行 WAF、PoW 防护与安全隧道。',
-    start: '从快速开始入门',
-    explore: '了解系统架构',
+      'OpenFlare 将分散在各地的服务器编排为统一的高性能边缘集群。在一个控制台内完成反向代理、SmartDNS 智能调度、边缘缓存、WAF 与 PoW 防护、内网穿透及 Pages 静态托管，路由自主，数据可控。',
+    start: '快速部署',
+    explore: '查看架构',
     status: '边缘网络拓扑示意',
-    statusDetail: '控制面 · 配置发布 · 边缘节点',
+    statusDetail: '控制面 · SmartDNS 调度 · 边缘节点',
     visitor: '访问者',
     edge: 'OpenFlare Edge',
     origin: '源站与私有服务',
-    statNodes: '边缘代理',
+    statNodes: 'Rust Pingora 边缘节点',
+    statDns: '智能权威解析',
     statSync: '边缘安全防护',
-    statHosting: '自建部署',
     featureEyebrow: 'PLATFORM CAPABILITIES',
-    featuresTitle: '从配置到边缘执行',
-    featuresIntro: '控制面负责协调，边缘节点负责服务流量。',
+    featuresTitle: '从智能调度到边缘执行',
+    featuresIntro: '控制面负责协调，SmartDNS 负责择优引流，边缘节点负责服务流量。',
     features: [
       {
-        title: '多节点配置发布',
-        text: '集中管理站点与运行策略，配置经版本化校验后同步到在线节点。',
-        href: '/guide/quick-start',
+        title: 'Pingora 边缘引擎与热同步',
+        text: '纯 Rust 驱动的 OpenFlare Edge 数据面，支持版本化配置无感热同步、自动 ACME 证书与内存/磁盘两级边缘缓存。',
+        href: '/guide/proxy-config',
         icon: Network,
       },
       {
-        title: '边缘安全防护',
-        text: '在边缘执行 WAF、IP 组和 PoW 人机验证，降低恶意流量到达源站的机会。',
+        title: '智能权威 DNS（SmartDNS）',
+        text: '独立 OpenFlare DNS 节点结合网络质量矩阵、ECS 识别与可视化规则流，将访客调度至低延迟健康节点。',
+        href: '/guide/smartdns',
+        icon: Globe2,
+      },
+      {
+        title: '边缘安全防线（WAF & PoW）',
+        text: '可视化 DAG 编排 WAF、GeoIP 地域准入与客户端 PoW 挑战，在边缘直接拦截 CC 与恶意爬虫。',
         href: '/guide/waf-usage',
         icon: ShieldCheck,
       },
       {
-        title: '加密隧道连接',
-        text: '通过 Relay 与 OpenFlared 将内网 Web 服务安全接入边缘网络。',
+        title: '安全内网穿透（Tunnels）',
+        text: '无需公网 IP 或开放入站端口，通过 Relay 中继池与 openflared 将内网 Web 与四层服务接入边缘网络。',
         href: '/guide/tunnel-usage',
         icon: Waypoints,
       },
       {
-        title: '静态站点托管',
-        text: '管理预构建静态资源，支持不可变部署、切换和回滚。',
+        title: 'Pages 静态托管',
+        text: '支持预构建静态产物与 GitHub Release 同步，提供原子部署切换、版本秒级回滚、SPA 回退与同域 API 反代。',
         href: '/guide/pages-usage',
         icon: Boxes,
       },
       {
-        title: '运行状态与日志',
-        text: '集中查看节点运行状态、访问日志和观测数据。',
-        href: '/design/observability-design',
+        title: '全链路观测与 CLI / MCP',
+        text: '内置多点探测、ASN 拓扑情报与全量访问日志，原生提供 CLI 与 MCP 接口，方便接入自动化与 AI Agent。',
+        href: '/guide/network-tools',
         icon: Activity,
-      },
-      {
-        title: '适配现有基础设施',
-        text: '可独立部署，也可与 Cloudflare 协同，为源站提供额外防护。',
-        href: '/design/cloudflare-pointing',
-        icon: Globe2,
       },
     ],
     architectureEyebrow: 'ONE CONTROL PLANE, DISTRIBUTED EDGE',
     architectureTitle: '让拓扑保持可读',
     architectureText:
-      '控制面发布经过校验的配置快照。边缘节点连接控制端并应用站点、WAF 与性能策略，流量继续流向公网源站或私有服务。',
-    stepControl: '控制面',
+      '控制面发布经过校验的站点与调度快照。SmartDNS 按实时网络质量引导访问，边缘节点执行站点、WAF 与性能策略并将流量送达公网源站或私有服务。',
+    stepControl: '控制面与 SmartDNS',
     stepEdge: '边缘节点',
     stepServices: '源站服务',
-    stepControlText: '组织配置并发布版本',
+    stepControlText: '编排配置并智能解析调度',
     stepEdgeText: '同步状态并代理请求',
     stepServicesText: '公网应用或内网服务',
     ctaEyebrow: 'START BUILDING YOUR EDGE',
@@ -100,70 +100,70 @@ const copy = {
     navDocs: 'Read the docs',
     github: 'GitHub',
     telegram: 'Telegram',
-    eyebrow: 'OPEN SOURCE · EDGE SECURITY',
-    title: 'Make your edge',
-    accent: 'clear and controlled',
+    eyebrow: 'OPEN SOURCE · RUST & PINGORA · CLI & MCP',
+    title: 'Open-Source Self-Hosted',
+    accent: 'Distributed Edge Network',
     description:
-      'Manage OpenFlare Edge nodes from one control plane. Publish site configs, enforce WAF and proof-of-work challenges, and connect private services through secure tunnels.',
-    start: 'Start with the quick guide',
-    explore: 'Explore the architecture',
+      'Orchestrate your own servers into a unified, high-performance edge cluster. Manage reverse proxies, SmartDNS traffic steering, edge caching, WAF & PoW defense, encrypted tunnels, and Pages hosting from one control plane with zero vendor lock-in.',
+    start: 'Quick Start',
+    explore: 'Architecture',
     status: 'Edge network topology',
-    statusDetail: 'Control plane · releases · edge nodes',
+    statusDetail: 'Control plane · SmartDNS steering · edge nodes',
     visitor: 'Visitors',
     edge: 'OpenFlare Edge',
     origin: 'Origins & private services',
-    statNodes: 'edge proxy',
+    statNodes: 'Rust Pingora edge proxy',
+    statDns: 'smart authoritative DNS',
     statSync: 'edge security',
-    statHosting: 'self-hosted',
     featureEyebrow: 'PLATFORM CAPABILITIES',
-    featuresTitle: 'From configuration to edge execution',
-    featuresIntro: 'The control plane coordinates. Edge nodes serve traffic.',
+    featuresTitle: 'From smart steering to edge execution',
+    featuresIntro: 'The control plane coordinates, SmartDNS steers, and edge nodes serve traffic.',
     features: [
       {
-        title: 'Multi-node releases',
-        text: 'Manage sites and runtime policies centrally, then distribute validated configuration versions to online nodes.',
-        href: '/en/guide/quick-start',
+        title: 'Pingora Edge & Hot Sync',
+        text: 'Pure Rust OpenFlare Edge data plane with zero-reload versioned config sync, automated ACME TLS certificates, and two-tier memory/disk caching.',
+        href: '/en/guide/proxy-config',
         icon: Network,
       },
       {
-        title: 'Edge security',
-        text: 'Apply WAF rules, IP groups, and proof-of-work challenges at the edge before requests reach your origins.',
+        title: 'Authoritative SmartDNS',
+        text: 'Standalone OpenFlare DNS combines real-time quality matrices, ECS awareness, and visual flow rules to steer visitors to healthy low-latency nodes.',
+        href: '/en/guide/smartdns',
+        icon: Globe2,
+      },
+      {
+        title: 'Edge Defense (WAF & PoW)',
+        text: 'Visual DAG WAF workflows, GeoIP access rules, and client PoW challenges stop bots and CC floods right at the edge.',
         href: '/en/guide/waf-usage',
         icon: ShieldCheck,
       },
       {
-        title: 'Encrypted tunnels',
-        text: 'Connect private web services through Relay and OpenFlared without exposing inbound ports.',
+        title: 'Encrypted Tunnels',
+        text: 'Expose private web and TCP/UDP services through Relay pools and openflared connectors without public IPs or open inbound ports.',
         href: '/en/guide/tunnel-usage',
         icon: Waypoints,
       },
       {
-        title: 'Static site hosting',
-        text: 'Manage prebuilt assets with immutable deployments, activation, and rollback.',
+        title: 'Pages Static Hosting',
+        text: 'Deploy pre-built static bundles from uploads or GitHub Releases with atomic rollouts, instant rollbacks, SPA fallback, and API proxying.',
         href: '/en/guide/pages-usage',
         icon: Boxes,
       },
       {
-        title: 'Health and observability',
-        text: 'Review node health, access logs, and observability data in one place.',
-        href: '/en/design/observability-design',
+        title: 'Observability, CLI & MCP',
+        text: 'Inspect multi-location probes, ASN routing topology, and access logs, or automate workflows via built-in CLI and MCP interfaces.',
+        href: '/en/guide/network-tools',
         icon: Activity,
-      },
-      {
-        title: 'Fits your infrastructure',
-        text: 'Run OpenFlare independently or pair it with Cloudflare for an additional origin protection layer.',
-        href: '/en/design/cloudflare-pointing',
-        icon: Globe2,
       },
     ],
     architectureEyebrow: 'ONE CONTROL PLANE, DISTRIBUTED EDGE',
     architectureTitle: 'Keep the topology readable',
     architectureText:
-      'The control plane publishes validated configuration snapshots. Edge nodes connect to the controller, apply site, WAF, and performance policies, then route traffic to public origins or private services.',
-    stepControl: 'Control plane',
+      'The control plane publishes validated site and scheduling snapshots. SmartDNS guides visitors by real-time network quality while edge nodes enforce site, WAF, and performance policies toward public origins or private services.',
+    stepControl: 'Control plane & SmartDNS',
     stepEdge: 'Edge nodes',
     stepServices: 'Origin services',
-    stepControlText: 'Organize and release config',
+    stepControlText: 'Organize config and steer DNS',
     stepEdgeText: 'Sync state and proxy requests',
     stepServicesText: 'Public apps or private services',
     ctaEyebrow: 'START BUILDING YOUR EDGE',
@@ -234,7 +234,7 @@ export function LandingPage({ locale }: LandingPageProps) {
             <span className="size-1.5 rounded-full bg-fd-primary" />
             {text.eyebrow}
           </div>
-          <h1 className="max-w-3xl text-5xl font-semibold leading-[1.08] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-[-0.04em] sm:text-5xl xl:text-[3.35rem]">
             {text.title}
             <br />
             <span className="bg-gradient-to-r from-fd-primary via-emerald-500 to-cyan-600 bg-clip-text text-transparent">
@@ -263,8 +263,8 @@ export function LandingPage({ locale }: LandingPageProps) {
           <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-dashed border-fd-border pt-6">
             {[
               ['EDGE NODE', text.statNodes],
+              ['SMARTDNS', text.statDns],
               ['WAF', text.statSync],
-              ['SELF-HOST', text.statHosting],
             ].map(([value, label]) => (
               <div className="flex items-center gap-2.5" key={label}>
                 <span className="font-mono text-sm font-semibold text-fd-primary">{value}</span>
@@ -321,15 +321,15 @@ export function LandingPage({ locale }: LandingPageProps) {
                 CONTROL PLANE
               </div>
               <div className="absolute bottom-3 right-3 font-mono text-[9px] uppercase tracking-wider text-fd-muted-foreground sm:bottom-4 sm:right-4 sm:text-[10px]">
-                TLS · WAF · ROUTING
+                SMARTDNS · TLS · WAF
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-3 divide-x divide-dashed divide-fd-border text-center">
               {[
                 ['EDGE NODE', text.statNodes],
+                ['SMARTDNS', text.statDns],
                 ['WAF', text.statSync],
-                ['SELF-HOST', text.statHosting],
               ].map(([value, label]) => (
                 <div className="px-2" key={label}>
                   <div className="font-mono text-sm font-semibold">{value}</div>

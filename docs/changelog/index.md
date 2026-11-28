@@ -19,39 +19,35 @@ sidebar: false
 >[4.1.0] 旧版内网穿透已移除，升级时会自动清理旧版穿透节点及相关历史数据。升级后请在新的「内网穿透」页面重新创建中继与隧道，并部署新版客户端。
 ## [Unreleased]
 
-### ✨ 新功能
-
-- 新增 **SmartDNS Phase 2 智能权威解析系统**：
-  - 在控制面重构侧栏「DNS」分组（合并「DNS 解析」「DNS 账号」「连接设置」「SmartDNS」），原 `/cloudflare/settings` 页面自动重定向至 `/dns/settings`。
-  - 在「节点管理」中新增全局路由标签管理（`/api/v1/d/node-tags`）、单节点带宽/并发连接上限、容量基准权重与标签绑定配置。
-  - 上线 **SmartDNS 控制台（`/dns/smartdns`）**：提供集群 QPS/P50-P99/L1 缓存命中率监控看板、委派域名配置与公网 NS 委派验证、独立 Rust 实例注册与隔离管理、基于 `@xyflow/react` 的可视化 JDM 调度规则编辑器，以及支持 EDNS0 ECS 模拟的 4 阶段打分决策模拟器。
-  - 新增 **Cloudflare `smartdns` 指向模式**：指向分组支持选择 SmartDNS 策略并在委派域名下生成 CNAME 目标，成员记录强制保持仅 DNS 模式以确保访客真实子网直达 SmartDNS 权威节点，策略与路由变更自动通过 WebSocket（`dns:snapshot_changed`）与 ETag HTTP 快照热分发至解析节点。
-  - 新增独立高性能 Rust 权威 DNS 服务端 `dns/`（`openflare-dns`），集成 `hickory-server`、`zen-engine`、`SO_REUSEPORT` 多队列监听、`moka` 分片 L1 缓存与 RRL 限流、`last-snapshot.bin` 离线灾备，以及控制面内嵌 `embedded_go` 兜底引擎，并通过 `qualityapi` 隔离契约消费网络质量预测数据。
-  - 完善 `openflare-dns` 交付与运维体系：新增测试、正式版（`dns-v*`）与 `canary` 预览版构建发布及 Multi-Arch Docker 镜像 GitHub Actions 工作流；新增 Linux 一键安装/升级/卸载脚本（支持 `canary` 参数、GeoIP 库拉取与 `systemd` 权限隔离）、基于 Alpine 的静态 `Dockerfile.dns` 与 `docker-compose.yaml` `dns` 服务；控制台实例页同步提供正式版/Canary 通道与 Linux 脚本/Docker 一键部署命令生成。
-
-- 新增 **网络情报与网络工具** 基础设施（为后续智能 DNS 调度提供测量与拓扑底座）：
-  - 在控制面「网络工具」分组上线 **多点 Ping / TCPing**、**多点路由追踪（Traceroute）**、**ASN 与 IP 情报查询**（含 `Origins → Upstreams → Tier 1 ISPs` 上游路由接线拓扑图）、**DNS 与 EDNS0 ECS 诊断查询** 以及 **网络质量矩阵与情报数据集状态** 五个控制台页面。
-  - Edge 边缘端将主动网络探测隔离至独立子进程 `openflare-edge probe-worker` 执行（集成 `trippy-core` 多轮路由追踪、复用 `openflare-probe` 批量 Ping/TCPing 与 EDNS0 ECS DNS 探针，并与反向代理主线程及进程崩溃完全隔离）；同步在 `Dockerfile.edge`（`cap_net_raw+p`）、`docker-compose.yaml`、控制台 Docker 部署命令（`--cap-add=NET_RAW`）、`install-openflare-edge.sh`/`update-openflare-edge.sh` 与探测子进程能力提升链路中完整保障 `CAP_NET_RAW` 权限。
-  - Edge 访问日志链路在有界队列富余时轻量采集内核 `TCP_INFO`（RTT/MinRTT/重传）与 TLS 握手耗时；服务端结合 `bgp.tools` 与 GeoIP 数据库无锁识别访客 `client_asn`，通过 1 分钟有界分桶及 6 小时衰减融合任务（`of_netquality_rollup`）生成 `节点 × 访客 ASN` 网络质量矩阵与 `of_as_topology_edges` AS 拓扑边表。
-  - 访问日志接口与「访问日志 → 日志明细」列表及详情弹窗新增展示每条请求的耗时（`request_time_ms`）与客户端 TCP RTT（`tcp_rtt_us`）。
-  - 数据看板「地理分布」3D/2D 切换与「来源国家排行 / 节点负载排行」切换均改为无背景图标按钮（节点负载排行展示各节点请求数与 CPU/内存负载）；「24 小时请求趋势」上方新增 **全球延迟视图（2D）** 卡片，按来源国家请求数排行展示客户端 TCP RTT 网络延迟分布（`0–100 ms` 深绿、`100–170 ms` 浅绿、`170–300 ms` 黄色、`300–800 ms` 红色），支持按请求数一键升降序并隐藏滚动条，同时过滤历史未记录延迟的数据。
-  - 新增构建与定时增量同步任务 `of_netintel_sync`（支持 GeoLite2/sapics 与 `bgp.tools`，默认关闭 CAIDA 并仅在运行期配置 `netintel_caida_enabled=true` 时按需拉取）。
-  - 升级 **网络质量矩阵与调度感知（Phase 1.5）**：
-    - 拆分 `(node_id, client_asn, client_country, client_region, ip_family, aggregation_level)` 多维键并分离被动 TCP（`tcp_*`）、主动探测（`probe_*`）与路由追踪（`trace_*`）指标，采用 64 桶对数直方图（`LogHistogram64`）、Bottom-64 前缀去重草图（`PrefixSketch`）、时间有序 EWMA 与球面加权地理质心替代有偏分位数均值，并支持 Edge Node 线路分组（`network_group`）与 City 级节点坐标优先回填。
-    - 实现 5 级延迟预测引擎（精确区域 → 国家聚合 → 基于多维网络相似度过滤的非负残差上游迁移 → 同城同组节点冷启动映射 → 地理基线），配备有界代数失效预测缓存、`POST /api/v1/d/network-tools/quality-matrix/predict` 实时模拟接口及离线 6 场景回测误差校准机制。
-    - 用受控公网探测靶点池（`of_probe_targets`）与按节点独立指数退避状态表（`of_probe_target_states`）取代前缀试探猜 IP 逻辑；新增控制台「探测靶点」管理页签、多维质量过滤、模拟预测面板及控制面 + Rust Edge `openflare-probe` 双向 SSRF 地址拦截与发包/并发预算防护。
-
 ### 🛠 修复
 
-- 修复网络质量预测器将同城节点（地理距离 `0 km`、`geo_base_rtt_ms == 0`）误判为坐标未知的问题：显式区分有效 `0 km` 基线与坐标缺失哨兵，恢复 L5 地理基线与 L3 同节点上游残差迁移及同城候选样本参与；同步将 L3/L4 推断结果的 `measurement_source` 统一为 `none`，在预测缓存键中加入量化坐标分桶以隔离同省区不同城市缓存，并在控制台模拟与矩阵列表中正确显示 `geo 0.0 ms`。
+- 修复 Linux 上 Edge 自更新完成后，定时延迟检测和主动网络探测因子进程启动失败而无法执行的问题。
 
 ### ⚡️ 优化与改进
 
-- 移除冗余的 `of_node_edge_health` 时序表，改为将节点最新活跃连接数直接持久化到主库节点表 `of_nodes.openresty_connections`（随心跳状态同步更新），大幅减少日志数据库存储占用与高频写入开销，同时保持 Agent 心跳协议与节点观测页面展示兼容。
-- 将「网络质量矩阵与情报数据集」页面中的 **客户端网络质量模拟预测** 拆分为独立的 **「质量模拟预测」** 页签，与 **「质量融合矩阵」** 分离展示。
-- **多点 Ping / TCPing**、**多点路由追踪（Traceroute）** 与 **DNS 诊断查询** 将「执行探测的边缘节点」合并至探测参数卡片底部操作栏，并改为支持按名称/地区/ASN 搜索与按在线状态分组的可折叠下拉菜单，默认全选所有在线边缘节点。
-- **ASN 与 IP 情报查询** 中的「AS 邻接关系与实测路径」列表改为前端分页展示，支持上一页/下一页切换与每页条数选择（10 / 20 / 50 条）。
-- **多点 Ping / TCPing** 目标地址输入支持自动纠正：ICMP / TCPing 模式下粘贴完整 URL（含协议、路径、查询参数或凭据）时，将自动仅保留主机地址并发起探测；URL 中显式声明的端口会自动填入端口输入框。不再因输入 URL 形态而报「invalid target hostname or IP address」错误。
+- 压缩控制面 NetIntel 的 CAIDA 邻接表与 BGP 前缀索引，降低网络情报的常驻内存和数据热更新时的内存峰值。
+- 统一各列表与表格行内操作按钮样式，改用单行紧凑排列的纯图标控件并配备悬浮提示与居中对齐，避免按钮换行拥挤。
+- 移除站点概览「查询窗口独立访客」指标卡片中的冗余口径说明文案。
+
+## [v4.2.0] - 2026-11-28
+
+### ✨ 新功能
+
+- **SmartDNS 智能权威解析与 OpenFlare DNS（`dns-v1.0.0`）**：新增智能权威解析系统与独立高性能权威 DNS 服务端 `OpenFlare DNS`，支持 Linux 一键部署、Docker 运行与离线快照容灾，并在控制面内置回退解析能力；结合多时间窗口网络质量监测与灰度验证，当线路出现高峰延迟升高或丢包恶化时自动切离异常节点，并在恢复后重新验证切回。
+- **SmartDNS 控制台与节点调度属性**：上线 SmartDNS 控制台，提供集群查询性能监控、委派域名配置与公网 NS 委派验证、独立权威实例管理（支持预注册或自动发现、隔离及单个或批量远程升级正式版/预览版）、独立页面的可视化调度规则编辑器（支持拖放节点、条件搜索多选与快捷键删除）以及支持客户端子网模拟的调度决策模拟器；节点管理同步新增全局路由标签、线路分组、带宽与并发连接上限及容量权重配置。
+- **多服务商 DNS 账号管理**：重构侧栏「DNS」分组，新增统一「DNS 账号」管理，支持配置并验证 Cloudflare、阿里云 DNS 与腾讯云 DNSPod 凭据，自动发现可用域名作用域并支持手动及每日自动刷新；指向分组按域名自动匹配对应服务商，新增 SmartDNS 指向模式，阿里云与腾讯云记录自动忽略 Cloudflare 代理选项；SmartDNS 委派设置支持直接调用 Cloudflare 或阿里云 DNS 同步父区 NS 记录。
+- **网络工具与网络质量矩阵（OpenFlare Edge `edge-v1.1.0`）**：控制面新增「网络工具」分组，上线多点 Ping / TCPing（粘贴完整网址时自动提取主机与端口）、多点路由追踪、ASN 与 IP 情报查询（含上游路由拓扑图、节点路径对比与分页邻接列表）、DNS 与客户端子网诊断查询、网络质量矩阵、质量模拟预测及受控探测靶点管理；边缘节点新增独立隔离的主动探测能力与访问日志延迟采集，结合定时同步的地理与自治系统情报自动构建多维网络质量矩阵并支持多级延迟预测。
+- **数据看板与访问日志延迟观测**：数据看板新增「全球延迟视图（2D）」，按来源国家请求量展示客户端网络延迟分布并支持排序，「来源国家排行」支持切换查看「节点负载排行」；访问日志列表与详情新增展示单次请求耗时与客户端网络延迟。
+
+### 🛠 修复
+
+- 修复内网穿透部署弹窗中关闭按钮显示异常的问题。
+
+### ⚡️ 优化与改进
+
+- 优化 DNS 管理界面与操作流程：拆分指向分组与同步记录视图，支持分组与域名搜索，并在删除记录和轮换访问令牌前增加确认提示。
+- 优化节点活跃连接数的采集与存储方式，显著降低日志数据库的写入压力与存储占用，同时保持节点监控页面展示兼容。
+- 优化数据看板视图与排行切换按钮样式，界面更为简洁。
 
 ## [v4.1.1] - 2026-11-25
 

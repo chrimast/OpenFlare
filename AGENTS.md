@@ -15,6 +15,7 @@
 | `push-notification` | 通知推送事件、统一触发器、带推送的业务 |
 | `release-guide` | Version Bump 双语提交信息（中英文以 `---` 分隔） |
 | `shadcn` | 添加/修改/组合 shadcn/ui 组件 |
+| `Humanizer` | 系统文案, 文档编写, 前端提示任何文字性的增删改查 |
 
 ## 硬性约束
 
@@ -190,6 +191,13 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 - 变体不足时扩展组件 variant，不写一次性颜色。
 - 卡片与内容分区统一采用**虚线外框、无阴影扁平设计**（`Pages` 与 `/admin/demo` 风格）：`frontend/components/ui/card.tsx` 已默认 `border-dashed shadow-none`，业务直接使用 `<Card>` 即可；**禁止**在卡片或列表项容器上添加 `shadow-sm`/`shadow-md` 等投影、`backdrop-blur-*` 毛玻璃或实线立体边框（`Dialog`、`Sheet`、`Popover` 等浮层除外）。自定义列表项/空状态/分块容器同样使用 `border border-dashed` 且不加阴影。
 
+### 列表与行内操作
+
+- 数据表格、列表项及资源卡片行内操作统一参考 `/admin/users`（`frontend/app/(main)/admin/users/page.tsx`）与 `/admin/demo`，复用 `frontend/components/common/list-actions.tsx`（`ListActions`、`ListActionButton`、`ListActionSwitch`）。
+- 行内操作统一使用**纯图标按钮**（`variant='ghost'`、`size='icon'`、`size-6`，图标 `size-3`）并在单行水平紧密排列（`gap-0.5 whitespace-nowrap`）。**禁止**在列表或表格操作列使用纯文本按钮、图标加文字按钮、自动换行按钮组或 `...` 折叠下拉菜单隐藏常用行操作。
+- 表格操作列表头与单元格统一 `text-center`（`align='center'`），非表格卡片列表行末尾可右对齐（`align='end'`）；若整行可点击，操作区须启用 `stopPropagation` 防止事件冒泡。
+- 每个图标按钮必须通过 `Tooltip` 显示清晰操作说明并具备完整可访问名称（`aria-label`，链接按钮同步附带 `sr-only` 文案）；删除、吊销、解绑等危险操作使用 `tone='destructive'`；启停状态开关统一使用 `ListActionSwitch`（`scale-75`）。
+
 ### 页面结构
 
 - 根容器全宽 `w-full`；禁止页面级 `max-w-*`（主布局负责宽度）。
@@ -229,10 +237,5 @@ frontend/lib/services/<name>/
 
 ### 文案规范
 
-- 展示于网站界面、文档页及内置 HTML 模板的所有前端文案须采用**正式、客观、克制的专业书面语**，禁止口语化表达。
-- **禁用写法**：
-  - 口语词、语气助词、网络梗与随意调侃（如「试试」「吧」「呢」「呀」「哦」「这个人很懒」「迷失在数字星云中」「你知道吗」「五秒盾」「过盾」「站长」「兜底」）。
-  - 随意缩写、非正式简称与开发俚语（如「反代」→「反向代理」、「控台」→「控制台」、「退登」→「退出登录」、「追平」→「同步」、「报错」→「错误」、「串给」→「分发给」、「灰云/橙云」→「仅 DNS / Cloudflare 代理」）。
-  - 情绪化感叹号（`！`/`!` 仅用于高危警告）与对话腔/随意第二人称（如「换个词试试？」「介绍一下自己吧」「发给你的」「这里可以」「请看」；改用客观陈述或「在此」「当前页面」「请查看」）。
-  - 残缺省略提示与错别字/异体字（如「空关闭」「0 关闭」→「留空表示关闭」「0 表示关闭」；统一使用「其他」而非「其它」、「模板」而非「模版」、「登录」而非「登陆」、「连接」而非「链接」）。
+- 展示于网站界面、文档页及内置 HTML 模板的所有前端文案须采用**正式、客观、克制的专业书面语**，禁止口语化表达。并且使用 Humanizer Skills 对文案进行审阅和润色，确保文案清晰、自然、专业，避免空话、重复及模板化表达。
 - **多语言一致性**：修改文案语义时须同步校对 `zh-CN`、`en`、`ru` 三个 fragment 文件；英文与俄文同样须采用正式产品用语（避免 `you've`、`hasn't` 等非正式缩写及 `Did you know:`、`Try a different term?` 等对话腔），并保持占位符与富文本标签一致。

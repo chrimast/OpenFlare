@@ -1588,6 +1588,7 @@ export interface CloudflareAvailableDomain {
 }
 
 export interface CloudflareOverview {
+  dns_ready?: boolean;
   connection: CloudflareConnection;
   group_count: number;
   member_count: number;
@@ -1676,10 +1677,15 @@ export interface AcmeAccountItem {
   updated_at: string;
 }
 
+export type DnsProvider = 'cloudflare' | 'alidns' | 'tencentcloud';
+
 export interface DnsAccountItem {
   id: number;
   name: string;
-  type: string;
+  type: DnsProvider;
+  scopes: { id: string; name: string }[] | null;
+  verification_status: '' | 'ready' | 'error';
+  last_checked_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -2392,7 +2398,11 @@ export interface NetToolsQualityMatrixItem {
   trace_sample_count: number;
   trace_last_seen_at?: string | null;
   effective_rtt_ms: number;
+  observed_rtt_ms?: number;
   predicted_rtt_ms: number;
+  short_rtt_p50_ms?: number;
+  short_rtt_p95_ms?: number;
+  short_sample_count?: number;
   rtt_ewma_ms?: number;
   distinct_prefix_count?: number;
   geo_base_rtt_ms?: number;
@@ -2402,6 +2412,9 @@ export interface NetToolsQualityMatrixItem {
   measurement_source?: string;
   quality_score: number;
   confidence: number;
+  quality_state?: 'healthy' | 'degraded' | 'recovering' | 'stale' | string;
+  consecutive_good_windows?: number;
+  explore_priority?: number;
   data_source: 'measured' | 'predicted' | string;
   last_observed_at?: string | null;
   updated_at: string;
@@ -2701,6 +2714,22 @@ export interface SmartDNSDelegationVerifyResult {
   error?: string;
 }
 
+export interface SmartDNSDelegationApplyResult {
+  provider: DnsProvider;
+  zone: string;
+  created: number;
+  removed: number;
+}
+
+export type SmartDNSUpdateChannel = 'stable' | 'canary';
+export type SmartDNSUpdateStatus =
+  | ''
+  | 'queued'
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'timed_out';
+
 export interface SmartDNSDiscoveryToken {
   discovery_token: string;
 }
@@ -2729,6 +2758,10 @@ export interface SmartDNSInstance {
   cache_hit_ratio: number;
   cpu_usage_percent: number;
   memory_usage_percent: number;
+  remote_update_supported?: boolean;
+  update_channel?: SmartDNSUpdateChannel | '';
+  update_status?: SmartDNSUpdateStatus;
+  update_requested_at?: string | null;
   last_seen_at?: string | null;
   last_error: string;
   quarantined_at?: string | null;
@@ -2818,7 +2851,7 @@ export interface SmartDNSPolicy {
   description: string;
   scope_type: 'all' | 'domains' | string;
   scope_domains: string[];
-  strategy_type: 'smart' | 'load_balance' | 'custom_jdm' | string;
+  strategy_type: 'smart' | 'load_balance' | 'custom' | string;
   priority: number;
   ttl: number;
   max_answers: number;
@@ -2866,6 +2899,7 @@ export interface SmartDNSSimulateInput {
   qtype: 'A' | 'AAAA' | string;
   client_ip: string;
   policy_id?: number;
+  has_ecs?: boolean;
 }
 
 export interface SmartDNSSimulatorClientContext {
@@ -2901,7 +2935,12 @@ export interface SmartDNSCandidateTrace {
   exclusion_reason?: string;
   source_tier?: string;
   effective_rtt_ms: number;
+  rtt_p95_ms?: number;
+  p95_weight?: number;
   loss_rate: number;
+  confidence?: number;
+  quality_state?: string;
+  explore_priority?: number;
   load_index: number;
   latency_score: number;
   load_score: number;
@@ -2918,6 +2957,8 @@ export interface SmartDNSSelectionResult {
   fallback_used: boolean;
   fallback_reason?: string;
   hysteresis_applied: boolean;
+  exploration_used?: boolean;
+  explored_node_id?: string;
   matched_nodes: string[];
   matched_conditions: string[];
   answers: SmartDNSSelectedAnswer[];

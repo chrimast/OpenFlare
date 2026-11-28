@@ -111,11 +111,10 @@ export const openflareDNSNavGroup: OpenFlareNavGroup = {
       url: '/cloudflare',
       childUrls: ['/cloudflare/groups'],
     },
-    { titleKey: 'dnsAccounts', url: '/dns-accounts' },
     {
-      titleKey: 'dnsSettings',
-      url: '/dns/settings',
-      childUrls: ['/cloudflare/settings'],
+      titleKey: 'dnsAccounts',
+      url: '/dns-accounts',
+      childUrls: ['/dns/settings', '/cloudflare/settings'],
     },
     { titleKey: 'smartDns', url: '/dns/smartdns' },
   ],
@@ -128,7 +127,6 @@ export const openflareDNSNavGroup: OpenFlareNavGroup = {
 export const openflareSidebarNav: OpenFlareSidebarNavEntry[] = [
   { kind: 'item', titleKey: 'dashboard', url: '/', icon: LayoutDashboard },
   { kind: 'group', ...openflareNodeNavGroup },
-  { kind: 'group', ...openflareNetworkToolsNavGroup },
   {
     kind: 'item',
     titleKey: 'tunnels',
@@ -145,6 +143,7 @@ export const openflareSidebarNav: OpenFlareSidebarNavEntry[] = [
   },
   { kind: 'group', ...openflareWebsiteNavGroup },
   { kind: 'group', ...openflareDNSNavGroup },
+  { kind: 'group', ...openflareNetworkToolsNavGroup },
   { kind: 'group', ...openflareSecurityNavGroup },
   {
     kind: 'item',
@@ -191,7 +190,6 @@ export const openflareWebsiteSubNav = [
 export const openflareDNSSubNav = [
   { titleKey: 'dnsResolve', url: '/cloudflare' },
   { titleKey: 'dnsAccounts', url: '/dns-accounts' },
-  { titleKey: 'dnsSettings', url: '/dns/settings' },
   { titleKey: 'smartDns', url: '/dns/smartdns' },
 ] as const;
 

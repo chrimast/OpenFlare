@@ -31,7 +31,6 @@
       "certificates": "TLS Certificates",
       "dnsAccounts": "DNS Accounts",
       "dnsResolve": "DNS Resolution",
-      "dnsSettings": "Connection Settings",
       "smartDns": "SmartDNS",
       "cloudflare": "Cloudflare",
       "origins": "Origins",

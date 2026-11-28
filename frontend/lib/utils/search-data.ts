@@ -66,7 +66,7 @@ export const searchData: SearchItemSource[] = [
     id: 'docs-how-to-use',
     titleKey: 'nav.usageDocs',
     descriptionKey: 'search.items.usageDocsDesc',
-    url: 'https://openflare.fyrn.link/',
+    url: 'https://openflare.cc',
     category: 'page',
     keywordKey: 'search.keywords.docs-how-to-use',
   },
@@ -183,14 +183,6 @@ export const searchData: SearchItemSource[] = [
     url: '/cloudflare',
     category: 'page',
     keywordKey: 'search.keywords.console-dns-resolve',
-  },
-  {
-    id: 'console-dns-settings',
-    titleKey: 'nav.dnsSettings',
-    descriptionKey: 'search.items.dnsSettingsDesc',
-    url: '/dns/settings',
-    category: 'page',
-    keywordKey: 'search.keywords.console-dns-settings',
   },
   {
     id: 'console-smartdns',

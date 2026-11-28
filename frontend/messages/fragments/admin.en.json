@@ -405,7 +405,6 @@
       "descCertificates": "Manage and distribute website SSL/TLS certificates",
       "descDnsAccounts": "Configure Cloudflare/Alidns and other DNS provider API credentials",
       "descDnsResolve": "Manage Cloudflare DNS pointing groups for edge nodes and SmartDNS CNAMEs",
-      "descDnsSettings": "Configure Cloudflare credentials and verify connection readiness",
       "descSmartDns": "Manage SmartDNS authoritative instances, JDM routing flows, and simulation",
       "descOrigins": "Centrally maintain backend origin server groups",
       "descWaf": "Configure WAF custom rules and rate limits",
@@ -1424,6 +1423,8 @@
         "searchPlaceholder": "Search by task name...",
         "filter": "Filter",
         "newTask": "New task",
+        "edit": "Edit",
+        "delete": "Delete",
         "columns": {
           "taskId": "Task ID",
           "taskName": "Task name",
@@ -1447,7 +1448,9 @@
           "rowHover": "). Table row hover uses a gentle transition.",
           "monoFont": "Encoded, primary key, or unique ID fields must use monospace font:",
           "badgeStyle": "Badges should be rounded (",
-          "badgeStyle2": ") with light backgrounds and corresponding icon dots for a modern, high-contrast visual feel."
+          "badgeStyle2": ") with light backgrounds and corresponding icon dots for a modern, high-contrast visual feel.",
+          "rowActions": "Row actions uniformly use icon-only controls (",
+          "rowActions2": "), centered in a single row with Tooltip hints and accessible labels."
         }
       },
       "dashboard": {

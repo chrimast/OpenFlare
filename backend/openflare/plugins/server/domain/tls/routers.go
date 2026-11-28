@@ -4,12 +4,14 @@
 package tls
 
 import (
+	"errors"
 	"net/http"
 
 	"Wavelet/openflare/plugins/server/kernel/apiutil"
 	"Wavelet/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func handleLogicError(c *gin.Context, err error) bool {
@@ -366,7 +368,7 @@ func RotateCompromisedCertificateHandler(c *gin.Context) {
 // @Router /api/v1/d/dns-accounts [get]
 func GetDNSAccounts(c *gin.Context) {
 	accounts, err := ListDNSAccounts(c.Request.Context())
-	if handleLogicError(c, err) {
+	if handleDNSAccountError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(accounts))
@@ -392,7 +394,7 @@ func CreateDNSAccountHandler(c *gin.Context) {
 		return
 	}
 	account, err := CreateDNSAccount(c.Request.Context(), input)
-	if handleLogicError(c, err) {
+	if handleDNSAccountError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(account))
@@ -424,7 +426,31 @@ func UpdateDNSAccountHandler(c *gin.Context) {
 		return
 	}
 	account, err := UpdateDNSAccount(c.Request.Context(), id, input)
-	if handleLogicError(c, err) {
+	if handleDNSAccountError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OK(account))
+}
+
+// RefreshDNSAccountHandler verifies the API and reloads the DNS account scopes.
+// @Summary 刷新 DNS 账号作用域
+// @Tags openflare-tls
+// @Produce json
+// @Security SessionCookie
+// @Param id path int true "DNS 账号 ID"
+// @Success 200 {object} response.Any{data=model.DNSAccount} "验证状态和作用域"
+// @Failure 400 {object} response.Any "参数错误"
+// @Failure 401 {object} response.Any "未登录"
+// @Failure 404 {object} response.Any "无权限或不存在"
+// @Failure 500 {object} response.Any "内部错误"
+// @Router /api/v1/d/dns-accounts/{id}/refresh [post]
+func RefreshDNSAccountHandler(c *gin.Context) {
+	id, ok := httpx.IDParam(c)
+	if !ok {
+		return
+	}
+	account, err := dnsaccount.Refresh(c.Request.Context(), id)
+	if handleDNSAccountError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(account))
@@ -449,10 +475,27 @@ func DeleteDNSAccountHandler(c *gin.Context) {
 	if !ok {
 		return
 	}
-	if err := DeleteDNSAccount(c.Request.Context(), id); handleLogicError(c, err) {
+	if err := DeleteDNSAccount(c.Request.Context(), id); handleDNSAccountError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OKNil())
+}
+
+func handleDNSAccountError(c *gin.Context, err error) bool {
+	if err == nil {
+		return false
+	}
+	var invalid dnsAccountInputError
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		response.AbortNotFound(c, errDNSAccountNotFound)
+	case errors.As(err, &invalid):
+		response.AbortBadRequest(c, invalid.Error())
+	default:
+		logger.ErrorF(c.Request.Context(), "DNS account operation failed: %v", err)
+		response.AbortInternal(c, errDNSAccountOperation)
+	}
+	return true
 }
 
 // GetDefaultAcmeAccountHandler 获取默认 ACME 账号。
